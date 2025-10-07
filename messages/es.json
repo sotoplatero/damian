@@ -1,0 +1,22 @@
+{
+	"$schema": "https://inlang.com/schema/inlang-message-format",
+	"name": "Damian Soto",
+	"username": "sotoplatero",
+	"description": "Desarrollador creando herramientas y proyectos para la web",
+	"projects_title": "Proyectos",
+	"tools_title": "Herramientas Gratuitas",
+	"freebie_email_description": "Plantillas de email gratis para tus proyectos",
+	"article_video_description": "Convierte artículos en videos atractivos",
+	"rooster_social_description": "Gestión de redes sociales simplificada",
+	"uuid_generator_title": "Generador de UUID",
+	"uuid_generator_description": "Genera identificadores únicos al instante",
+	"character_counter_title": "Contador de Caracteres",
+	"character_counter_description": "Cuenta caracteres y palabras en tu texto",
+	"generate": "Generar",
+	"copy": "Copiar",
+	"copied": "¡Copiado!",
+	"paste_text": "Pega tu texto aquí...",
+	"characters": "Caracteres",
+	"words": "Palabras",
+	"lines": "Líneas"
+}
