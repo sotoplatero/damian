@@ -22,6 +22,22 @@ This project uses **pnpm** as the package manager.
 
 ## Architecture
 
+### Home Sales Page
+
+The home route (`/`) is a single-column sales page (Spanish, Alex Hormozi / Isra Bravo style): one direct sales letter plus an email capture form. It does **not** list the projects or tools.
+
+- **All copy lives in `src/lib/content/home.md`** — this is the single source of truth. Edit that file to change the page text; do not hardcode copy in `src/routes/+page.svelte`.
+- The `.md` file has two parts:
+  - **Frontmatter** (between `---`): UI strings as `key: value` (form `placeholder`, `button`, `sending`, `success`, `error`, `errorOffline`, `errorNotConfigured`, `signature`). Lines starting with `#` inside the frontmatter are comments.
+  - **Body**: the sales letter in plain markdown. `# ...` renders as the headline, a line wrapped in `**...**` renders bold, blank-line-separated lines become paragraphs.
+- `src/routes/+page.svelte` imports the file as raw text (`import homeRaw from '$lib/content/home.md?raw'`) and a small `parseCopy()` function turns the frontmatter into UI strings and the body into copy blocks. This avoids treating `.md` as a Svelte/mdsvex module (which breaks type resolution), so no `svelte.config.js` extension changes are needed.
+- **Email form**: posts to Formspree via `PUBLIC_FORMSPREE_ID` (see `.env.example`). If the id is unset, the form shows a friendly error instead of failing.
+- **Theme**: the whole site is forced to the light DaisyUI theme (`data-theme="light"` in `app.html` and `src/routes/+layout.svelte`).
+
+### Tools
+
+The tools under `src/routes/tool/*` (`uuid-generator`, `character-counter`, `places-evaluator`) remain live and reachable by URL, but are intentionally not linked from the home page.
+
 ### Internationalization Setup
 
 The project uses Paraglide JS for i18n with the following integration:

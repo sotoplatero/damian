@@ -18,5 +18,18 @@
 	"paste_text": "Pega tu texto aquí...",
 	"characters": "Caracteres",
 	"words": "Palabras",
-	"lines": "Líneas"
+	"lines": "Líneas",
+	"places_evaluator_title": "Evaluador de Google Places",
+	"places_evaluator_description": "Analiza la calidad de tu perfil de negocio",
+	"search_placeholder": "Nombre del negocio y ubicación",
+	"place_id_placeholder": "Place ID (opcional)",
+	"maps_url_placeholder": "URL de Google Maps (opcional)",
+	"evaluate": "Evaluar",
+	"evaluating": "Evaluando...",
+	"evaluation_results": "Resultados de la Evaluación",
+	"score": "Puntuación",
+	"status_pass": "Aprobado",
+	"status_fail": "Fallo",
+	"status_warning": "Advertencia",
+	"recommendation": "Recomendación"
 }

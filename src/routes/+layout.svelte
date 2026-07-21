@@ -4,13 +4,10 @@
 	import { onMount } from 'svelte';
 
 	let { children } = $props();
-	let theme = $state('light');
 
 	onMount(() => {
-		// Detect system preference
-		const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-		theme = prefersDark ? 'dark' : 'light';
-		document.documentElement.setAttribute('data-theme', theme);
+		// Force light theme site-wide
+		document.documentElement.setAttribute('data-theme', 'light');
 	});
 </script>
 
@@ -18,4 +15,8 @@
 	<link rel="icon" href={favicon} />
 </svelte:head>
 
-{@render children?.()}
+<main class="min-h-screen w-full antialiased font-sans text-base text-neutral-900 bg-white">
+	<div class="mx-auto max-w-2xl px-4 py-16">
+		{@render children?.()}
+	</div>
+</main>
