@@ -1,11 +1,11 @@
 import { fail } from '@sveltejs/kit';
-import { GOOGLE_PLACES_API_KEY } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 import { evaluatePlace } from '$lib/rules';
 import type { Actions } from './$types';
 
 async function fetchPlaceBySearch(query: string) {
 	// Text Search
-	const searchUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&key=${GOOGLE_PLACES_API_KEY}`;
+	const searchUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&key=${env.GOOGLE_PLACES_API_KEY}`;
 	const searchResponse = await fetch(searchUrl);
 	const searchData = await searchResponse.json();
 
@@ -36,7 +36,7 @@ async function fetchPlaceDetails(placeId: string) {
 		'url'
 	].join(',');
 
-	const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=${fields}&key=${GOOGLE_PLACES_API_KEY}`;
+	const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=${fields}&key=${env.GOOGLE_PLACES_API_KEY}`;
 	const detailsResponse = await fetch(detailsUrl);
 	const detailsData = await detailsResponse.json();
 
@@ -150,7 +150,7 @@ export const actions = {
 		}
 
 		try {
-			const autocompleteUrl = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(query)}&key=${GOOGLE_PLACES_API_KEY}`;
+			const autocompleteUrl = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(query)}&key=${env.GOOGLE_PLACES_API_KEY}`;
 			const response = await fetch(autocompleteUrl);
 			const data = await response.json();
 
