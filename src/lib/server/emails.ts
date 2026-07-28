@@ -14,6 +14,9 @@ const modules = import.meta.glob('../emails/*.md', {
 	eager: true
 }) as Record<string, string>;
 
+/** Solo los nombres numéricos forman la secuencia. tool-copy.md queda fuera. */
+const SEQUENCE_FILE = /(?:^|\/)\d+\.md$/;
+
 function parse(raw: string): { subject: string; body: string } {
 	let body = raw;
 	let subject = '';
@@ -34,6 +37,7 @@ function parse(raw: string): { subject: string; body: string } {
 }
 
 export const emails: SequenceEmail[] = Object.entries(modules)
+	.filter(([path]) => SEQUENCE_FILE.test(path))
 	.sort(([a], [b]) => a.localeCompare(b))
 	.map(([, raw], index) => {
 		const { subject, body } = parse(raw);
@@ -68,4 +72,17 @@ export function renderEmail(
 	if (!email) return null;
 	const inner = marked.parse(email.markdown) as string;
 	return { subject: email.subject, html: shell(inner, unsubscribeUrl) };
+}
+
+/**
+ * Render a one-off email (not part of the sequence) from raw markdown with
+ * frontmatter, using the same shell. Used by /tool/copy to deliver the
+ * generated frameworks.
+ */
+export function renderStandalone(
+	raw: string,
+	unsubscribeUrl: string
+): { subject: string; html: string } {
+	const { subject, body } = parse(raw);
+	return { subject, html: shell(marked.parse(body) as string, unsubscribeUrl) };
 }

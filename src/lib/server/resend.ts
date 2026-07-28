@@ -1,8 +1,9 @@
 import { Resend } from 'resend';
 import { env } from '$env/dynamic/private';
 import { env as publicEnv } from '$env/dynamic/public';
-import { renderEmail } from './emails';
+import { renderEmail, renderStandalone } from './emails';
 import { signEmail } from './tokens';
+import toolCopyTemplate from '../emails/tool-copy.md?raw';
 
 /** A subscriber as stored in the Resend audience. */
 export type Contact = {
@@ -81,4 +82,28 @@ export async function sendSequenceEmail(to: string, index: number): Promise<bool
 	});
 	if (error) throw new Error(error.message);
 	return true;
+}
+
+/**
+ * Deliver the copy tool's output. `copiesMarkdown` is the seven generated
+ * frameworks already formatted as markdown; it replaces `{{COPIES}}` in
+ * `src/lib/emails/tool-copy.md`.
+ */
+export async function sendToolCopyEmail(to: string, copiesMarkdown: string): Promise<void> {
+	const from = env.RESEND_FROM;
+	if (!from) throw new Error('RESEND_FROM no configurada');
+	const url = unsubscribeUrl(to);
+	const rendered = renderStandalone(toolCopyTemplate.replace('{{COPIES}}', copiesMarkdown), url);
+
+	const { error } = await client().emails.send({
+		from,
+		to,
+		subject: rendered.subject,
+		html: rendered.html,
+		headers: {
+			'List-Unsubscribe': `<${url}>`,
+			'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
+		}
+	});
+	if (error) throw new Error(error.message);
 }
