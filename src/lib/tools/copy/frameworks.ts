@@ -6,6 +6,10 @@
  * en `prompt.js` — el modelo se guía por esta misma lista.
  *
  * El orden importa: el primero (`pasp`) es el que se regala sin pedir email.
+ *
+ * Las definiciones salen del cheatsheet del artículo de Neal O'Grady, que va en
+ * una imagen (no en el texto): auditado contra ella. Si tocas un `hint`,
+ * comprueba antes que sigue diciendo lo que dice la fuente.
  */
 export type FrameworkStep = {
 	key: string;
@@ -30,7 +34,7 @@ export const frameworks: Framework[] = [
 		bestFor: 'El caballo de batalla. Anuncio, email corto, post.',
 		steps: [
 			{ key: 'problema', label: 'Problema', hint: 'Nombra el dolor concreto del cliente' },
-			{ key: 'agitacion', label: 'Agitación', hint: 'Hurga en él: qué le cuesta seguir así' },
+			{ key: 'agitacion', label: 'Agitación', hint: 'Hazlo más intenso y visceral: que lo sienta en el cuerpo' },
 			{ key: 'solucion', label: 'Solución', hint: 'Presenta la oferta como el remedio' },
 			{ key: 'prueba', label: 'Prueba', hint: 'Demuestra que funciona' }
 		]
@@ -41,7 +45,7 @@ export const frameworks: Framework[] = [
 		bestFor: 'Lo más simple. Bio, cabecera de una landing.',
 		steps: [
 			{ key: 'antes', label: 'Antes', hint: 'Dónde está hoy el cliente' },
-			{ key: 'despues', label: 'Después', hint: 'Dónde podría estar' },
+			{ key: 'despues', label: 'Después', hint: 'Lo bien que podría estar: píntalo bien' },
 			{ key: 'puente', label: 'Puente', hint: 'Cómo lo lleva tu oferta de uno a otro' }
 		]
 	},
@@ -61,11 +65,12 @@ export const frameworks: Framework[] = [
 	{
 		id: 'aida',
 		name: 'AIDA',
-		bestFor: 'Como PAS, pero con un cierre claro.',
+		bestFor:
+			'Como PAS pero con un cierre claro. Y a diferencia de PAS, aquí NO partes de un problema: enganchas por curiosidad o por deseo, no por dolor.',
 		steps: [
 			{ key: 'atencion', label: 'Atención', hint: 'Un titular, una pregunta o un dato que frene el scroll' },
-			{ key: 'interes', label: 'Interés', hint: 'Engánchalo con algo que le toque' },
-			{ key: 'deseo', label: 'Deseo', hint: 'Que se vea usándolo' },
+			{ key: 'interes', label: 'Interés', hint: 'Echa leña: construye el interés contando una historia' },
+			{ key: 'deseo', label: 'Deseo', hint: 'Que se vea la vida DESPUÉS de usarlo, con detalle' },
 			{ key: 'accion', label: 'Acción', hint: 'Qué hace ahora, y que sea una sola cosa' }
 		]
 	},

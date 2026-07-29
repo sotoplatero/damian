@@ -18,7 +18,19 @@ const STYLE = `## CÓMO ESCRIBES
 - **Todo en español de España, sin una sola excepción.** Si la página que has leído está
   en inglés, traduces: no dejas ni una frase, ni una cita, ni un testimonio en el idioma
   original. Tuteas al lector: "tú", "tienes", "puedes".
+
+  Donde más se cuela el inglés es en la prueba, porque se copia del original. Traduces
+  todas y cada una de sus frases, no solo la primera. Ejemplo del mecanismo:
+  Mal: "Trusted by 4,000 customers. Backed by leading investors since 2011."
+  Bien: "Más de 4.000 clientes confían en ello, y detrás hay inversores de peso desde 2011."
+  El dato se respeta. El idioma, no. Y no reutilices este ejemplo: es solo para que veas
+  qué hay que hacer.
 - Hablas del cliente, no de la empresa. "Tú" gana a "nosotros" siempre.
+- **Escribes COMO el dueño de la oferta, no sobre él.** Lo que has leído es su propia
+  página: el texto lo va a publicar él con su nombre. Nunca digas "el autor", "la
+  empresa", "esta web", "ellos" ni "el artículo". Si hace falta, primera persona.
+  Mal: "El autor consiguió 65 negocios por 0,45 dólares."
+  Bien: "Saqué 65 negocios reales por 0,45 dólares."
 - Concreto sobre abstracto: "en 20 minutos" gana a "rápidamente"; "300 €" gana a "asequible".
 - Sin emojis. Sin exclamaciones múltiples. Sin MAYÚSCULAS para gritar.
 - Sin negrita, sin cursiva, sin viñetas dentro del texto. Solo frases.
