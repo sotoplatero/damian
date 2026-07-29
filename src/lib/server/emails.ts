@@ -81,8 +81,22 @@ export function renderEmail(
  */
 export function renderStandalone(
 	raw: string,
-	unsubscribeUrl: string
+	unsubscribeUrl: string,
+	vars: Record<string, string> = {}
 ): { subject: string; html: string } {
 	const { subject, body } = parse(raw);
-	return { subject, html: shell(marked.parse(body) as string, unsubscribeUrl) };
+
+	// La sustitución va DESPUÉS de separar el frontmatter, y solo sobre el cuerpo.
+	// Si se hace antes, un `{{...}}` mencionado en un comentario del frontmatter
+	// se lleva el contenido, y como ese contenido trae separadores `---` corta el
+	// frontmatter por la mitad: el correo sale sin asunto y con el cuerpo
+	// desordenado. Pasó de verdad.
+	let filled = body;
+	for (const [key, value] of Object.entries(vars)) {
+		filled = filled.split(`{{${key}}}`).join(value);
+	}
+
+	if (!subject) throw new Error('El correo no tiene subject en su frontmatter');
+
+	return { subject, html: shell(marked.parse(filled) as string, unsubscribeUrl) };
 }

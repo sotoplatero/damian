@@ -93,7 +93,7 @@ export async function sendToolCopyEmail(to: string, copiesMarkdown: string): Pro
 	const from = env.RESEND_FROM;
 	if (!from) throw new Error('RESEND_FROM no configurada');
 	const url = unsubscribeUrl(to);
-	const rendered = renderStandalone(toolCopyTemplate.replace('{{COPIES}}', copiesMarkdown), url);
+	const rendered = renderStandalone(toolCopyTemplate, url, { COPIES: copiesMarkdown });
 
 	const { error } = await client().emails.send({
 		from,
