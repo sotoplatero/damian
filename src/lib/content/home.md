@@ -1,5 +1,7 @@
 ---
-# Textos de la interfaz (edítalos aquí)
+# OJO: estos textos del formulario YA NO SE USAN en la home. El alta la hace
+# el iframe de Substack. Solo vuelven a valer si pones el formulario propio
+# ($lib/components/SubscribeForm.svelte) y le pasas estos valores.
 placeholder: tu@email.com
 button: Mándame el primero
 sending: Enviando...
@@ -9,9 +11,9 @@ errorOffline: No se pudo conectar. Revisa tu conexión e inténtalo de nuevo.
 errorNotConfigured: El formulario aún no está configurado. Inténtalo de nuevo más tarde.
 signature: Damian Soto
 
-# Sección de las cositas (debajo del formulario)
-toolsTitle: Cositas
-toolsIntro: Cosas que me hago para facilitarme la vida y que te dejo aquí. Gratis. Esta lista va a ir creciendo.
+# Sección de herramientas (debajo del formulario)
+toolsTitle: Herramientas
+toolsIntro: Las que uso yo para trabajar. Me las hago para facilitarme la vida y las dejo aquí por si te sirven. Esta lista va a ir creciendo.
 
 # ─────────────────────────────────────────────────────────────
 # NOTAS PARA TI (esto no se publica: las líneas con # se ignoran)
@@ -21,13 +23,17 @@ toolsIntro: Cosas que me hago para facilitarme la vida y que te dejo aquí. Grat
 #    en el bote. Tres aviones hasta Porto Alegre y a Uruguay en auto.
 #    Un año hasta volver a estar con tus hijos.
 #
-# 1. CÓMO FUNCIONA EL FORMULARIO
-#    Guarda el email en tu audiencia de Resend y manda al momento el 00.md
-#    (la lista de las seis tareas). De ahí exportas los contactos y los
-#    importas en Substack a mano. Ya NO hay cron: 01, 02 y 03.md no los
-#    envía nadie, son tus borradores para los posts de Objeto Brillante.
+# 1. CÓMO FUNCIONA EL ALTA
+#    La home usa el iframe de Substack: el alta va directa allí y este repo
+#    no ve el email. Ya NO hay cron; 00-03.md no los envía nadie, son tus
+#    borradores para los posts de Objeto Brillante (00.md es el que deberías
+#    poner como correo de bienvenida en Substack).
 #
-# 2. LAS COSITAS se editan en src/lib/tools/list.ts. Añades un objeto y
+#    Sigue existiendo la otra vía, sin usar: SubscribeForm.svelte contra
+#    /api/subscribe, que guarda en Resend y manda 00.md al momento. El tool
+#    /tool/copy SÍ la usa: da de alta en Resend, no en Substack.
+#
+# 2. LAS HERRAMIENTAS se editan en src/lib/tools/list.ts. Añades un objeto y
 #    aparece sola en la home. El título y la entradilla de la sección están
 #    aquí arriba (toolsTitle / toolsIntro).
 #
@@ -57,41 +63,25 @@ toolsIntro: Cosas que me hago para facilitarme la vida y que te dejo aquí. Grat
 
 # Desde el Amazonas hasta tu buzón.
 
-**En 2022 salí de Cuba** en un avión a Surinam. Solo. Sin decírselo a mis amigos, dejando atrás a mi mujer y a mis dos hijos.
+En 2022 salí de Cuba en un avión a Surinam. Solo. Sin decírselo a mis amigos. Dejando atrás a mi mujer y a mis dos hijos.
 
-De Surinam a Brasil en un bote largo y angosto, con otros 24 cubanos dentro.
+Estuve en Amazonas en un bote junto a 24 cubanos por más de 27 horas escondido para llegar a Brasil. Tres vuelos para llegar a Porto Alegre en la frontera sur. Y finalmente entré a Uruguay.
 
-El bote le dio la vuelta a la Guayana Francesa, salió al Caribe y entró por el Amazonas. Había que llegar de noche. Nos retrasamos y amanecimos con la guardia costera brasileña ya despierta.
-
-Así que nos escondimos en un manglar. Todo el día metidos en un hueco de la costa, esperando a que oscureciera para poder bajar.
-
-Salimos a las seis de la tarde. Desembarcamos a las nueve de la noche del día siguiente.
-
-Veintisiete horas en ese bote.
-
-Después tres aviones hasta Porto Alegre, en la frontera sur de Brasil. Y de ahí a Uruguay en auto.
+Y todo comenzó. Buscar trabajo. Donde vivir. Trámites. 
 
 <img src="/los-sotos.webp" alt="Damian Soto con sus dos hijos" width="1100" height="1100" loading="lazy" decoding="async">
 
-*Estos son los míos. Tardé un año en volver a tenerlos delante.*
+Estos son los míos. Tardé un año en volver a verlos.
 
 No te cuento esto para que me tengas lástima.
 
-Te lo cuento porque cuando lo has dejado todo y empiezas de cero, todo lo demás te parece posible.
+Te lo digo porque solo quien ha dejado todo y empieza de cero sabe que nada es imposible.
 
-No escribo bonito. Pero sé hacer. Y sé aprender.
+Para eso escribo el **Objeto Brillante** donde te cuento cómo armar tu carpeta de herramientas IA que trabajan para tí. 
 
-**Objeto Brillante.** Un email a la semana.
+No escribo bonito. Escribo lo que sé.
 
-Sale una herramienta nueva de IA, LinkedIn se vuelve loco, y tú piensas «esto tengo que meterlo en mi negocio». Y ahí sigue, como las once anteriores.
-
-Yo me paso la semana metiendo IA en negocios de verdad. Casi nada sirve. Cuando algo funciona te lo cuento, y cuando no, también.
-
-Cinco minutos. Qué monté, si funcionó y qué me costó. Sin tutoriales ni vídeos de cuarenta minutos.
-
-**No te voy a vender un curso.** Ni masterclass, ni plantilla de 47 euros. Yo automatizo procesos, que es de lo que como.
-
-Si lo que quieres es aprender a montarlo tú, cierra la pestaña.
+Si lo que quieres es una master class, 10 prompts o una plantilla, cierra la pestaña y olvidame. No soy tu maestro
 
 Déjame tu email. Empiezas por las seis tareas que ahora haces a mano y que una IA ya haría sola.
 

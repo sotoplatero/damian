@@ -11,13 +11,14 @@
 </script>
 
 <svelte:head>
-	<!-- La cara como favicon: en una pestaña con veinte iconos, una cara se
-	     distingue mejor que cualquier logo. -->
-	<link rel="icon" href="/damian.jpg" />
-	<link rel="apple-touch-icon" href="/damian.jpg" />
+	<!-- Favicon: tu cara recortada de la misma foto que sale en la home
+	     (static/favicon.png, 180px). Es la misma imagen en la pestaña y en la
+	     página, y a 32px se lee porque la cara llena el cuadro. -->
+	<link rel="icon" href="/favicon.png" />
+	<link rel="apple-touch-icon" href="/favicon.png" />
 </svelte:head>
 
-<main class="min-h-screen w-full antialiased font-sans text-base text-neutral-900 bg-white">
+<main class="min-h-screen w-full bg-white font-sans text-base text-ink antialiased">
 	<div class="mx-auto max-w-2xl px-4 py-16">
 		{@render children?.()}
 	</div>

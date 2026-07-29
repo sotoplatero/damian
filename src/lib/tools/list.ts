@@ -1,5 +1,5 @@
 /**
- * Las cositas que se enseñan en la home, debajo del formulario.
+ * Las herramientas que se enseñan en la home, debajo del formulario.
  *
  * Esta lista va a crecer. Para añadir una, basta con meter un objeto aquí:
  * la home la pinta sola, en el orden en que estén. Lo primero de la lista es

@@ -146,7 +146,12 @@
 	/>
 </svelte:head>
 
-<article class="prose prose-lg prose-neutral max-w-none">
+<!-- Vuelta al home. Los demás tools lo tienen arriba; este también. -->
+<a href="/" class="link-quiet">
+	&larr; Damian Soto
+</a>
+
+<article class="prose prose-xl prose-neutral mt-6 max-w-none">
 	<!-- Markdown propio del repo (src/lib/content/tool-copy.md), igual que la home.
 	     No hay nada del visitante aquí dentro. -->
 	{@html intro}
@@ -183,7 +188,7 @@
 <!-- Paso 2: los textos -->
 {#if copies.length}
 	<section id="resultado" class="mt-10 space-y-6">
-		<div class="text-sm text-neutral-500">
+		<div class="muted">
 			{#if site}<p>{t.readLine.replace('{site}', site)}</p>{/if}
 			{#if lowConfidence}<p class="mt-1">{t.lowConfidence}</p>{/if}
 		</div>
@@ -194,13 +199,13 @@
 			<!-- El muro va justo después de lo que ya ha leído. Si lo dejamos al final,
 			     queda detrás de seis tarjetas vacías y nadie baja tanto. -->
 			{#if index === gateAfter}
-				<section class="rounded-lg bg-neutral-100 p-6">
+				<section class="box bg-line/40">
 					{#if sent}
-						<h3 class="text-xl font-bold">{t.sentTitle}</h3>
-						<p class="mt-1 text-neutral-600">{t.sentBody}</p>
+						<h3 class="section-title">{t.sentTitle}</h3>
+						<p class="section-intro">{t.sentBody}</p>
 					{:else}
-						<h3 class="text-xl font-bold">{t.gateTitle}</h3>
-						<p class="mt-1 text-neutral-600">{t.gateBody}</p>
+						<h3 class="section-title">{t.gateTitle}</h3>
+						<p class="section-intro">{t.gateBody}</p>
 						<form onsubmit={unlock} class="mt-4 space-y-3">
 							<input
 								type="email"
@@ -224,16 +229,16 @@
 			{/if}
 
 			{#if copy}
-				<article class="rounded-lg border border-neutral-200 p-5">
+				<article class="box">
 					<header class="mb-4 flex items-start justify-between gap-3">
 						<div>
-							<h3 class="text-lg font-bold">
+							<h3 class="box-title">
 								{framework.name}
 								{#if framework.id === freeFramework.id}
 									<span class="badge badge-sm badge-neutral align-middle">{t.freeBadge}</span>
 								{/if}
 							</h3>
-							<p class="text-sm text-neutral-500">{framework.bestFor}</p>
+							<p class="muted">{framework.bestFor}</p>
 						</div>
 						<button
 							type="button"
@@ -248,10 +253,10 @@
 						{#each framework.steps as step (step.key)}
 							{#if copy.blocks[step.key]}
 								<div>
-									<p class="text-xs font-semibold uppercase tracking-wide text-neutral-400">
+									<p class="eyebrow">
 										{step.label}
 									</p>
-									<p class="whitespace-pre-wrap">{copy.blocks[step.key]}</p>
+									<p class="body-text whitespace-pre-wrap">{copy.blocks[step.key]}</p>
 								</div>
 							{/if}
 						{/each}
@@ -261,18 +266,18 @@
 				<!-- Bloqueado: se ve la estructura, nunca el texto. Los seis restantes
 				     no se generan hasta que entra el email, así que aquí no hay nada
 				     que descubrir mirando el HTML. -->
-				<article class="rounded-lg border border-dashed border-neutral-200 p-5" aria-hidden="true">
-					<h3 class="text-lg font-bold text-neutral-400">{framework.name}</h3>
-					<p class="mb-4 text-sm text-neutral-400">{framework.bestFor}</p>
+				<article class="box-locked" aria-hidden="true">
+					<h3 class="box-title text-muted">{framework.name}</h3>
+					<p class="muted mb-4">{framework.bestFor}</p>
 					<div class="space-y-3">
 						{#each framework.steps as step (step.key)}
 							<div>
-								<p class="text-xs font-semibold uppercase tracking-wide text-neutral-300">
+								<p class="eyebrow opacity-60">
 									{step.label}
 								</p>
 								<div class="mt-1 space-y-1.5">
-									<div class="h-2.5 w-full rounded bg-neutral-100"></div>
-									<div class="h-2.5 w-4/5 rounded bg-neutral-100"></div>
+									<div class="h-2.5 w-full rounded bg-line/60"></div>
+									<div class="h-2.5 w-4/5 rounded bg-line/60"></div>
 								</div>
 							</div>
 						{/each}
@@ -281,13 +286,13 @@
 			{/if}
 		{/each}
 
-		<button type="button" onclick={restart} class="link text-sm text-neutral-500">
+		<button type="button" onclick={restart} class="link-quiet">
 			{t.restart}
 		</button>
 	</section>
 {/if}
 
-<footer class="mt-16 border-t border-neutral-200 pt-6 text-sm text-neutral-500">
+<footer class="section muted border-t border-line pt-6">
 	<p>
 		Los frameworks están tomados de
 		<a

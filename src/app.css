@@ -2,22 +2,98 @@
 @plugin '@tailwindcss/typography';
 @plugin 'daisyui';
 
+/*
+ * Tema del sitio.
+ *
+ * La paleta entera son un negro, dos grises y una línea. Si hay que cambiar un
+ * tono se cambia aquí, no en cuarenta sitios. Tailwind genera solo las
+ * utilidades: text-ink, text-soft, text-muted, border-line...
+ */
 @theme {
-  --font-mono: "JetBrains Mono", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+	--font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 
+	--color-ink: #171717; /* texto principal */
+	--color-soft: #525252; /* texto secundario */
+	--color-muted: #737373; /* notas, pies, cosas que no piden atención */
+	--color-line: #e5e5e5; /* bordes y separadores */
+}
+
+/*
+ * Vocabulario del sitio. Con estas clases se pinta todo: la home y los tools
+ * usan las mismas. Antes de añadir una nueva, comprobar si alguna ya sirve.
+ *
+ * SOLO HAY DOS TAMAÑOS DE LETRA:
+ *   cuerpo  1.25rem  (el de la carta, prose-xl) -> .body-text y todo lo legible
+ *   nota     0.875rem                           -> .muted, pies y avisos
+ * La jerarquía la hace el color (ink > soft > muted), no el tamaño. Si te ves
+ * escribiendo text-base o text-lg en el markup, es que falta una clase aquí.
+ */
+@layer components {
+	/* Separación entre bloques grandes. Una sola medida en todo el sitio. */
+	.section {
+		@apply mt-20;
+	}
+	.section-title {
+		@apply text-3xl font-bold;
+	}
+	.section-intro {
+		@apply mt-2 text-xl leading-relaxed text-soft;
+	}
+
+	/* Cuerpo de texto fuera de .prose: mismo tamaño que la carta. */
+	.body-text {
+		@apply text-xl leading-relaxed;
+	}
+
+	/* Texto que no pide atención: pies, notas, avisos. */
+	.muted {
+		@apply text-sm text-muted;
+	}
+
+	/* Enlace discreto: volver al home, empezar de nuevo, probar otra web. */
+	.link-quiet {
+		@apply text-sm text-muted underline underline-offset-4 transition-colors hover:text-ink;
+	}
+
+	/* Caja con borde: la unidad visual del sitio. Una herramienta, un texto
+	   generado, un bloque de contenido. */
+	.box {
+		@apply rounded-lg border border-line p-5;
+	}
+	/* Lo que está ahí pero todavía no se puede leer. */
+	.box-locked {
+		@apply rounded-lg border border-dashed border-line p-5;
+	}
+	/* Caja que además es enlace: el borde se marca al pasar por encima. */
+	.box-link {
+		@apply block rounded-lg border border-line p-5 transition-colors hover:border-ink;
+	}
+
+	/* Título y cuerpo dentro de una caja. */
+	.box-title {
+		@apply text-xl font-bold;
+	}
+	.box-text {
+		@apply mt-2 text-xl leading-relaxed text-soft;
+	}
+
+	/* Etiqueta pequeña en versales encima de un bloque de texto. */
+	.eyebrow {
+		@apply text-xs font-semibold tracking-wide text-muted uppercase;
+	}
 }
 
 /* La foto familiar dentro de la carta: esquinas suaves y aire alrededor,
-   para que no corte la lectura de golpe. El pie va justo debajo, pegado. */
+   con el pie pegado debajo. */
 .prose img {
-  border-radius: 0.5rem;
-  margin-block: 2rem 0.75rem;
+	border-radius: 0.5rem;
+	margin-block: 2rem 0.75rem;
 }
 
 .prose img + p em,
 .prose p:has(img) + p em {
-  display: block;
-  font-size: 0.875rem;
-  font-style: normal;
-  color: #737373;
+	display: block;
+	font-size: 0.875rem;
+	font-style: normal;
+	color: var(--color-muted);
 }
