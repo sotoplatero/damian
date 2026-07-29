@@ -36,13 +36,13 @@ The home route (`/`) is a single-column sales page (Spanish, Alex Hormozi / Isra
 
 ### Tools
 
-Every tool under `src/routes/tool/*` is reachable by URL, but only the ones listed in `src/lib/tools/list.ts` are shown on the home page. Add an entry there to surface one; today that's just `copy`. The rest (`uuid-generator`, `character-counter`, `places-evaluator`, `lyra`) stay unlisted on purpose.
+Every tool under `src/routes/tool/*` is reachable by URL, but only the ones listed in `src/lib/tools/list.ts` are shown on the home page. Add an entry there to surface one; today that's just `7-frameworks`. The rest (`uuid-generator`, `character-counter`, `places-evaluator`, `lyra`) stay unlisted on purpose.
 
-`/tool/copy` takes a URL, scrapes the page (`src/lib/server/scrape.ts`, which has SSRF guards — read the comments before touching it), and writes the offer using the seven copywriting frameworks in `src/lib/tools/copy/frameworks.ts`. The first one is free on screen; the other six are emailed in exchange for the address. Its model is pinned in `src/routes/tool/copy/+server.ts` — see the comment there before changing it.
+`/tool/7-frameworks` takes a URL, scrapes the page (`src/lib/server/scrape.ts`, which has SSRF guards — read the comments before touching it), and writes the offer using the seven copywriting frameworks in `src/lib/tools/7-frameworks/frameworks.ts`. The first one is free on screen; the other six are emailed in exchange for the address. Its model is pinned in `src/routes/tool/7-frameworks/+server.ts` — see the comment there before changing it.
 
 ### Email
 
-`/api/subscribe` stores the address in a Resend audience and sends `src/lib/emails/00.md` right away. **There is no cron**: `01-03.md` are drafts for the Substack posts, not scheduled sends. Damian exports the Resend contacts and imports them into Substack by hand. Only strictly numbered `NN.md` files join the sequence — `tool-copy.md` is a one-off sent by the copy tool.
+`/api/subscribe` stores the address in a Resend audience and sends `src/lib/emails/00.md` right away. **There is no cron**: `01-03.md` are drafts for the Substack posts, not scheduled sends. Damian exports the Resend contacts and imports them into Substack by hand. Only strictly numbered `NN.md` files join the sequence — `tool-7-frameworks.md` is a one-off sent by the frameworks tool.
 
 ### Internationalization Setup
 

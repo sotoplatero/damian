@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { marked } from 'marked';
 	import { tick } from 'svelte';
-	import raw from '$lib/content/tool-copy.md?raw';
-	import { frameworks, freeFramework } from '$lib/tools/copy/frameworks';
-	import { toPlainText, type GeneratedCopy } from '$lib/tools/copy/format';
+	import raw from '$lib/content/tool-7-frameworks.md?raw';
+	import { frameworks, freeFramework } from '$lib/tools/7-frameworks/frameworks';
+	import { toPlainText, type GeneratedCopy } from '$lib/tools/7-frameworks/format';
 
 	/** Mismo formato que home.md: frontmatter con los textos, cuerpo con el argumentario. */
 	function parseCopy(source: string): { t: Record<string, string>; body: string } {
@@ -65,7 +65,7 @@
 	}
 
 	async function post(payload: Record<string, unknown>) {
-		const response = await fetch('/tool/copy', {
+		const response = await fetch('/tool/7-frameworks', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify(payload)
@@ -146,43 +146,79 @@
 	/>
 </svelte:head>
 
-<!-- Vuelta al home. Los demás tools lo tienen arriba; este también. -->
-<a href="/" class="link-quiet">
-	&larr; Damian Soto
-</a>
+<!--
+	Se reutilizan con snippets en vez de repetir el markup: en el estado inicial
+	el crédito va debajo del formulario, y con resultados va al final.
+-->
+{#snippet backHome()}
+	<a href="/" class="link-quiet">&larr; Damian Soto</a>
+{/snippet}
 
-<article class="prose prose-xl prose-neutral mt-6 max-w-none">
-	<!-- Markdown propio del repo (src/lib/content/tool-copy.md), igual que la home.
-	     No hay nada del visitante aquí dentro. -->
-	{@html intro}
-</article>
+{#snippet credit()}
+	<p class="muted">
+		Los frameworks están tomados de
+		<a
+			href="https://www.nealsnewsletter.com/p/7-copywriting-frameworks-that-sell"
+			target="_blank"
+			rel="noopener noreferrer"
+			class="link">7 Copywriting Frameworks that Sell</a
+		>, de Neal O'Grady.
+	</p>
+{/snippet}
 
-{#if error}
-	<p class="mt-6 text-sm text-error">{error}</p>
-{/if}
+{#snippet intro_()}
+	<article class="prose prose-xl prose-neutral max-w-none">
+		<!-- Markdown propio del repo (src/lib/content/tool-7-frameworks.md), igual
+		     que la home. No hay nada del visitante aquí dentro. -->
+		{@html intro}
+	</article>
+{/snippet}
 
-<!-- Paso 1: la URL. Única entrada: sin web no hay nada que reescribir. -->
 {#if !copies.length}
-	<section class="mt-8">
-		<form onsubmit={analyze} class="space-y-3">
-			<input
-				type="text"
-				bind:value={url}
-				disabled={busy === 'analyzing'}
-				placeholder={t.urlPlaceholder}
-				inputmode="url"
-				autocomplete="url"
-				class="input input-bordered input-lg w-full"
-			/>
-			<button
-				type="submit"
-				disabled={busy === 'analyzing' || !url.trim()}
-				class="btn btn-primary btn-lg btn-block"
-			>
-				{busy === 'analyzing' ? t.urlScanning : t.urlButton}
-			</button>
-		</form>
-	</section>
+	<!-- Estado inicial: cabe entero en una pantalla, así que no debe haber scroll.
+	     El alto descuenta el py-16 del layout para que sume 100dvh justos. -->
+	<div class="flex min-h-[calc(100dvh-8rem)] flex-col">
+		{@render backHome()}
+
+		<div class="flex flex-1 flex-col justify-center">
+			{@render intro_()}
+
+			{#if error}
+				<p class="mt-6 text-sm text-error">{error}</p>
+			{/if}
+
+			<!-- Input y botón en la misma línea, igual que el del muro. El input se
+			     encoge (min-w-0) y el botón no, para que quepan juntos en móvil. -->
+			<form onsubmit={analyze} class="mt-8 flex gap-2">
+				<input
+					type="text"
+					bind:value={url}
+					disabled={busy === 'analyzing'}
+					placeholder={t.urlPlaceholder}
+					inputmode="url"
+					autocomplete="url"
+					class="input input-bordered input-lg min-w-0 flex-1"
+				/>
+				<button
+					type="submit"
+					disabled={busy === 'analyzing' || !url.trim()}
+					class="btn btn-primary btn-lg shrink-0"
+				>
+					{busy === 'analyzing' ? t.urlScanning : t.urlButton}
+				</button>
+			</form>
+
+			<!-- El crédito, justo debajo del formulario. -->
+			<div class="mt-6">{@render credit()}</div>
+		</div>
+	</div>
+{:else}
+	{@render backHome()}
+	<div class="mt-6">{@render intro_()}</div>
+
+	{#if error}
+		<p class="mt-6 text-sm text-error">{error}</p>
+	{/if}
 {/if}
 
 <!-- Paso 2: los textos -->
@@ -294,15 +330,8 @@
 	</section>
 {/if}
 
-<footer class="section muted border-t border-line pt-6">
-	<p>
-		Los frameworks están tomados de
-		<a
-			href="https://www.nealsnewsletter.com/p/7-copywriting-frameworks-that-sell"
-			target="_blank"
-			rel="noopener noreferrer"
-			class="link">7 Copywriting Frameworks that Sell</a
-		>, de Neal O'Grady.
-	</p>
-	<p class="mt-2"><a href="/" class="link">Damian Soto</a></p>
-</footer>
+{#if copies.length}
+	<footer class="section border-t border-line pt-6">
+		{@render credit()}
+	</footer>
+{/if}

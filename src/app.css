@@ -93,6 +93,12 @@
 		@apply mt-2 line-clamp-2 text-xl leading-relaxed text-soft;
 	}
 
+	/* Estado inicial de una herramienta: el contenido cabe de sobra, así que se
+	   centra en la pantalla. Se descuenta el py-16 del layout. */
+	.screen-center {
+		@apply flex min-h-[calc(100dvh-8rem)] flex-col justify-center;
+	}
+
 	/* Etiqueta pequeña en versales encima de un bloque de texto. */
 	.eyebrow {
 		@apply text-xs font-semibold tracking-wide text-muted uppercase;

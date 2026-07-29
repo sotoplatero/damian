@@ -14,7 +14,7 @@ const modules = import.meta.glob('../emails/*.md', {
 	eager: true
 }) as Record<string, string>;
 
-/** Solo los nombres numéricos forman la secuencia. tool-copy.md queda fuera. */
+/** Solo los nombres numéricos forman la secuencia. tool-7-frameworks.md queda fuera. */
 const SEQUENCE_FILE = /(?:^|\/)\d+\.md$/;
 
 function parse(raw: string): { subject: string; body: string } {
@@ -76,7 +76,7 @@ export function renderEmail(
 
 /**
  * Render a one-off email (not part of the sequence) from raw markdown with
- * frontmatter, using the same shell. Used by /tool/copy to deliver the
+ * frontmatter, using the same shell. Used by /tool/7-frameworks to deliver the
  * generated frameworks.
  */
 export function renderStandalone(

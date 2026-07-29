@@ -22,7 +22,7 @@ export type Tool = {
 export const tools: Tool[] = [
 	{
 		name: 'Tu oferta, escrita de 7 formas',
-		href: '/tool/copy',
+		href: '/tool/7-frameworks',
 		blurb: 'Pegas tu web y te devuelvo tu oferta escrita de siete formas distintas.',
 		capturesEmail: true
 	}

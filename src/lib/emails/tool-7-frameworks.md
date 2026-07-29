@@ -1,5 +1,5 @@
 ---
-# Correo de entrega del tool /tool/copy. NO forma parte de la secuencia diaria:
+# Correo de entrega del tool /tool/7-frameworks. NO forma parte de la secuencia diaria:
 # el nombre del fichero no es numérico, así que emails.ts lo deja fuera.
 # El marcador COPIES del cuerpo se sustituye por los 7 textos generados.
 # No escribas ese marcador entre llaves aquí arriba: solo se sustituye en el

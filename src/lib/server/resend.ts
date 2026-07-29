@@ -3,7 +3,7 @@ import { env } from '$env/dynamic/private';
 import { env as publicEnv } from '$env/dynamic/public';
 import { renderEmail, renderStandalone } from './emails';
 import { signEmail } from './tokens';
-import toolCopyTemplate from '../emails/tool-copy.md?raw';
+import toolCopyTemplate from '../emails/tool-7-frameworks.md?raw';
 
 /** A subscriber as stored in the Resend audience. */
 export type Contact = {
@@ -87,7 +87,7 @@ export async function sendSequenceEmail(to: string, index: number): Promise<bool
 /**
  * Deliver the copy tool's output. `copiesMarkdown` is the seven generated
  * frameworks already formatted as markdown; it replaces `{{COPIES}}` in
- * `src/lib/emails/tool-copy.md`.
+ * `src/lib/emails/tool-7-frameworks.md`.
  */
 export async function sendToolCopyEmail(to: string, copiesMarkdown: string): Promise<void> {
 	const from = env.RESEND_FROM;

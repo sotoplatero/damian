@@ -4,9 +4,9 @@ import type { RequestHandler } from './$types';
 import { scrape, UnreadableError } from '$lib/server/scrape';
 import { subscribe, sendToolCopyEmail } from '$lib/server/resend';
 import { isDisposable } from '$lib/server/email-validation';
-import { analyzePrompt, copyPrompt, offerMessage, type Offer } from '$lib/tools/copy/prompt';
-import { sanitizeCopies, toMarkdown, type GeneratedCopy } from '$lib/tools/copy/format';
-import { gatedFrameworks } from '$lib/tools/copy/frameworks';
+import { analyzePrompt, copyPrompt, offerMessage, type Offer } from '$lib/tools/7-frameworks/prompt';
+import { sanitizeCopies, toMarkdown, type GeneratedCopy } from '$lib/tools/7-frameworks/format';
+import { gatedFrameworks } from '$lib/tools/7-frameworks/frameworks';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -70,7 +70,7 @@ async function askJson(
 
 	if (!response.ok) {
 		const detail = await response.text();
-		console.error('[tool/copy] OpenAI error:', response.status, detail);
+		console.error('[tool/7-frameworks] OpenAI error:', response.status, detail);
 		throw new Error('openai_failed');
 	}
 
@@ -169,7 +169,7 @@ ${page.text}`,
 			try {
 				await subscribe(email);
 			} catch (error) {
-				console.error('[tool/copy] subscribe failed:', error);
+				console.error('[tool/7-frameworks] subscribe failed:', error);
 				return json({ error: 'server_error' }, { status: 500 });
 			}
 
@@ -183,7 +183,7 @@ ${page.text}`,
 			try {
 				await sendToolCopyEmail(email, toMarkdown([...free, ...copies]));
 			} catch (error) {
-				console.error('[tool/copy] delivery email failed:', error);
+				console.error('[tool/7-frameworks] delivery email failed:', error);
 				return json({ error: 'send_failed' }, { status: 502 });
 			}
 
@@ -192,7 +192,7 @@ ${page.text}`,
 
 		return json({ error: 'bad_request' }, { status: 400 });
 	} catch (error) {
-		console.error('[tool/copy] failed:', error);
+		console.error('[tool/7-frameworks] failed:', error);
 		return json({ error: 'server_error' }, { status: 500 });
 	}
 };

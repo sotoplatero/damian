@@ -31,7 +31,7 @@ toolsIntro: Las que uso yo para trabajar. Me las hago para facilitarme la vida y
 #
 #    Sigue existiendo la otra vía, sin usar: SubscribeForm.svelte contra
 #    /api/subscribe, que guarda en Resend y manda 00.md al momento. El tool
-#    /tool/copy SÍ la usa: da de alta en Resend, no en Substack.
+#    /tool/7-frameworks SÍ la usa: da de alta en Resend, no en Substack.
 #
 # 2. LAS HERRAMIENTAS se editan en src/lib/tools/list.ts. Añades un objeto y
 #    aparece sola en la home. El título y la entradilla de la sección están
@@ -83,7 +83,7 @@ No escribo bonito. Escribo lo que sé.
 
 Si lo que quieres es una master class, 10 prompts o una plantilla, cierra la pestaña y olvidame. No soy tu maestro
 
-Déjame tu email. Empiezas por las seis tareas que ahora haces a mano y que una IA ya haría sola.
+Pero si quieres la historia completa, déjame tu email. 
 
 Si te canso, un clic y desaparezco.
 

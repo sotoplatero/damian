@@ -1,5 +1,5 @@
 ---
-# Textos de /tool/copy. Edítalos aquí; no hay copy escrito en el .svelte.
+# Textos de /tool/7-frameworks. Edítalos aquí; no hay copy escrito en el .svelte.
 
 # --- Paso 1: la URL ---
 urlPlaceholder: tuweb.com
@@ -36,10 +36,8 @@ errorGeneric: Algo ha fallado por mi parte. Inténtalo otra vez.
 errorOffline: No se pudo conectar. Revisa tu conexión.
 ---
 
-# Tu oferta, escrita de 7 formas distintas.
+# Tu oferta, escrita de 7 formas.
 
-**Pega la dirección de tu web.** La leo, entiendo qué vendes y a quién, y te devuelvo ese mismo mensaje montado sobre los siete frameworks de copywriting que más se usan para vender.
+**Pega tu web.** Te la leo y te la devuelvo montada sobre los siete frameworks de copywriting que más venden.
 
-Vale cualquier página donde vendas algo: tu home, una página de producto, un artículo, un post.
-
-El mismo producto. Siete ángulos. Uno de ellos va a funcionarte mejor que lo que tienes hoy.
+Siete ángulos del mismo producto. Uno funciona mejor que el que tienes hoy.
