@@ -2,6 +2,7 @@
 	import { marked } from 'marked';
 	import { onMount } from 'svelte';
 	import homeRaw from '$lib/content/home.md?raw';
+	import { tools } from '$lib/tools/list';
 
 	/** Split home.md into UI strings (frontmatter) + the sales letter body. */
 	function parseCopy(raw: string): { t: Record<string, string>; body: string } {
@@ -97,10 +98,10 @@
 </script>
 
 <svelte:head>
-	<title>Damian Soto — Automatizo tu negocio con IA</title>
+	<title>Objeto Brillante — Damian Soto</title>
 	<meta
 		name="description"
-		content="Déjame tu email: te mando la lista de tareas que un negocio como el tuyo ya podría automatizar con IA (y las que son puro humo), y un email al día para quitarte horas de encima."
+		content="Un email a la semana con algo que he hecho con IA en un negocio real y que funciona. Sin cursos, sin tutoriales. Yo te cuento lo que hago."
 	/>
 </svelte:head>
 
@@ -144,6 +145,33 @@
 			{/if}
 		</form>
 	{/if}
+</section>
+
+<!--
+	Las cositas. Segunda puerta del funnel: también captan emails, así que la
+	sección tiene peso propio en vez de ir como nota al pie. Los tools se editan
+	en src/lib/tools/list.ts; los textos de la sección, en home.md.
+-->
+<section class="mt-20 border-t border-neutral-200 pt-10">
+	<h2 class="text-2xl font-bold">{t.toolsTitle}</h2>
+	<p class="mt-2 text-neutral-600">{t.toolsIntro}</p>
+
+	<ul class="mt-6 space-y-3">
+		{#each tools as tool (tool.href)}
+			<li>
+				<a
+					href={tool.href}
+					class="group block rounded-lg border border-neutral-200 p-5 transition hover:border-neutral-900"
+				>
+					<span class="font-bold underline decoration-neutral-300 underline-offset-4 group-hover:decoration-neutral-900">
+						{tool.name}
+					</span>
+					<span aria-hidden="true" class="text-neutral-400">&nbsp;→</span>
+					<p class="mt-2 text-sm leading-relaxed text-neutral-600">{tool.blurb}</p>
+				</a>
+			</li>
+		{/each}
+	</ul>
 </section>
 
 <style>

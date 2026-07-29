@@ -1,6 +1,5 @@
 <script lang="ts">
 	import '../app.css';
-	import favicon from '$lib/assets/favicon.svg';
 	import { onMount } from 'svelte';
 
 	let { children } = $props();
@@ -12,7 +11,10 @@
 </script>
 
 <svelte:head>
-	<link rel="icon" href={favicon} />
+	<!-- La cara como favicon: en una pestaña con veinte iconos, una cara se
+	     distingue mejor que cualquier logo. -->
+	<link rel="icon" href="/damian.jpg" />
+	<link rel="apple-touch-icon" href="/damian.jpg" />
 </svelte:head>
 
 <main class="min-h-screen w-full antialiased font-sans text-base text-neutral-900 bg-white">

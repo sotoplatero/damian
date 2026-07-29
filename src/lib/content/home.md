@@ -1,59 +1,100 @@
 ---
 # Textos de la interfaz (edítalos aquí)
 placeholder: tu@email.com
-button: Cuéntame más
+button: Mándame el primero
 sending: Enviando...
 success: Míralo en tu correo. Ya está ahí.
 error: Algo falló al enviar. Inténtalo de nuevo en un momento.
 errorOffline: No se pudo conectar. Revisa tu conexión e inténtalo de nuevo.
 errorNotConfigured: El formulario aún no está configurado. Inténtalo de nuevo más tarde.
 signature: Damian Soto
+
+# Sección de las cositas (debajo del formulario)
+toolsTitle: Cositas
+toolsIntro: Cosas que me hago para facilitarme la vida y que te dejo aquí. Gratis. Esta lista va a ir creciendo.
+
+# ─────────────────────────────────────────────────────────────
+# NOTAS PARA TI (esto no se publica: las líneas con # se ignoran)
+#
+# 0. DATOS CONFIRMADOS POR TI (no los cambies sin querer):
+#    Salida 6pm de Surinam, desembarco 9pm del día siguiente = 27 horas
+#    en el bote. Tres aviones hasta Porto Alegre y a Uruguay en auto.
+#    Un año hasta volver a estar con tus hijos.
+#
+# 1. CÓMO FUNCIONA EL FORMULARIO
+#    Guarda el email en tu audiencia de Resend y manda al momento el 00.md
+#    (la lista de las seis tareas). De ahí exportas los contactos y los
+#    importas en Substack a mano. Ya NO hay cron: 01, 02 y 03.md no los
+#    envía nadie, son tus borradores para los posts de Objeto Brillante.
+#
+# 2. LAS COSITAS se editan en src/lib/tools/list.ts. Añades un objeto y
+#    aparece sola en la home. El título y la entradilla de la sección están
+#    aquí arriba (toolsTitle / toolsIntro).
+#
+# 3. FALTAN PRUEBAS. Ni un cliente, ni una cifra. Una línea real —"esto se lo
+#    monté a un taller de Montevideo"— vale más que medio texto de abajo.
+#    Va justo antes de "Déjame tu email".
+#
+# 4. LA FOTO ya está optimizada: 1100x1100 WebP, 108 KB (antes 801 KB).
+#    El original sin tocar está en src/lib/assets/los-sotos-original.jpg.
+#
+# 5. POR QUÉ ESTÁ ESCRITO ASÍ
+#    La historia va primero porque es lo único que nadie más puede contar.
+#
+#    ES "SIN DECÍRSELO A MIS AMIGOS", NUNCA "A NADIE".
+#    "A nadie" mete a tu mujer en el mismo saco y la salida se lee como un
+#    abandono. Ella lo sabía. No lo toques.
+#
+#    "No te cuento esto para que me tengas lástima" es la línea que salva
+#    la historia de sonar a queja. Si la quitas, recorta la historia.
+#
+# 6. TITULARES ALTERNATIVOS:
+#    - Del Amazonas a tu buzón.
+#    - Veintisiete horas en un bote para acabar escribiéndote un email
+#      a la semana.
+# ─────────────────────────────────────────────────────────────
 ---
 
-# 28 horas escondido en un bote por el Amazonas para acabar automatizando tu negocio.
+# Desde el Amazonas hasta tu buzón.
 
-**En 2022 salí de Cuba** en un avión a Surinam. Sin decirle a mis amigos. Solo. Dejando a mi esposa y a mis dos hijos.
+**En 2022 salí de Cuba** en un avión a Surinam. Solo. Sin decírselo a mis amigos, dejando atrás a mi mujer y a mis dos hijos.
 
-Crucé el Amazonas en un bote con otros 24 cubanos, rumbo a Brasil. Escondidos. 28 horas con el fondo del bote lleno de agua de mar y orina, el sol reventándonos por encima.
+De Surinam a Brasil en un bote largo y angosto, con otros 24 cubanos dentro.
 
-Tres aviones más para cruzar Brasil y un poco de aventura llegé a Uruguay.
+El bote le dio la vuelta a la Guayana Francesa, salió al Caribe y entró por el Amazonas. Había que llegar de noche. Nos retrasamos y amanecimos con la guardia costera brasileña ya despierta.
 
-Esta historia no te afecta ni te importa. Lo sé.
+Así que nos escondimos en un manglar. Todo el día metidos en un hueco de la costa, esperando a que oscureciera para poder bajar.
 
-**Pero a mí me dio la fuerza para darlo todo.**
+Salimos a las seis de la tarde. Desembarcamos a las nueve de la noche del día siguiente.
 
-La fuerza para contártela.
+Veintisiete horas en ese bote.
 
-Y la fuerza para decirte que estás perdiendo el tiempo.
+Después tres aviones hasta Porto Alegre, en la frontera sur de Brasil. Y de ahí a Uruguay en auto.
 
-¿Cuántas veces has visto lo que se puede hacer con la IA y has pensado: «esto tengo que meterlo en mi negocio»?
+<img src="/los-sotos.webp" alt="Damian Soto con sus dos hijos" width="1100" height="1100" loading="lazy" decoding="async">
 
-Y ahí sigues. Sin hacer nada.
+*Estos son los míos. Tardé un año en volver a tenerlos delante.*
 
-No porque seas torpe. Es que tú tienes un negocio que llevar.
+No te cuento esto para que me tengas lástima.
 
-**Si sabes más que yo, o quieres seguir de tutorial en tutorial, cierra esta pestaña.**
+Te lo cuento porque cuando lo has dejado todo y empiezas de cero, todo lo demás te parece posible.
 
-Yo automatizo procesos. Hago que las cosas funcionen.
+No escribo bonito. Pero sé hacer. Y sé aprender.
 
-Eso es lo que voy a hacer con el tuyo: mirarlo, encontrar lo que te roba horas y quitártelo de encima.
+**Objeto Brillante.** Un email a la semana.
 
-Sin cursos. Sin manuales. Sin que toques una tecla.
+Sale una herramienta nueva de IA, LinkedIn se vuelve loco, y tú piensas «esto tengo que meterlo en mi negocio». Y ahí sigue, como las once anteriores.
 
-Te diré qué se puede automatizar en un negocio como el tuyo. Y qué no.
+Yo me paso la semana metiendo IA en negocios de verdad. Casi nada sirve. Cuando algo funciona te lo cuento, y cuando no, también.
 
-Y si no hay nada que valga la pena, también te lo diré.
+Cinco minutos. Qué monté, si funcionó y qué me costó. Sin tutoriales ni vídeos de cuarenta minutos.
 
-**Hoy no te pido que me compres nada.**
+**No te voy a vender un curso.** Ni masterclass, ni plantilla de 47 euros. Yo automatizo procesos, que es de lo que como.
 
-Solo tu email.
+Si lo que quieres es aprender a montarlo tú, cierra la pestaña.
 
-A cambio te mando una lista de las tareas que ahora haces a mano y que una IA ya podría estar haciendo por ti. Y las que no valen la pena ni tocar. Se lee en cinco minutos.
+Déjame tu email. Empiezas por las seis tareas que ahora haces a mano y que una IA ya haría sola.
 
-Y a partir de ahí, un email al día. Ideas para quitarle horas de encima a tu negocio.
-
-Si te aporta, te quedas. Si te canso, te borras en un clic y no vuelves a saber de mí.
-
-Tú decides.
+Si te canso, un clic y desaparezco.
 
 **Damian**

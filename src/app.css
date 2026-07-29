@@ -6,3 +6,18 @@
   --font-mono: "JetBrains Mono", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 
 }
+
+/* La foto familiar dentro de la carta: esquinas suaves y aire alrededor,
+   para que no corte la lectura de golpe. El pie va justo debajo, pegado. */
+.prose img {
+  border-radius: 0.5rem;
+  margin-block: 2rem 0.75rem;
+}
+
+.prose img + p em,
+.prose p:has(img) + p em {
+  display: block;
+  font-size: 0.875rem;
+  font-style: normal;
+  color: #737373;
+}
