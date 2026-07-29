@@ -16,6 +16,20 @@
 	--color-soft: #525252; /* texto secundario */
 	--color-muted: #737373; /* notas, pies, cosas que no piden atención */
 	--color-line: #e5e5e5; /* bordes y separadores */
+
+	/* Azul de Substack. El alta se hace en su formulario embebido, así que el
+	   sitio usa su mismo acento para que no parezcan dos productos. */
+	--color-brand: #0076ff;
+}
+
+/*
+ * El sitio va forzado al tema light de DaisyUI (ver +layout.svelte). Su color
+ * primary se sobrescribe aquí con el azul de la marca: así los botones y
+ * enlaces lo cogen solos, sin repetir la clase en cada uno.
+ */
+[data-theme='light'] {
+	--color-primary: #0076ff;
+	--color-primary-content: #ffffff;
 }
 
 /*
@@ -73,8 +87,10 @@
 	.box-title {
 		@apply text-xl font-bold;
 	}
+	/* Subtítulo de una tarjeta. Cortado a dos líneas: si el texto se va, la
+	   tarjeta crece y el listado deja de leerse de un vistazo. */
 	.box-text {
-		@apply mt-2 text-xl leading-relaxed text-soft;
+		@apply mt-2 line-clamp-2 text-xl leading-relaxed text-soft;
 	}
 
 	/* Etiqueta pequeña en versales encima de un bloque de texto. */

@@ -13,7 +13,7 @@ export type Tool = {
 	/** Lo que se lee en el enlace. Que diga qué hace, no cómo se llama por dentro. */
 	name: string;
 	href: string;
-	/** Una o dos frases. Qué se lleva quien entre. */
+	/** Una frase corta: se corta a dos líneas en pantalla. Qué se lleva quien entre. */
 	blurb: string;
 	/** Marca las que piden email, para que sepas de un vistazo cuáles captan. */
 	capturesEmail?: boolean;
@@ -23,8 +23,7 @@ export const tools: Tool[] = [
 	{
 		name: 'Tu oferta, escrita de 7 formas',
 		href: '/tool/copy',
-		blurb:
-			'Pegas la web de tu negocio. Te la leo y te devuelvo tu oferta montada sobre los siete frameworks de copywriting que más se usan para vender. El primero, gratis y sin pedirte nada.',
+		blurb: 'Pegas tu web y te devuelvo tu oferta escrita de siete formas distintas.',
 		capturesEmail: true
 	}
 ];

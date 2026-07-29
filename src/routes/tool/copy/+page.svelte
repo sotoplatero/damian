@@ -206,7 +206,9 @@
 					{:else}
 						<h3 class="section-title">{t.gateTitle}</h3>
 						<p class="section-intro">{t.gateBody}</p>
-						<form onsubmit={unlock} class="mt-4 space-y-3">
+						<!-- Input y botón en la misma línea. El input se encoge (min-w-0)
+						     y el botón no, para que quepan juntos también en móvil. -->
+						<form onsubmit={unlock} class="mt-4 flex gap-2">
 							<input
 								type="email"
 								bind:value={email}
@@ -214,12 +216,12 @@
 								disabled={busy === 'unlocking'}
 								placeholder={t.gatePlaceholder}
 								autocomplete="email"
-								class="input input-bordered input-lg w-full"
+								class="input input-bordered input-lg min-w-0 flex-1"
 							/>
 							<button
 								type="submit"
 								disabled={busy === 'unlocking'}
-								class="btn btn-primary btn-lg btn-block"
+								class="btn btn-primary btn-lg shrink-0"
 							>
 								{busy === 'unlocking' ? t.gateUnlocking : t.gateButton}
 							</button>
