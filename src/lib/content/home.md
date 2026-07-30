@@ -66,9 +66,9 @@ toolsIntro: Las que uso yo para trabajar. Me las hago para facilitarme la vida y
 #    que la travesía pasa de ser la promesa a ser tu credencial. Sigue
 #    encajando —"quien ha dejado todo y empieza de cero sabe que nada es
 #    imposible" es justo el argumento de "hazlo tú"— pero el salto del titular
-#    al primer párrafo es seco. Si te chirría, ahí va una línea puente:
-#
-#    Ni la que necesito yo. Así que me la hago.
+#    al primer párrafo era seco, así que hay una línea puente después del
+#    titular: "Ni la que necesito yo. Así que me la hago." Es la que conecta
+#    la idea con la historia. Si la quitas, el corte vuelve.
 #
 # 7. TITULARES ALTERNATIVOS:
 #    - Nadie va a construir la herramienta que te falta.
@@ -80,6 +80,8 @@ toolsIntro: Las que uso yo para trabajar. Me las hago para facilitarme la vida y
 ---
 
 # La herramienta que necesitas no existe.
+
+Ni la que necesito yo. Así que me la hago.
 
 En 2022 salí de Cuba en un avión a Surinam. Solo. Sin decírselo a mis amigos. Dejando atrás a mi mujer y a mis dos hijos.
 
