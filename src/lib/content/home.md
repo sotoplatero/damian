@@ -60,14 +60,26 @@ toolsIntro: Las que uso yo para trabajar. Me las hago para facilitarme la vida y
 #    "No te cuento esto para que me tengas lástima" es la línea que salva
 #    la historia de sonar a queja. Si la quitas, recorta la historia.
 #
-# 6. TITULARES ALTERNATIVOS:
-#    - Del Amazonas a tu buzón.
-#    - Veintisiete horas en un bote para acabar escribiéndote un email
-#      a la semana.
+# 6. EL TITULAR YA NO ANUNCIA LA TRAVESÍA.
+#    Antes era "Desde el Amazonas hasta tu buzón" y el titular presentaba la
+#    historia. Ahora presenta la idea (la herramienta no existe, hazla), así
+#    que la travesía pasa de ser la promesa a ser tu credencial. Sigue
+#    encajando —"quien ha dejado todo y empieza de cero sabe que nada es
+#    imposible" es justo el argumento de "hazlo tú"— pero el salto del titular
+#    al primer párrafo es seco. Si te chirría, ahí va una línea puente:
+#
+#    Ni la que necesito yo. Así que me la hago.
+#
+# 7. TITULARES ALTERNATIVOS:
+#    - Nadie va a construir la herramienta que te falta.
+#    - Cada semana me hago una herramienta. Te cuento cómo.
+#    - Me hago las herramientas que no encuentro. Y te las dejo aquí.
+#    - Estás pagando por software que podrías hacerte en una tarde.
+#    - Desde el Amazonas hasta tu buzón.   (el anterior)
 # ─────────────────────────────────────────────────────────────
 ---
 
-# Desde el Amazonas hasta tu buzón.
+# La herramienta que necesitas no existe.
 
 En 2022 salí de Cuba en un avión a Surinam. Solo. Sin decírselo a mis amigos. Dejando atrás a mi mujer y a mis dos hijos.
 
