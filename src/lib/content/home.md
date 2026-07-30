@@ -27,7 +27,8 @@ toolsIntro: Las que uso yo para trabajar. Me las hago para facilitarme la vida y
 # 0. DATOS CONFIRMADOS POR TI (no los cambies sin querer):
 #    Salida 6pm de Surinam, desembarco 9pm del día siguiente = 27 horas
 #    en el bote. Tres aviones hasta Porto Alegre y a Uruguay en auto.
-#    Un año hasta volver a estar con tus hijos.
+#    Un año hasta volver a estar con tus hijos. Ahora vives en Canadá:
+#    Uruguay fue el final de la travesía, no dónde acabaste.
 #
 # 1. CÓMO FUNCIONA EL ALTA
 #    La home usa el iframe de Substack: el alta va directa allí y este repo
@@ -87,7 +88,7 @@ En 2022 salí de Cuba en un avión a Surinam. Solo. Sin decírselo a mis amigos.
 
 Estuve en Amazonas en un bote junto a 24 cubanos por más de 27 horas escondido para llegar a Brasil. Tres vuelos para llegar a Porto Alegre en la frontera sur. Y finalmente entré a Uruguay.
 
-Ahora estoy en Canada
+Ahora estoy en Canadá.
 
 <img src="/los-sotos.webp" alt="Damian Soto con sus dos hijos" width="1100" height="1100" loading="lazy" decoding="async">
 
