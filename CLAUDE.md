@@ -129,6 +129,9 @@ Resend sends everything. **There is no cron.**
   emails with no subject. Don't undo that.
 - Model output is escaped before going into email markdown, or a line starting with `#` or
   `-` renders as a heading or a list in the mail client.
+- The shell carries a small `<style>` block for what can't be inlined, because `marked`
+  generates the HTML from markdown and never passes through it. Gmail honours it; clients
+  that don't fall back to default indentation and still read fine.
 
 ### Styling
 
@@ -139,7 +142,9 @@ The theme is in `src/app.css`, in two blocks:
    overridden to match.
 2. `@layer components` — the site vocabulary: `.section`, `.box`, `.box-link`,
    `.box-locked`, `.box-title`, `.box-text`, `.body-text`, `.muted`, `.link-quiet`,
-   `.eyebrow`, `.screen-center`.
+   `.eyebrow`, `.screen-center`, `.meter`, `.chip`. `.meter` is a bar that knows nothing
+   about what it measures — the fill is a child with its own width, so it serves both a
+   dimension score and a locked finding.
 
 **There are only two font sizes on the site**: body `1.25rem` and note `0.875rem`.
 Hierarchy comes from colour, not size. Writing `text-base` or `text-lg` in markup means a
