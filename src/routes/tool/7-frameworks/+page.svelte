@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { marked } from 'marked';
-	import ToolMeta from '$lib/components/ToolMeta.svelte';
+	import PageMeta from '$lib/components/PageMeta.svelte';
 	import { tick } from 'svelte';
 	import raw from '$lib/content/tool-7-frameworks.md?raw';
 	import { frameworks, freeFramework } from '$lib/tools/7-frameworks/frameworks';
@@ -139,7 +139,7 @@
 	}
 </script>
 
-<ToolMeta
+<PageMeta
 	title="Tu oferta, escrita de 7 formas distintas — Damian Soto"
 	description="Pega la web de tu negocio y te devuelvo tu oferta escrita con los 7 frameworks de copywriting que más se usan para vender. El primero, gratis."
 />

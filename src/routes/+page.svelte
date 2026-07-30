@@ -3,6 +3,7 @@
 	import { onMount } from 'svelte';
 	import homeRaw from '$lib/content/home.md?raw';
 	import { tools } from '$lib/tools/list';
+	import PageMeta from '$lib/components/PageMeta.svelte';
 
 	/** Split home.md into UI strings (frontmatter) + the sales letter body. */
 	function parseCopy(raw: string): { t: Record<string, string>; body: string } {
@@ -51,13 +52,10 @@
 	});
 </script>
 
-<svelte:head>
-	<title>Objeto Brillante — Damian Soto</title>
-	<meta
-		name="description"
-		content="Un email a la semana con algo que he hecho con IA en un negocio real y que funciona. Sin cursos, sin tutoriales. Yo te cuento lo que hago."
-	/>
-</svelte:head>
+<PageMeta
+	title="Objeto Brillante — Damian Soto"
+	description="Un email a la semana con algo que he hecho con IA en un negocio real y que funciona. Sin cursos, sin tutoriales. Yo te cuento lo que hago."
+/>
 
 <!-- #4 — the line that knows the time. Reserves its height to avoid layout shift. -->
 <p class="greeting muted">{greeting}</p>

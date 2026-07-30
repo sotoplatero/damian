@@ -1,7 +1,7 @@
 import { ImageResponse } from '@vercel/og';
 import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { tools } from '$lib/tools/list';
+import { cardFor } from '$lib/og-cards';
 // Vite devuelve el fichero como data URI y de ahí se saca el búfer. Se importa
 // así, y no leyendo del disco, para que el bundler lo empaquete con la función.
 import inter400 from '$lib/server/fonts/inter-400.woff?inline';
@@ -11,8 +11,9 @@ import inter700 from '$lib/server/fonts/inter-700.woff?inline';
  * La imagen que se ve al compartir un enlace, generada al vuelo.
  *
  * `/og/newsletter.png` saca la tarjeta de la herramienta cuyo `href` acabe en
- * `/newsletter`. Así una herramienta nueva la tiene sola: basta con añadirla a
- * `src/lib/tools/list.ts` y ya tiene imagen.
+ * `/newsletter`, y `/og/home.png` la de la portada. Los textos salen de
+ * `$lib/og-cards.ts`, así que una herramienta nueva tiene tarjeta en cuanto se
+ * añade a `src/lib/tools/list.ts`.
  *
  * Va rasterizada a PNG y no servida como SVG a propósito: Facebook, X, LinkedIn
  * y WhatsApp ignoran los SVG en `og:image` y no enseñan nada. Por eso está aquí
@@ -48,8 +49,8 @@ const WIDTH = 1200;
 const HEIGHT = 630;
 
 export const GET: RequestHandler = async ({ params, url }) => {
-	const tool = tools.find((t) => t.href.replace(/^\/tool\//, '') === params.slug);
-	if (!tool) error(404, 'No hay ninguna herramienta con ese nombre');
+	const card = cardFor(params.slug);
+	if (!card?.title) error(404, 'No hay tarjeta para esa ruta');
 
 	return new ImageResponse(
 		{
@@ -81,7 +82,7 @@ export const GET: RequestHandler = async ({ params, url }) => {
 											lineHeight: 1.1,
 											letterSpacing: '-0.02em'
 										},
-										children: tool.name
+										children: card.title
 									}
 								},
 								{
@@ -96,7 +97,7 @@ export const GET: RequestHandler = async ({ params, url }) => {
 											display: 'block',
 											lineClamp: 3
 										},
-										children: tool.blurb
+										children: card.subtitle
 									}
 								}
 							]
@@ -120,7 +121,7 @@ export const GET: RequestHandler = async ({ params, url }) => {
 									type: 'div',
 									props: {
 										style: { fontSize: 28, color: MUTED },
-										children: `${url.host} · herramienta gratis`
+										children: `${url.host} · ${card.tag}`
 									}
 								},
 								// Un punto del color de marca, para que la tarjeta no sea solo gris.

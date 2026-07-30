@@ -11,6 +11,12 @@ errorOffline: No se pudo conectar. Revisa tu conexión e inténtalo de nuevo.
 errorNotConfigured: El formulario aún no está configurado. Inténtalo de nuevo más tarde.
 signature: Damian Soto
 
+# Tarjeta que se ve al compartir la portada (se dibuja en /og/home.png).
+# El título va grande; el tag es la línea de abajo, al lado del dominio.
+ogTitle: Objeto Brillante
+ogDescription: Un email a la semana con algo que he hecho con IA en un negocio real y que funciona. Sin cursos ni tutoriales.
+ogTag: un email a la semana
+
 # Sección de herramientas (debajo del formulario)
 toolsTitle: Herramientas
 toolsIntro: Las que uso yo para trabajar. Me las hago para facilitarme la vida y las dejo aquí por si te sirven. Esta lista va a ir creciendo.

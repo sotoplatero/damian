@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { marked } from 'marked';
-	import ToolMeta from '$lib/components/ToolMeta.svelte';
+	import PageMeta from '$lib/components/PageMeta.svelte';
 	import { tick } from 'svelte';
 	import raw from '$lib/content/tool-newsletter.md?raw';
 	import type { Measurements } from '$lib/tools/newsletter/checks';
@@ -114,7 +114,7 @@
 	);
 </script>
 
-<ToolMeta
+<PageMeta
 	title="Qué se ve de tu newsletter desde fuera — Damian Soto"
 	description="Pega tu Substack y te digo si se entiende de qué va, si la promesa vende y qué tienes sin tocar. Sin pedirte métricas."
 />
