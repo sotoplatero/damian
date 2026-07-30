@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { marked } from 'marked';
+	import ToolMeta from '$lib/components/ToolMeta.svelte';
 	import { tick } from 'svelte';
 	import raw from '$lib/content/tool-7-frameworks.md?raw';
 	import { frameworks, freeFramework } from '$lib/tools/7-frameworks/frameworks';
@@ -138,13 +139,10 @@
 	}
 </script>
 
-<svelte:head>
-	<title>Tu oferta, escrita de 7 formas distintas — Damian Soto</title>
-	<meta
-		name="description"
-		content="Pega la web de tu negocio y te devuelvo tu oferta escrita con los 7 frameworks de copywriting que más se usan para vender. El primero, gratis."
-	/>
-</svelte:head>
+<ToolMeta
+	title="Tu oferta, escrita de 7 formas distintas — Damian Soto"
+	description="Pega la web de tu negocio y te devuelvo tu oferta escrita con los 7 frameworks de copywriting que más se usan para vender. El primero, gratis."
+/>
 
 <!--
 	Se reutilizan con snippets en vez de repetir el markup: en el estado inicial
