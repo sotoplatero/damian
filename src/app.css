@@ -105,6 +105,30 @@
 	}
 }
 
+/*
+ * El titular, a tamaño fluido.
+ *
+ * prose-xl deja el h1 en 3,5rem fijos. A 320px de ancho una palabra larga
+ * ("herramienta") mide más que la columna, no parte, y saca scroll horizontal a
+ * TODA la página: el desbordamiento del h1 empuja el <main>. Con clamp el
+ * titular se encoge en pantallas estrechas y se queda igual en las grandes.
+ *
+ * `.prose h1` gana al plugin de tipografía, que usa :where() y no tiene
+ * especificidad.
+ */
+.prose h1 {
+	font-size: clamp(2rem, 8.5vw, 3.5rem);
+	line-height: 1.05;
+}
+
+/* Red de seguridad: cualquier palabra que no quepa parte en vez de desbordar. */
+.prose,
+.body-text,
+.box-text,
+.section-title {
+	overflow-wrap: break-word;
+}
+
 /* La foto familiar dentro de la carta: esquinas suaves y aire alrededor,
    con el pie pegado debajo. */
 .prose img {
