@@ -211,12 +211,23 @@ iframe {
 	max-width: 100%;
 }
 
-/* Red de seguridad: cualquier palabra que no quepa parte en vez de desbordar. */
+/*
+ * Que ninguna línea pueda salirse de su columna.
+ *
+ * `anywhere` y no `break-word`, y la diferencia importa: los dos parten
+ * palabras largas, pero solo `anywhere` cuenta para el tamaño mínimo
+ * intrínseco del elemento. Con `break-word`, una palabra larga puede seguir
+ * ensanchando su contenedor (y con él la página); con `anywhere` no puede.
+ */
 .prose,
+.prose *,
 .body-text,
 .box-text,
-.section-title {
-	overflow-wrap: break-word;
+.box-title,
+.section-title,
+.section-intro,
+.muted {
+	overflow-wrap: anywhere;
 }
 
 /* La foto familiar dentro de la carta: esquinas suaves y aire alrededor,

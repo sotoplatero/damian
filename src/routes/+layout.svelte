@@ -24,7 +24,10 @@
 <main
 	class="min-h-screen w-full overflow-x-clip bg-white font-sans text-base text-ink antialiased"
 >
-	<div class="mx-auto max-w-2xl px-4 py-16">
+	<!-- w-full + min-w-0: el ancho es explicito y ningun hijo puede estirarlo.
+	     Sin esto, un elemento ancho arrastra la columna y el padding derecho
+	     desaparece. -->
+	<div class="mx-auto w-full min-w-0 max-w-2xl px-5 py-16">
 		{@render children?.()}
 	</div>
 </main>
