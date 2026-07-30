@@ -3,6 +3,65 @@
 @plugin 'daisyui';
 
 /*
+ * Fuentes del sitio, autoalojadas desde /static/fonts (subconjunto latino).
+ *
+ * Antes no habia ninguna declarada, asi que cada sistema operativo ensenaba una
+ * distinta: Segoe UI en Windows, SF Pro en Mac, Roboto en Android. En una pagina
+ * cuyo diseno es solo tipografia, eso es que cada visitante veia otro sitio.
+ *
+ * La eleccion: SERIF para el texto y SANS solo para la interfaz. Todo lo que se
+ * genera hoy usa sans de interfaz (Inter, Geist, Bricolage...), asi que una
+ * serif diferencia la pagina sin que la fuente grite nada. Y encaja con lo que
+ * la pagina es: alguien contandote algo, no un producto.
+ *
+ * font-display: swap para que el texto se lea desde el primer momento aunque la
+ * fuente aun no haya llegado.
+ */
+@font-face {
+	font-family: 'Source Serif 4';
+	src: url('/fonts/source-serif-400.woff2') format('woff2');
+	font-weight: 400;
+	font-style: normal;
+	font-display: swap;
+}
+@font-face {
+	font-family: 'Source Serif 4';
+	src: url('/fonts/source-serif-400i.woff2') format('woff2');
+	font-weight: 400;
+	font-style: italic;
+	font-display: swap;
+}
+@font-face {
+	font-family: 'Source Serif 4';
+	src: url('/fonts/source-serif-600.woff2') format('woff2');
+	font-weight: 600;
+	font-style: normal;
+	font-display: swap;
+}
+@font-face {
+	font-family: 'Public Sans';
+	src: url('/fonts/public-sans-400.woff2') format('woff2');
+	font-weight: 400;
+	font-style: normal;
+	font-display: swap;
+}
+@font-face {
+	font-family: 'Public Sans';
+	src: url('/fonts/public-sans-600.woff2') format('woff2');
+	font-weight: 600;
+	font-style: normal;
+	font-display: swap;
+}
+@font-face {
+	font-family: 'Public Sans';
+	src: url('/fonts/public-sans-700.woff2') format('woff2');
+	font-weight: 700;
+	font-style: normal;
+	font-display: swap;
+}
+
+
+/*
  * Tema del sitio.
  *
  * La paleta entera son un negro, dos grises y una línea. Si hay que cambiar un
@@ -10,7 +69,12 @@
  * utilidades: text-ink, text-soft, text-muted, border-line...
  */
 @theme {
-	--font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+	/* Sans solo para interfaz: botones, etiquetas, la lista de herramientas. */
+	--font-sans: 'Public Sans', ui-sans-serif, system-ui, sans-serif;
+	/* Serif para todo lo que se lee: la carta y los textos de las herramientas. */
+	--font-serif: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+	/* Sin descarga: la JetBrains que se cargaba antes no la usaba nada. */
+	--font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
 
 	--color-ink: #171717; /* texto principal */
 	--color-soft: #525252; /* texto secundario */
@@ -103,6 +167,14 @@
 	.eyebrow {
 		@apply text-xs font-semibold tracking-wide text-muted uppercase;
 	}
+}
+
+/* Todo lo que es texto para leer, en serif. La interfaz hereda la sans del <main>. */
+.prose,
+.body-text,
+.section-intro,
+.box-text {
+	font-family: var(--font-serif);
 }
 
 /*
