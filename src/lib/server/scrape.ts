@@ -18,7 +18,7 @@ const MAX_CHARS = 6_000;
 /** Por debajo de esto la página no dice nada útil (SPA vacía, muro de Cloudflare...). */
 const MIN_USEFUL_CHARS = 180;
 
-const UA =
+export const BROWSER_UA =
 	'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
 
 export type ScrapeResult = { title: string; description: string; text: string };
@@ -86,7 +86,7 @@ function isPrivateAddress(ip: string): boolean {
  * Se llama otra vez en cada redirección: si no, un servidor podría aceptar la
  * primera petición y luego reenviarnos a `127.0.0.1`.
  */
-async function assertPublicUrl(url: URL): Promise<void> {
+export async function assertPublicUrl(url: URL): Promise<void> {
 	if (url.protocol !== 'http:' && url.protocol !== 'https:') {
 		throw new UnreadableError('invalid_url');
 	}
@@ -156,7 +156,7 @@ async function fetchPage(target: URL): Promise<{ html: string; finalUrl: URL }> 
 				redirect: 'manual',
 				signal: AbortSignal.timeout(TIMEOUT_MS),
 				headers: {
-					'user-agent': UA,
+					'user-agent': BROWSER_UA,
 					accept: 'text/html,application/xhtml+xml',
 					'accept-language': 'es-ES,es;q=0.9,en;q=0.8'
 				}

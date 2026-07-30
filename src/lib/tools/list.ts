@@ -5,9 +5,9 @@
  * la home la pinta sola, en el orden en que estén. Lo primero de la lista es
  * lo primero que se ve, así que arriba va lo que más te interese mover.
  *
- * Hay tools vivos por URL que NO están aquí a propósito (uuid-generator,
- * character-counter, places-evaluator, lyra). Para sacarlos a la home,
- * añádelos.
+ * `places-evaluator` sigue vivo por URL pero no está aquí a propósito: usa
+ * Paraglide y DaisyUI, así que todavía no encaja con el resto. Para sacarlo a
+ * la home hay que migrarlo antes al tema del sitio.
  */
 export type Tool = {
 	/** Lo que se lee en el enlace. Que diga qué hace, no cómo se llama por dentro. */
@@ -20,6 +20,11 @@ export type Tool = {
 };
 
 export const tools: Tool[] = [
+	{
+		name: 'Qué se ve de tu newsletter desde fuera',
+		href: '/tool/newsletter',
+		blurb: 'Pegas tu Substack y te digo si se entiende de qué va y qué tienes sin tocar.'
+	},
 	{
 		name: 'Tu oferta, escrita de 7 formas',
 		href: '/tool/7-frameworks',
