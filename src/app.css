@@ -110,15 +110,33 @@
  *
  * prose-xl deja el h1 en 3,5rem fijos. A 320px de ancho una palabra larga
  * ("herramienta") mide más que la columna, no parte, y saca scroll horizontal a
- * TODA la página: el desbordamiento del h1 empuja el <main>. Con clamp el
- * titular se encoge en pantallas estrechas y se queda igual en las grandes.
+ * TODA la página: el desbordamiento del h1 empuja el <main>.
+ *
+ * El mínimo del clamp lo marca la palabra más larga del titular: en una fuente
+ * de palo seco en negrita ocupa unas 6 veces el tamaño de letra, así que en la
+ * columna de 288px que queda a 320px de ancho caben unos 47px. 2,75rem (44px)
+ * entra con margen. Y `overflow-wrap: break-word` de abajo es la red por si
+ * algún día escribes una palabra más larga.
  *
  * `.prose h1` gana al plugin de tipografía, que usa :where() y no tiene
  * especificidad.
  */
 .prose h1 {
-	font-size: clamp(2rem, 8.5vw, 3.5rem);
-	line-height: 1.05;
+	font-size: clamp(2.75rem, 12vw, 4rem);
+	line-height: 1.02;
+	letter-spacing: -0.02em;
+}
+
+/*
+ * El iframe de Substack.
+ *
+ * Safari en iOS estira los iframes al ancho de su contenido e IGNORA el
+ * atributo `width`, así que hay que forzarlo por CSS. Y como su contenido es de
+ * otro dominio y no se puede medir, el contenedor recorta por si acaso.
+ */
+iframe {
+	display: block;
+	max-width: 100%;
 }
 
 /* Red de seguridad: cualquier palabra que no quepa parte en vez de desbordar. */

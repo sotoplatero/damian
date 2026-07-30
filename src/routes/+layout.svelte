@@ -18,7 +18,12 @@
 	<link rel="apple-touch-icon" href="/favicon.png" />
 </svelte:head>
 
-<main class="min-h-screen w-full bg-white font-sans text-base text-ink antialiased">
+<!-- overflow-x-clip es el cierre final: el sitio es de una columna y nada
+     deberia moverlo en horizontal. Se usa `clip` y no `hidden` porque `hidden`
+     convierte el elemento en contenedor de scroll y rompe position: sticky. -->
+<main
+	class="min-h-screen w-full overflow-x-clip bg-white font-sans text-base text-ink antialiased"
+>
 	<div class="mx-auto max-w-2xl px-4 py-16">
 		{@render children?.()}
 	</div>
