@@ -4,26 +4,7 @@
 	import homeRaw from '$lib/content/home.md?raw';
 	import { tools } from '$lib/tools/list';
 	import PageMeta from '$lib/components/PageMeta.svelte';
-
-	/** Split home.md into UI strings (frontmatter) + the sales letter body. */
-	function parseCopy(raw: string): { t: Record<string, string>; body: string } {
-		let body = raw;
-		const t: Record<string, string> = {};
-
-		const frontmatter = raw.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
-		if (frontmatter) {
-			body = raw.slice(frontmatter[0].length);
-			for (const line of frontmatter[1].split('\n')) {
-				const trimmed = line.trim();
-				if (!trimmed || trimmed.startsWith('#')) continue;
-				const separator = trimmed.indexOf(':');
-				if (separator === -1) continue;
-				t[trimmed.slice(0, separator).trim()] = trimmed.slice(separator + 1).trim();
-			}
-		}
-
-		return { t, body };
-	}
+	import { parseCopy } from '$lib/content';
 
 	const { t, body } = parseCopy(homeRaw);
 	const html = marked.parse(body) as string;

@@ -5,25 +5,8 @@
 	import raw from '$lib/content/tool-7-frameworks.md?raw';
 	import { frameworks, freeFramework } from '$lib/tools/7-frameworks/frameworks';
 	import { toPlainText, type GeneratedCopy } from '$lib/tools/7-frameworks/format';
-
-	/** Mismo formato que home.md: frontmatter con los textos, cuerpo con el argumentario. */
-	function parseCopy(source: string): { t: Record<string, string>; body: string } {
-		let body = source;
-		const t: Record<string, string> = {};
-
-		const frontmatter = source.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
-		if (frontmatter) {
-			body = source.slice(frontmatter[0].length);
-			for (const line of frontmatter[1].split('\n')) {
-				const trimmed = line.trim();
-				if (!trimmed || trimmed.startsWith('#')) continue;
-				const separator = trimmed.indexOf(':');
-				if (separator === -1) continue;
-				t[trimmed.slice(0, separator).trim()] = trimmed.slice(separator + 1).trim();
-			}
-		}
-		return { t, body };
-	}
+	import { parseCopy } from '$lib/content';
+	import InlineForm from '$lib/components/InlineForm.svelte';
 
 	const { t, body } = parseCopy(raw);
 	const intro = marked.parse(body) as string;
@@ -76,10 +59,7 @@
 		return data;
 	}
 
-	async function analyze(event: SubmitEvent) {
-		event.preventDefault();
-		if (!url.trim() || busy) return;
-
+	async function analyze() {
 		busy = 'analyzing';
 		error = '';
 		try {
@@ -101,10 +81,7 @@
 	 * Los seis restantes se mandan por correo y no se enseñan nunca aquí.
 	 * El correo es el único sitio donde están, y por eso el email vale algo.
 	 */
-	async function unlock(event: SubmitEvent) {
-		event.preventDefault();
-		if (!email.trim() || busy) return;
-
+	async function unlock() {
 		busy = 'unlocking';
 		error = '';
 		try {
@@ -145,13 +122,9 @@
 />
 
 <!--
-	Se reutilizan con snippets en vez de repetir el markup: en el estado inicial
+	El crédito y la introducción se reutilizan con snippets: en el estado inicial
 	el crédito va debajo del formulario, y con resultados va al final.
 -->
-{#snippet backHome()}
-	<a href="/" class="link-quiet">&larr; Damian Soto</a>
-{/snippet}
-
 {#snippet credit()}
 	<p class="muted">
 		Los frameworks están tomados de
@@ -173,46 +146,29 @@
 {/snippet}
 
 {#if !copies.length}
-	<!-- Estado inicial: cabe entero en una pantalla, así que no debe haber scroll.
-	     El alto descuenta el py-16 del layout para que sume 100dvh justos. -->
-	<div class="flex min-h-[calc(100dvh-8rem)] flex-col">
-		{@render backHome()}
+	{@render intro_()}
 
-		<div class="flex flex-1 flex-col justify-center">
-			{@render intro_()}
+	{#if error}
+		<p class="mt-6 text-sm text-error">{error}</p>
+	{/if}
 
-			{#if error}
-				<p class="mt-6 text-sm text-error">{error}</p>
-			{/if}
-
-			<!-- Input y botón en la misma línea, igual que el del muro. El input se
-			     encoge (min-w-0) y el botón no, para que quepan juntos en móvil. -->
-			<form onsubmit={analyze} class="mt-8 flex gap-2">
-				<input
-					type="text"
-					bind:value={url}
-					disabled={busy === 'analyzing'}
-					placeholder={t.urlPlaceholder}
-					inputmode="url"
-					autocomplete="url"
-					class="input input-bordered input-lg min-w-0 flex-1"
-				/>
-				<button
-					type="submit"
-					disabled={busy === 'analyzing' || !url.trim()}
-					class="btn btn-primary btn-lg shrink-0"
-				>
-					{busy === 'analyzing' ? t.urlScanning : t.urlButton}
-				</button>
-			</form>
-
-			<!-- El crédito, justo debajo del formulario. -->
-			<div class="mt-6">{@render credit()}</div>
-		</div>
+	<div class="mt-8">
+		<InlineForm
+			bind:value={url}
+			placeholder={t.urlPlaceholder}
+			label={t.urlButton}
+			busyLabel={t.urlScanning}
+			busy={busy === 'analyzing'}
+			inputmode="url"
+			autocomplete="url"
+			onsubmit={analyze}
+		/>
 	</div>
+
+	<!-- El crédito, justo debajo del formulario. -->
+	<div class="mt-6">{@render credit()}</div>
 {:else}
-	{@render backHome()}
-	<div class="mt-6">{@render intro_()}</div>
+	{@render intro_()}
 
 	{#if error}
 		<p class="mt-6 text-sm text-error">{error}</p>
@@ -242,24 +198,19 @@
 						<p class="section-intro">{t.gateBody}</p>
 						<!-- Input y botón en la misma línea. El input se encoge (min-w-0)
 						     y el botón no, para que quepan juntos también en móvil. -->
-						<form onsubmit={unlock} class="mt-4 flex gap-2">
-							<input
+						<div class="mt-4">
+							<InlineForm
 								type="email"
 								bind:value={email}
-								required
-								disabled={busy === 'unlocking'}
 								placeholder={t.gatePlaceholder}
+								label={t.gateButton}
+								busyLabel={t.gateUnlocking}
+								busy={busy === 'unlocking'}
+								inputmode="email"
 								autocomplete="email"
-								class="input input-bordered input-lg min-w-0 flex-1"
+								onsubmit={unlock}
 							/>
-							<button
-								type="submit"
-								disabled={busy === 'unlocking'}
-								class="btn btn-primary btn-lg shrink-0"
-							>
-								{busy === 'unlocking' ? t.gateUnlocking : t.gateButton}
-							</button>
-						</form>
+						</div>
 					{/if}
 				</section>
 			{/if}

@@ -4,24 +4,8 @@
 	import { tick } from 'svelte';
 	import raw from '$lib/content/tool-newsletter.md?raw';
 	import type { Measurements } from '$lib/tools/newsletter/checks';
-
-	/** Mismo formato que home.md: frontmatter con los textos, cuerpo con el argumentario. */
-	function parseCopy(source: string): { t: Record<string, string>; body: string } {
-		let body = source;
-		const t: Record<string, string> = {};
-		const frontmatter = source.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
-		if (frontmatter) {
-			body = source.slice(frontmatter[0].length);
-			for (const line of frontmatter[1].split('\n')) {
-				const trimmed = line.trim();
-				if (!trimmed || trimmed.startsWith('#')) continue;
-				const separator = trimmed.indexOf(':');
-				if (separator === -1) continue;
-				t[trimmed.slice(0, separator).trim()] = trimmed.slice(separator + 1).trim();
-			}
-		}
-		return { t, body };
-	}
+	import { parseCopy } from '$lib/content';
+	import InlineForm from '$lib/components/InlineForm.svelte';
 
 	const { t, body } = parseCopy(raw);
 	const intro = marked.parse(body) as string;
@@ -62,10 +46,7 @@
 		return data;
 	}
 
-	async function analyze(event: SubmitEvent) {
-		event.preventDefault();
-		if (!url.trim() || busy) return;
-
+	async function analyze() {
 		busy = 'analyzing';
 		error = '';
 		try {
@@ -80,10 +61,7 @@
 	}
 
 	/** El informe completo no baja al navegador: se genera y se envía en el servidor. */
-	async function send(event: SubmitEvent) {
-		event.preventDefault();
-		if (!email.trim() || busy) return;
-
+	async function send() {
 		busy = 'sending';
 		error = '';
 		try {
@@ -119,46 +97,27 @@
 	description="Pega tu Substack y te digo si se entiende de qué va, si la promesa vende y qué tienes sin tocar. Sin pedirte métricas."
 />
 
-{#snippet backHome()}
-	<a href="/" class="link-quiet">&larr; Damian Soto</a>
-{/snippet}
-
 {#snippet introBlock()}
 	<article class="prose prose-xl prose-neutral max-w-none">{@html intro}</article>
 {/snippet}
 
 {#if !preview}
-	<!-- Estado inicial: cabe en una pantalla, así que va centrado y sin scroll. -->
-	<div class="flex min-h-[calc(100dvh-8rem)] flex-col">
-		{@render backHome()}
-		<div class="flex flex-1 flex-col justify-center">
-			{@render introBlock()}
-			{#if error}<p class="mt-6 text-sm text-error">{error}</p>{/if}
-
-			<!-- Input y botón en la misma línea, como en el otro tool. -->
-			<form onsubmit={analyze} class="mt-8 flex gap-2">
-				<input
-					type="text"
-					bind:value={url}
-					disabled={busy === 'analyzing'}
-					placeholder={t.urlPlaceholder}
-					inputmode="url"
-					autocomplete="url"
-					class="input input-bordered input-lg min-w-0 flex-1"
-				/>
-				<button
-					type="submit"
-					disabled={busy === 'analyzing' || !url.trim()}
-					class="btn btn-primary btn-lg shrink-0"
-				>
-					{busy === 'analyzing' ? t.urlScanning : t.urlButton}
-				</button>
-			</form>
-		</div>
+	{@render introBlock()}
+	{#if error}<p class="mt-6 text-sm text-error">{error}</p>{/if}
+	<div class="mt-8">
+		<InlineForm
+			bind:value={url}
+			placeholder={t.urlPlaceholder}
+			label={t.urlButton}
+			busyLabel={t.urlScanning}
+			busy={busy === 'analyzing'}
+			inputmode="url"
+			autocomplete="url"
+			onsubmit={analyze}
+		/>
 	</div>
 {:else}
-	{@render backHome()}
-	<div class="mt-6">{@render introBlock()}</div>
+	{@render introBlock()}
 	{#if error}<p class="mt-6 text-sm text-error">{error}</p>{/if}
 
 	<section id="informe" class="mt-10 space-y-6">
@@ -197,24 +156,19 @@
 			{:else}
 				<h2 class="section-title">{t.gateTitle}</h2>
 				<p class="section-intro">{gateBody}</p>
-				<form onsubmit={send} class="mt-4 flex gap-2">
-					<input
+				<div class="mt-4">
+					<InlineForm
 						type="email"
 						bind:value={email}
-						required
-						disabled={busy === 'sending'}
 						placeholder={t.gatePlaceholder}
+						label={t.gateButton}
+						busyLabel={t.gateSending}
+						busy={busy === 'sending'}
+						inputmode="email"
 						autocomplete="email"
-						class="input input-bordered input-lg min-w-0 flex-1"
+						onsubmit={send}
 					/>
-					<button
-						type="submit"
-						disabled={busy === 'sending'}
-						class="btn btn-primary btn-lg shrink-0"
-					>
-						{busy === 'sending' ? t.gateSending : t.gateButton}
-					</button>
-				</form>
+				</div>
 			{/if}
 		</section>
 

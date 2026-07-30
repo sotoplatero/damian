@@ -116,10 +116,10 @@
 	}
 </script>
 
-<div class="min-h-screen flex items-center justify-center p-4">
+<div class="flex items-center justify-center">
 	<div class="w-full max-w-3xl space-y-6">
-		<!-- Back link -->
-		<a href="/" class="btn btn-ghost btn-sm">← {m.name()}</a>
+		<!-- El enlace de vuelta lo pone src/routes/tool/+layout.svelte, comun a
+		     todas las herramientas. -->
 
 		<!-- Header -->
 		<div class="text-center space-y-2">
