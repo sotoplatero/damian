@@ -85,11 +85,11 @@ En 2022 salí de Cuba en un avión a Surinam. Solo. Sin decírselo a mis amigos.
 
 Estuve en Amazonas en un bote junto a 24 cubanos por más de 27 horas escondido para llegar a Brasil. Tres vuelos para llegar a Porto Alegre en la frontera sur. Y finalmente entré a Uruguay.
 
-Y todo comenzó. Buscar trabajo. Donde vivir. Trámites. 
+Ahora estoy en Canada
 
 <img src="/los-sotos.webp" alt="Damian Soto con sus dos hijos" width="1100" height="1100" loading="lazy" decoding="async">
 
-Estos son los míos. Tardé un año en volver a verlos.
+Estos son los míos. Tardé mas de un año en volver a verlos.
 
 No te cuento esto para que me tengas lástima.
 
