@@ -76,9 +76,28 @@ deliberately:
 - `src/lib/tools/newsletter/checks.ts` measures everything countable. Deterministic, can't
   hallucinate a number. **Its severities are calibrated against five real newsletters and
   the evidence is written in the file — do not raise them without new data.** Notably:
-  empty SEO fields and titles over 60 characters are *not* defects, because the most-read
-  Spanish newsletters do both.
-- The model only judges what no `if` can: niche, promise, CTA, titles.
+  empty SEO fields, titles over 60 characters and the default "Suscribirse" button are
+  *not* defects, because the most-read Spanish newsletters do all three.
+- The model only judges what no `if` can: niche, ideal reader, promise, CTA, titles.
+
+Every `Finding` carries a **written fix** (`fix`), the Substack path plus the text to
+paste — not "improve your subtitle". It lives in `checks.ts` and not in the prompt because
+it isn't opinion: the settings path is what it is, and a model would invent it.
+
+`score()` **sums the penalties out of 100; it does not average the five dimensions.** That
+was tried and a publication abandoned 117 days scored 85, because one catastrophic
+dimension diluted into four healthy ones. The calibration targets are in the file.
+
+**Do not add a check for Substack's boilerplate meta description** ("Click to read…, a
+Substack publication"). It was tried: all five publications have it, because Substack
+appends it to everyone's tagline and it cannot be removed. Flagging it invents a defect
+with no possible fix. Instead the report shows it verbatim in the Google preview and says
+whose it is.
+
+`src/lib/tools/newsletter/report.ts` builds the emailed report. Two rules hold there:
+every section carries a datum or an action or it doesn't exist, and the fix is written, not
+described. **No markdown tables** — the email shell doesn't style them and they overflow at
+320px; a numbered index scans the same and survives.
 
 `src/lib/server/newsletter.ts` collects the data in two requests: the homepage (meta tags,
 `window._preloads` with the full publication object) and Substack's undocumented

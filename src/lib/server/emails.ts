@@ -49,7 +49,28 @@ export const sequenceLength = emails.length;
 function shell(inner: string, unsubscribeUrl: string): string {
 	return `<!doctype html>
 <html lang="es">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+/*
+ * Lo mínimo que no se puede poner en línea, porque el HTML lo genera marked a
+ * partir del markdown y no pasa por aquí.
+ *
+ * Gmail respeta un <style> en el <head>; los que no, se quedan con el sangrado
+ * y el tamaño por defecto, que ya se leen. Así que esto mejora donde se puede y
+ * no rompe donde no.
+ *
+ * Las citas son las vistas previas del informe de /tool/newsletter: lo que ve
+ * quien comparte tu enlace, lo que sale en la bandeja y lo que sale en Google.
+ * Con borde se leen como lo que son —una tarjeta— y no como texto sangrado.
+ */
+blockquote{margin:12px 0;padding:12px 16px;border:1px solid #e5e5e5;border-radius:8px;background:#fafafa;}
+blockquote p{margin:0;}
+h1{font-size:32px;line-height:1.1;margin:0 0 8px;}
+h2{font-size:20px;line-height:1.3;margin:32px 0 8px;}
+hr{border:none;border-top:1px solid #e5e5e5;margin:32px 0;}
+a{color:#0076ff;}
+</style>
+</head>
 <body style="margin:0;background:#ffffff;">
 <div style="max-width:34rem;margin:0 auto;padding:32px 20px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:1.6;color:#171717;">
 ${inner}

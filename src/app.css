@@ -167,6 +167,20 @@
 	.eyebrow {
 		@apply text-xs font-semibold tracking-wide text-muted uppercase;
 	}
+
+	/* Barra: sirve para una nota y para un hallazgo tapado. El relleno lo pone
+	   un hijo con su propio ancho, así que la barra no sabe qué mide. */
+	.meter {
+		@apply h-1.5 overflow-hidden rounded-full bg-line;
+	}
+	.meter > * {
+		@apply block h-full rounded-full bg-ink;
+	}
+
+	/* Etiqueta de gravedad de un hallazgo. El color lo decide quien la pinta. */
+	.chip {
+		@apply inline-block rounded px-1.5 py-0.5 text-xs font-semibold tracking-wide uppercase;
+	}
 }
 
 /* Todo lo que es texto para leer, en serif. La interfaz hereda la sans del <main>. */

@@ -5,7 +5,7 @@ import { collectNewsletter, UnreadableError } from '$lib/server/newsletter';
 import { subscribe, sendNewsletterReportEmail } from '$lib/server/resend';
 import { isDisposable } from '$lib/server/email-validation';
 import { overLimit } from '$lib/server/rate-limit';
-import { measure, check } from '$lib/tools/newsletter/checks';
+import { measure, check, score, isQuickWin } from '$lib/tools/newsletter/checks';
 import { nichePrompt, fullPrompt, auditMessage } from '$lib/tools/newsletter/prompt';
 import { toMarkdown, type FullVerdict, type Niche } from '$lib/tools/newsletter/report';
 
@@ -66,7 +66,8 @@ async function judge(
 async function read(url: string) {
 	const snapshot = await collectNewsletter(url);
 	const measurements = measure(snapshot, Date.now());
-	return { snapshot, measurements, findings: check(snapshot, measurements) };
+	const findings = check(snapshot, measurements);
+	return { snapshot, measurements, findings, scores: score(findings) };
 }
 
 export const POST: RequestHandler = async ({ request, getClientAddress }) => {
@@ -89,24 +90,40 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	try {
 		// --- Paso 1: cifras y nicho. Lo único que se enseña sin pedir nada. ---
 		if (body.step === 'analyze') {
-			const { snapshot, measurements, findings } = await read(url);
+			const { snapshot, measurements, findings, scores } = await read(url);
 
 			const niche = (await judge(
 				nichePrompt(),
 				auditMessage(snapshot, measurements, findings),
-				700
+				900
 			)) as Niche | null;
+
+			// El primero SÍ va completo, con su arreglo. Es la prueba de que el
+			// informe da soluciones y no solo regaños: sin verlo, el visitante
+			// tiene que creerse de palabra que lo que hay detrás del muro vale.
+			const [first, ...rest] = findings;
 
 			return json({
 				site: new URL(snapshot.url).hostname.replace(/^www\./, ''),
 				name: snapshot.name.trim(),
+				// Con esto se reconstruye en pantalla la tarjeta que ve quien
+				// comparte su enlace. Es el bloque que produce el "esto es verdad".
+				card: {
+					tagline: snapshot.tagline.trim(),
+					// La imagen de verdad, no un aviso de que la tiene: la tarjeta
+					// reconstruida solo convence si es la suya.
+					image: snapshot.ogImage,
+					hasLogo: snapshot.hasLogo
+				},
 				measurements,
+				scores,
 				niche,
-				// Cuántos hallazgos hay, sin decir cuáles: da idea de lo que falta por ver.
-				pending: {
-					defects: findings.filter((f) => f.severity !== 'oportunidad').length,
-					opportunities: findings.filter((f) => f.severity === 'oportunidad').length
-				}
+				first: first ?? null,
+				// De los que quedan solo viajan gravedad, área e impacto: suficiente
+				// para pintar las barras tapadas a un ancho que signifique algo, y no
+				// se filtra ni un hallazgo.
+				locked: rest.map((f) => ({ severity: f.severity, area: f.area, impact: f.impact })),
+				quickWins: findings.filter(isQuickWin).length
 			});
 		}
 
@@ -131,21 +148,21 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 
 			// Se relee en vez de fiarse de lo que mande el navegador: son dos GET
 			// rápidos y así el informe no se puede manipular desde el cliente.
-			const { snapshot, measurements, findings } = await read(url);
+			const { snapshot, measurements, findings, scores } = await read(url);
 			const site = new URL(snapshot.url).hostname.replace(/^www\./, '');
 
 			const niche = (await judge(
 				nichePrompt(),
 				auditMessage(snapshot, measurements, findings),
-				700
+				900
 			)) as Niche | null;
 			const verdict = (await judge(
 				fullPrompt(),
 				auditMessage(snapshot, measurements, findings, niche),
-				2500
+				3500
 			)) as FullVerdict | null;
 
-			const report = toMarkdown(site, measurements, findings, niche, verdict);
+			const report = toMarkdown(site, snapshot, measurements, findings, scores, niche, verdict);
 
 			try {
 				await sendNewsletterReportEmail(email, report);

@@ -27,11 +27,15 @@ const RULES = `## LO QUE NO HACES
 - **No felicitas por cumplir.** "Tienes logo" no es un elogio.
 - No hablas de aperturas, bajas ni suscriptores: desde fuera no se ven y no los tienes.`;
 
-/** Primera llamada: solo el nicho, que es lo que se enseña gratis. */
+/**
+ * Primera llamada: lo que se enseña gratis. De qué va, para quién, y el
+ * veredicto de una línea que acompaña a la nota.
+ */
 export const nichePrompt = () => `${ROLE}
 
 Recibes lo que un newsletter de Substack enseña desde fuera y unas mediciones ya hechas.
-Tu único trabajo ahora es una cosa: decir de qué va esto.
+Tu trabajo ahora es decir de qué va, a quién le habla, y resumir el diagnóstico en una
+línea.
 
 ${STYLE}
 
@@ -46,14 +50,30 @@ Di de qué crees que va **con tus palabras**, para que quien lo lea compruebe si
 acertado. Ahí está el valor: se va a leer descrito por un desconocido. Si los títulos van
 cada uno por su lado, dilo sin rodeos.
 
+## PARA QUIÉN ESCRIBE
+
+Esto es lo que más le va a sorprender, porque nadie se lo dice: quién es la persona
+concreta que se suscribiría. No un segmento de marketing ("emprendedores"), sino alguien
+reconocible: qué hace, en qué punto está y qué está intentando resolver.
+
+Sale de los títulos, del subtítulo y de la biografía. Si los títulos no dan para
+deducirlo, dilo: eso ya es el diagnóstico.
+
+## EL VEREDICTO
+
+Una línea que acompaña a la nota. Dice lo que está bien y lo que falla, en ese orden, y
+cabe en dos frases cortas. Ejemplo de la forma: "Se entiende qué haces. No para quién."
+
 ## FORMATO DE SALIDA
 
 Devuelves SOLO un objeto JSON con esta forma exacta:
 
 {
+  "veredicto": "Dos frases cortas: lo que funciona y lo que falla",
   "loQueSeEntiende": "De qué va esto, según sus títulos, en una o dos frases",
   "claro": true | false,
-  "porQue": "Dos frases. Qué lo sostiene, o qué lo desdibuja."
+  "porQue": "Dos frases sobre los TÍTULOS: qué sostiene el paraguas o qué lo estira. Nada sobre el lector, eso va en paraQuien.",
+  "paraQuien": "La persona que se suscribiría, en dos o tres frases. Reconocible, no un segmento."
 }
 
 Solo el JSON, sin explicaciones ni bloques de código.`;
@@ -96,6 +116,13 @@ Devuelves SOLO un objeto JSON con esta forma exacta:
     "mejorTitulo": "El mejor de los suyos, copiado tal cual",
     "peorTitulo": "El más flojo de los suyos, copiado tal cual"
   },
+  "seoTitles": [
+    {
+      "slug": "el slug tal cual te lo he dado",
+      "titulo": "Título para buscadores, menos de 60 caracteres, con la palabra que alguien buscaría",
+      "descripcion": "Descripción para buscadores, entre 150 y 160 caracteres"
+    }
+  ],
   "acciones": [
     "Lo primero que haría yo mañana, en una frase y accionable",
     "Lo segundo",
@@ -107,6 +134,10 @@ Devuelves SOLO un objeto JSON con esta forma exacta:
 - Cada acción dice qué hacer, no qué mejorar. "Cambia el subtítulo por X" y no
   "mejora tu subtítulo".
 - En "mejorTitulo" y "peorTitulo" copias sus títulos literalmente, sin retocarlos.
+- En "seoTitles" va un objeto por cada post de la lista "POSTS QUE MÁS TRÁFICO DEJAN", con
+  su slug sin cambiar. El título va por debajo de 60 caracteres y la descripción entre 150
+  y 160: son los límites que Google respeta al mostrarlos. Escríbelos para que alguien que
+  busca ese problema en Google haga clic, no para que suenen bien.
 - Solo el JSON, sin explicaciones ni bloques de código.`;
 
 /** Todo lo observado y medido, formateado para el modelo. */
@@ -140,11 +171,20 @@ export function auditMessage(
 - Último post: hace ${m.daysSinceLast} días
 - Longitud: de ${m.wordsMin} a ${m.wordsMax} palabras (mediana ${m.wordsMedian})
 - Reacciones y comentarios: ${m.reactions} y ${m.comments}, o sea ${m.engagementPerPost} por post
+- Interacción por post: ${m.engagementFirstHalf} en su mitad más antigua, ${m.engagementSecondHalf} en la más reciente
+- El post que más conectó: ${m.bestPost ? `"${m.bestPost.title}" (${m.bestPost.engagement})` : '(sin datos)'}
 
 ## HALLAZGOS QUE YA SE MUESTRAN APARTE (no los repitas)
 
 ${findings.map((f) => `- [${f.severity}] ${f.fact}`).join('\n') || '- (ninguno)'}
 ${nicheBlock}
+## POSTS QUE MÁS TRÁFICO DEJAN
+
+Los que más interacción tienen y no tienen título de buscador. Para estos hay que escribir
+"seoTitles":
+
+${m.seoOpportunities.map((p) => `- slug: ${p.slug}\n  título actual: "${p.title}"`).join('\n') || '- (ninguno)'}
+
 ## SUS ÚLTIMOS TÍTULOS
 
 ${titles}`;

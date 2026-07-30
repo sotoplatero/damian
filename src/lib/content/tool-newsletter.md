@@ -5,19 +5,42 @@ urlButton: Evaluar
 urlScanning: Leyendo...
 restart: Probar con otra
 
-# --- Etiquetas de la vista previa ---
+# --- La nota ---
 readLine: He leído {site}.
-labelNiche: De qué va tu newsletter
+scoreOutOf: sobre 100
+scoreNote: Es mi escala, no un estándar del sector. Sirve para ver dónde está el problema, no para compararte con nadie.
+
+# --- Las cifras ---
 labelPosts: Posts
 labelEvery: Cada
 labelLast: Último
 labelEngagement: Interacción
 
+# --- La tarjeta que ve quien comparte el enlace ---
+labelCard: Así te ve quien comparte tu enlace
+cardNoImage: Sin imagen: la tarjeta sale como un enlace de texto pelado
+cardNoName: (sin nombre)
+cardNoTagline: (sin subtítulo: aquí no sale nada)
+
+# --- Los bloques de juicio ---
+labelAudience: Para quién escribes
+audienceNote: Esto sale solo de lo que enseñas. Si no es a quien tenías en la cabeza, el problema no es el lector.
+labelNiche: De qué va tu newsletter
+
+# --- El primer hallazgo, el único que va completo ---
+# {total} se sustituye por el número de hallazgos.
+labelFirst: El primero de {total}
+labelImpact: Impacto {impact}/10
+labelFix: Cómo se arregla
+
+# --- Lo que queda tapado. {rest} es cuántos son. ---
+labelLocked: Los otros {rest}
+
 # --- El muro ---
-gateTitle: ¿Quieres el informe completo?
-# {defects} y {opportunities} se sustituyen por el número de hallazgos.
-gateBody: Tengo {defects} cosas que arreglar y {opportunities} que nadie de tu competencia está haciendo. Más la promesa, el botón y tus títulos, con reescrituras. Dame tu correo.
-gateBodyClean: No he encontrado nada roto, y eso ya es raro. Lo que sí tengo son {opportunities} oportunidades que nadie está tocando, más la promesa, el botón y tus títulos con reescrituras. Dame tu correo.
+gateTitle: Con su arreglo escrito, uno por uno
+# {rest} y {quickWins} se sustituyen por números.
+gateBody: Te mando los {rest} que quedan, cada uno con lo que hay que tocar y dónde. {quickWins} se hacen hoy mismo. Más el subtítulo, el botón y los títulos para buscadores, escritos y listos para pegar.
+gateBodyClean: No he encontrado nada más, y eso ya es raro. Lo que sí tengo es el subtítulo, el botón y los títulos para buscadores, escritos y listos para pegar. Dame tu correo.
 gatePlaceholder: tu@email.com
 gateButton: Mándamelo
 gateSending: Enviando...
@@ -36,6 +59,6 @@ errorOffline: No se pudo conectar. Revisa tu conexión.
 
 # Qué se ve de tu newsletter desde fuera.
 
-**Pega la dirección de tu Substack.** Te digo si se entiende de qué va, si la promesa da ganas de dejar el correo, y qué tienes sin tocar.
+**Pega la dirección de tu Substack.** Te doy una nota sobre 100, lo que ve quien comparte tu enlace, y el primer fallo con su arreglo.
 
 No mira aperturas ni suscriptores: eso no se ve desde fuera y nadie que te lo prometa lo tiene.
