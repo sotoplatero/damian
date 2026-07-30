@@ -4,6 +4,7 @@ import type { RequestHandler } from './$types';
 import { scrape, UnreadableError } from '$lib/server/scrape';
 import { subscribe, sendToolCopyEmail } from '$lib/server/resend';
 import { isDisposable } from '$lib/server/email-validation';
+import { overLimit } from '$lib/server/rate-limit';
 import { analyzePrompt, copyPrompt, offerMessage, type Offer } from '$lib/tools/7-frameworks/prompt';
 import { sanitizeCopies, toMarkdown, type GeneratedCopy } from '$lib/tools/7-frameworks/format';
 import { gatedFrameworks } from '$lib/tools/7-frameworks/frameworks';
@@ -17,31 +18,6 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
  * No cambiar sin decírselo.
  */
 const MODEL = 'gpt-5.4-mini';
-
-/**
- * Tope por IP para que un bot no dispare la factura de OpenAI.
- * Es en memoria y cada instancia serverless tiene la suya, así que el límite
- * real es más flojo que este número. Sirve para frenar el abuso tonto, no a un
- * atacante con ganas.
- */
-const RATE_LIMIT = 10;
-const RATE_WINDOW_MS = 60 * 60 * 1000;
-const hits = new Map<string, number[]>();
-
-function overRateLimit(ip: string): boolean {
-	const now = Date.now();
-	const recent = (hits.get(ip) ?? []).filter((at) => now - at < RATE_WINDOW_MS);
-	recent.push(now);
-	hits.set(ip, recent);
-
-	// Poda perezosa: sin esto el Map crece sin fin mientras viva la instancia.
-	if (hits.size > 5_000) {
-		for (const [key, times] of hits) {
-			if (times.every((at) => now - at >= RATE_WINDOW_MS)) hits.delete(key);
-		}
-	}
-	return recent.length > RATE_LIMIT;
-}
 
 /** Una llamada a OpenAI que devuelve JSON ya parseado. */
 async function askJson(
@@ -108,8 +84,10 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	}
 
 	const step = body.step;
+	const ip = getClientAddress();
 
-	if (overRateLimit(getClientAddress())) {
+	// El paso gratis se limita por IP; el caro, por correo (ver rate-limit.ts).
+	if (step === 'analyze' && overLimit('toolPreview', ip)) {
 		return json({ error: 'rate_limit' }, { status: 429 });
 	}
 
@@ -162,6 +140,11 @@ ${page.text}`,
 				.toLowerCase();
 			if (!EMAIL_RE.test(email)) return json({ error: 'invalid_email' }, { status: 400 });
 			if (isDisposable(email)) return json({ error: 'disposable' }, { status: 400 });
+			// Por correo, que sí identifica a alguien, y con techo por IP para que
+			// nadie encadene direcciones desde la misma conexión.
+			if (overLimit('toolDelivery', email) || overLimit('toolDeliveryPerIp', ip)) {
+				return json({ error: 'rate_limit' }, { status: 429 });
+			}
 
 			const free = Array.isArray(body.free) ? sanitizeCopies({ copies: body.free }) : [];
 

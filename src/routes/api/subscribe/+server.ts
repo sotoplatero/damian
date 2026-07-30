@@ -1,9 +1,15 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { subscribe, sendSequenceEmail } from '$lib/server/resend';
+import { overLimit } from '$lib/server/rate-limit';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export const POST: RequestHandler = async ({ request }) => {
+export const POST: RequestHandler = async ({ request, getClientAddress }) => {
+	// Cada alta escribe en Resend y manda un correo: no debería repetirse mucho.
+	if (overLimit('subscribe', getClientAddress())) {
+		return json({ error: 'rate_limit' }, { status: 429 });
+	}
+
 	let email = '';
 	try {
 		const body = await request.json();

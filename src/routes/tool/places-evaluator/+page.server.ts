@@ -1,6 +1,7 @@
 import { fail } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 import { evaluatePlace } from '$lib/rules';
+import { overLimit } from '$lib/server/rate-limit';
 import type { Actions } from './$types';
 
 async function fetchPlaceBySearch(query: string) {
@@ -79,7 +80,16 @@ function detectInputType(input: string): 'placeId' | 'url' | 'search' {
 }
 
 export const actions = {
-	evaluate: async ({ request }) => {
+	/**
+	 * Cada evaluación son tres llamadas a Google Places (autocomplete + text
+	 * search + details con reviews) y cuesta del orden de 0,086 $. Es el endpoint
+	 * más caro del sitio con diferencia, así que va con límite.
+	 */
+	evaluate: async ({ request, getClientAddress }) => {
+		if (overLimit('places', getClientAddress())) {
+			return fail(429, { error: 'Has evaluado unos cuantos negocios ya. Vuelve mañana.' });
+		}
+
 		const formData = await request.formData();
 		const input = formData.get('search')?.toString()?.trim();
 		const placeId = formData.get('place_id')?.toString()?.trim();
@@ -138,7 +148,12 @@ export const actions = {
 			return fail(500, { error: 'Failed to evaluate business' });
 		}
 	},
-	autocomplete: async ({ request }) => {
+	// Se dispara al teclear, así que su límite es aparte y más generoso.
+	autocomplete: async ({ request, getClientAddress }) => {
+		if (overLimit('placesAutocomplete', getClientAddress())) {
+			return { suggestions: [] };
+		}
+
 		const formData = await request.formData();
 		const query = formData.get('query')?.toString()?.trim();
 
