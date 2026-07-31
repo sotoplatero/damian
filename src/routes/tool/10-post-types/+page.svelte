@@ -7,6 +7,11 @@
 	import { toPlainText, type GeneratedPost } from '$lib/tools/10-post-types/format';
 	import { parseCopy } from '$lib/content';
 	import InlineForm from '$lib/components/InlineForm.svelte';
+	import TextareaForm from '$lib/components/TextareaForm.svelte';
+
+	/** Los mismos limites que valida el servidor. Si cambian alli, cambian aqui. */
+	const IDEA_MIN = 20;
+	const IDEA_MAX = 2000;
 
 	const { t, body } = parseCopy(raw);
 	const intro = marked.parse(body) as string;
@@ -16,10 +21,10 @@
 	let busy = $state<Busy>('');
 	let error = $state('');
 
-	let url = $state('');
+	/** La idea escrita por la persona. Antes esto era una URL que se raspaba. */
+	let idea = $state('');
 	/** El tema que el modelo dedujo. Viaja al servidor otra vez para escribir los nueve restantes. */
 	let topic = $state<Record<string, string> | null>(null);
-	let site = $state('');
 	let lowConfidence = $state(false);
 
 	let posts = $state<GeneratedPost[]>([]);
@@ -41,6 +46,7 @@
 
 	function errorFor(code: unknown): string {
 		if (code === 'unreadable') return t.errorUnreadable;
+		if (code === 'idea_short') return t.errorIdeaShort;
 		if (code === 'invalid_email') return t.errorInvalidEmail;
 		if (code === 'disposable') return t.errorDisposable;
 		if (code === 'send_failed') return t.errorSendFailed;
@@ -63,10 +69,9 @@
 		busy = 'analyzing';
 		error = '';
 		try {
-			const data = await post({ step: 'extract', url });
+			const data = await post({ step: 'extract', idea });
 			topic = data.topic;
 			posts = data.posts;
-			site = data.site ?? '';
 			lowConfidence = data.confidence === 'baja';
 			await tick();
 			document.getElementById('resultado')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -105,9 +110,8 @@
 	function restart() {
 		busy = '';
 		error = '';
-		url = '';
+		idea = '';
 		topic = null;
-		site = '';
 		lowConfidence = false;
 		posts = [];
 		sent = false;
@@ -118,7 +122,7 @@
 
 <PageMeta
 	title="Tu tema, en 10 tipos de post — Damian Soto"
-	description="Pega tu web o tu newsletter y te devuelvo el mismo tema escrito en los 10 tipos de post que más funcionan en redes. El primero, gratis."
+	description="Escribe una idea y te la devuelvo contada en los 10 tipos de post que más funcionan en redes. El primero, gratis."
 />
 
 <!--
@@ -153,14 +157,15 @@
 	{/if}
 
 	<div class="mt-8">
-		<InlineForm
-			bind:value={url}
-			placeholder={t.urlPlaceholder}
-			label={t.urlButton}
-			busyLabel={t.urlScanning}
+		<TextareaForm
+			bind:value={idea}
+			placeholder={t.ideaPlaceholder}
+			label={t.ideaButton}
+			busyLabel={t.ideaWorking}
 			busy={busy === 'analyzing'}
-			inputmode="url"
-			autocomplete="url"
+			minLength={IDEA_MIN}
+			maxLength={IDEA_MAX}
+			hint={idea.trim().length >= IDEA_MIN ? t.ideaShortcut : t.ideaHint}
 			onsubmit={analyze}
 		/>
 	</div>
@@ -178,10 +183,7 @@
 <!-- Paso 2: los posts -->
 {#if posts.length}
 	<section id="resultado" class="mt-10 space-y-6">
-		<div class="muted">
-			{#if site}<p>{t.readLine.replace('{site}', site)}</p>{/if}
-			{#if lowConfidence}<p class="mt-1">{t.lowConfidence}</p>{/if}
-		</div>
+		{#if lowConfidence}<p class="muted">{t.lowConfidence}</p>{/if}
 
 		{#each ordered as type, index (type.id)}
 			{@const written = byId.get(type.id)}

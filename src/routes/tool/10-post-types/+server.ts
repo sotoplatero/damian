@@ -1,7 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { askJson } from '$lib/server/openai';
-import { scrape, UnreadableError } from '$lib/server/scrape';
 import { subscribe, sendToolPostsEmail } from '$lib/server/resend';
 import { isDisposable } from '$lib/server/email-validation';
 import { overLimit } from '$lib/server/rate-limit';
@@ -10,6 +9,16 @@ import { sanitizePosts, toMarkdown, type GeneratedPost } from '$lib/tools/10-pos
 import { gatedPostTypes } from '$lib/tools/10-post-types/types';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/**
+ * La entrada es una idea escrita, no una URL.
+ *
+ * El mínimo existe para no gastar una llamada en «marketing» a secas: con menos
+ * de esto no hay tema, hay una palabra. El máximo acota lo que se manda al modelo
+ * y de paso lo que puede pegar cualquiera en un campo abierto.
+ */
+const IDEA_MIN = 20;
+const IDEA_MAX = 2000;
 
 /**
  * El mismo modelo que 7-frameworks: el más rápido de los que Damian comparó y el
@@ -76,30 +85,12 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	}
 
 	try {
-		// --- Paso 1: leer la página y escribir el post gratis, de una pasada ---
+		// --- Paso 1: ordenar la idea y escribir el post gratis, de una pasada ---
 		if (step === 'extract') {
-			const url = typeof body.url === 'string' ? body.url : '';
+			const idea = typeof body.idea === 'string' ? body.idea.trim() : '';
+			if (idea.length < IDEA_MIN) return json({ error: 'idea_short' }, { status: 400 });
 
-			let page;
-			try {
-				page = await scrape(url);
-			} catch (error) {
-				if (error instanceof UnreadableError) {
-					return json({ error: 'unreadable', reason: error.reason }, { status: 422 });
-				}
-				throw error;
-			}
-
-			const raw = await ask(
-				extractPrompt(),
-				`URL: ${page.finalUrl}
-Título: ${page.title}
-Meta descripción: ${page.description}
-
-Texto de la página:
-${page.text}`,
-				2000
-			);
+			const raw = await ask(extractPrompt(), `La idea, con sus palabras:\n\n${idea.slice(0, IDEA_MAX)}`, 2000);
 
 			const topic = readTopic(raw.topic);
 			const posts = sanitizePosts(raw);
@@ -109,8 +100,7 @@ ${page.text}`,
 			return json({
 				topic,
 				posts,
-				confidence: raw.confidence === 'baja' ? 'baja' : 'alta',
-				site: new URL(page.finalUrl).hostname.replace(/^www\./, '')
+				confidence: raw.confidence === 'baja' ? 'baja' : 'alta'
 			});
 		}
 

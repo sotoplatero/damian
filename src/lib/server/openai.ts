@@ -23,6 +23,24 @@ import { env } from '$env/dynamic/private';
 
 const ENDPOINT = 'https://api.openai.com/v1/responses';
 
+/**
+ * Sin esquema se pide `json_object`, y ahí la API exige que la palabra "json"
+ * aparezca **en el input** — no vale que esté en `instructions`.
+ *
+ * Es una diferencia real con `chat/completions`: allí el system y el user iban en
+ * el mismo array de `messages`, así que la instrucción de "devuelve JSON" del
+ * prompt de sistema cumplía el requisito. Aquí `instructions` va por su lado y el
+ * chequeo solo mira `input`, así que los dos tools que no usan esquema devolvían
+ * un 400 con "Response input messages must contain the word 'json'".
+ *
+ * Se resuelve aquí y no en cada prompt porque es una rareza de la API, no una
+ * decisión de redacción. Y solo se añade si falta, para no ensuciar los que ya la
+ * llevan.
+ */
+function ensureJsonMention(input: string): string {
+	return /json/i.test(input) ? input : `${input}\n\nDevuelve la respuesta en JSON.`;
+}
+
 /** Un esquema estricto, tal como lo quiere `text.format`. */
 export type JsonSchema = {
 	name: string;
@@ -93,7 +111,7 @@ export async function askJson<T = Record<string, unknown>>(ask: Ask): Promise<T 
 			body: JSON.stringify({
 				model: ask.model,
 				instructions: ask.instructions,
-				input: ask.input,
+				input: ask.schema ? ask.input : ensureJsonMention(ask.input),
 				text: {
 					format: ask.schema
 						? {

@@ -12,14 +12,44 @@
  * cómo se hace el tipo, no qué es. Si tocas un `hint`, comprueba antes que sigue
  * diciendo lo que dice la fuente.
  *
- * Cada tipo lleva un `example`: un post entero de ese tipo, escrito a mano. En
- * el artículo, cada tipo va acompañado de una imagen con un ejemplo real (posts
- * de Justin Welsh, Jon Brosio, Lara Acosta, Rob Hoffman...). Esas capturas no se
- * pueden traer ni pegar aquí, así que están reescritas: un ejemplo propio por
- * tipo, todos sobre EL MISMO tema (preparar tu primer 10K) para que se vea la
- * idea del artículo —el mismo tema contado de diez formas— y para que el molde
- * de cada tipo quede claro. El tema del ejemplo es aposta uno cualquiera y
- * lejano: sirve para enseñar la FORMA, no para que el modelo copie el tema.
+ * ─────────────────────────────────────────────────────────────────────────
+ * LOS MOLDES DE LOS `hint` SALEN DE LAS CAPTURAS DEL ARTÍCULO. VERIFICABLES.
+ *
+ * El artículo acompaña cada tipo con capturas de posts reales. Se leyeron (julio
+ * de 2026) y de ahí salió el mecanismo concreto que lleva cada `hint`. Antes los
+ * hints decían QUÉ era cada tipo; ahora dicen CÓMO se construye, que es lo que
+ * el modelo puede seguir:
+ *
+ *   - `observacion` — hilo de Naval (59K me gusta): seis frases con la misma
+ *     construcción («X is an exit from Y»), una por línea, y una última sola que
+ *     nombra el patrón («Individuals are leaving institutions»).
+ *   - `lista` — post de Neal O'Grady: frase de principio, línea de qué viene, y
+ *     diez puntos con «Nombre: qué te da» + un comentario personal corto.
+ *   - `contracorriente` — post de Neal O'Grady: sátira de ingenuo fingido; cuenta
+ *     el bootstrapping como si fuera una tendencia nueva llamada «strap booting».
+ *   - `caso` — post de Neal O'Grady: siete líneas de «quién: antes → después»
+ *     antes de explicar nada, luego «in ~1 year», luego el contexto.
+ *   - `historia` — post de Neal O'Grady: credenciales apiladas, desinfladas con
+ *     «But nobody knew who I was», y de ahí el giro.
+ *   - `motivacion` — post de Lara Acosta: «lo hice sin logo, sin web y sin pitch
+ *     deck», reencuadre, tres imperativos y «stop overcomplicating it».
+ *
+ * Los otros cuatro tipos se quedaron como estaban porque sus capturas NO son
+ * posts de texto: la de `practico` es la portada de un carrusel y la de
+ * `contraste` es un post cuyo contenido es una infografía con dos gráficos. De
+ * un ejemplo visual no se saca un molde de texto.
+ * ─────────────────────────────────────────────────────────────────────────
+ *
+ * Cada tipo lleva un `example`: un post entero de ese tipo, escrito a mano.
+ * **Los posts reales NO se copian aquí**, y no por no poder: `example` se enseña
+ * en las tarjetas de la página, así que pegarlos sería publicar en el sitio de
+ * Damian el texto de Naval o de Lara Acosta sin más. El molde va en el `hint`
+ * (una estructura no es de nadie) y el ejemplo es propio.
+ *
+ * Los ejemplos van todos sobre EL MISMO tema (preparar tu primer 10K) para que se
+ * vea la idea del artículo —el mismo tema contado de diez formas— y para que el
+ * molde de cada tipo quede claro. El tema es aposta uno cualquiera y lejano:
+ * sirve para enseñar la FORMA, no para que el modelo copie el tema.
  *
  * El `example` se usa en dos sitios: se le pasa al modelo como muestra de la
  * forma (prompt.ts) y se enseña en las tarjetas bloqueadas de la página, para
@@ -57,7 +87,7 @@ El día que aguantes 40 minutos seguidos, estás a un mes del 10K.`
 		id: 'observacion',
 		name: 'Observación',
 		bestFor: 'Algo que has visto en tu sector y que nadie más cuenta.',
-		hint: 'Una cosa que has notado en tu sector y que otros no están diciendo. Enseña cómo ves tú el mundo. Es una idea, no un tutorial: corta, un solo pensamiento, sin pasos.',
+		hint: 'Una cosa que has notado en tu sector y que otros no están diciendo. Enseña cómo ves tú el mundo. Es una idea, no un tutorial: corta, un solo pensamiento, sin pasos. El molde que mejor funciona es la repetición: cuatro o seis frases con LA MISMA construcción, una por línea, cada una con un par de tu sector, y una última línea sola que nombre lo que tienen todas en común. Cada frase se sostiene sola; la última es la que hace clic.',
 		example: `Casi nadie deja de correr por las piernas. Lo deja por la cabeza.
 
 La primera semana duele todo y parece que no avanzas. Ahí se cae la mayoría.
@@ -78,7 +108,7 @@ Despacio se llega antes. Suena raro, pero es así.`
 		id: 'motivacion',
 		name: 'Motivación',
 		bestFor: 'No les falta saber más. Les falta que alguien les empuje.',
-		hint: 'La gente no necesita más información, necesita que la empujen a moverse. Apunta a lo que quiere de verdad y no siempre dice: estatus, dinero, tiempo libre. Dile que es posible. "Yo lo hice, tú también." Que se sienta capaz al terminar de leer.',
+		hint: 'La gente no necesita más información, necesita que la empujen a moverse. Apunta a lo que quiere de verdad y no siempre dice: estatus, dinero, tiempo libre. El molde: abre con un logro conseguido SIN la cosa que todos creen imprescindible ("lo hice sin X, sin Y y sin Z"), reencuadra en una frase lo que sí importa, suelta tres imperativos cortos en líneas separadas, y cierra con una orden tajante de cuatro palabras. Que se sienta capaz al terminar de leer.',
 		example: `No necesitas las zapatillas caras ni el reloj bueno. Necesitas salir hoy.
 
 Hay gente con la mitad de tu fondo cruzando metas de 10K cada domingo.
@@ -99,7 +129,7 @@ Por eso la gente aguanta tres semanas y acaba con la rodilla tocada.`
 		id: 'lista',
 		name: 'Lista',
 		bestFor: 'Una lista útil de tu sector. Se guarda y se comparte.',
-		hint: 'Una lista de cosas de tu sector: libros, herramientas, gente a seguir, errores que se repiten. Cada punto en su línea, con un porqué corto de para qué le sirve a quien lee. Sin relleno entre puntos.',
+		hint: 'Una lista de cosas de tu sector: libros, herramientas, gente a seguir, errores que se repiten. Abre con una frase de principio que justifique la lista, luego una línea que diga qué viene, y luego los puntos numerados. Cada punto lleva dos partes: qué es y para qué sirve, y después un comentario tuyo, personal y corto. Ese comentario es lo que separa una lista de un directorio: sin él es Wikipedia. Sin relleno entre puntos.',
 		example: `Cinco cosas que sí valen la pena para tu primer 10K:
 
 Unas zapatillas de tu número, probadas andando. Lo demás da igual.
@@ -111,7 +141,7 @@ Un domingo fijo en el calendario. Sin fecha, no hay carrera.`
 		id: 'contracorriente',
 		name: 'A contracorriente',
 		bestFor: 'Una opinión con pinchos. Divide y atrae a tu tribu.',
-		hint: 'Una opinión fuerte y con pinchos: algo se está haciendo mal, o debería hacerse de otra forma. Di lo que los tuyos piensan y no se atreven a decir. Sin miedo a molestar a los del otro bando: esa es la gracia.',
+		hint: 'Algo se está haciendo mal, o debería hacerse de otra forma. Di lo que los tuyos piensan y no se atreven a decir. Hay dos moldes y el segundo rinde más: (a) directo, la opinión con pinchos y sin rodeos; (b) ingenuo fingido, que es sátira — cuentas lo obvio de tu sector como si acabaras de descubrir una tendencia nuevísima, le pones un nombre ridículo, lo defines entre paréntesis con inocencia fingida ("por si no lo sabes, esto significa...") y cierras con un "a ver cómo acaba". Con (b) la crítica la hace el lector, y eso molesta más y se comparte mejor que un sermón. No insultes a nadie con nombre y apellidos.',
 		example: `Correr no es caro. Lo caro es la industria que le han montado encima.
 
 No te hace falta el reloj de 400 euros ni las mallas de compresión.
@@ -121,7 +151,7 @@ Te hace falta salir por la puerta. Lo demás es que gastes en vez de correr.`
 		id: 'caso',
 		name: 'Caso de éxito',
 		bestFor: 'El que menos gusta y el que más vende.',
-		hint: 'Una prueba de que lo tuyo funciona: un cliente contento, un resultado, un testimonio. Cuenta su problema y cómo lo resolviste. Si en los datos no hay una prueba real, deja un hueco entre corchetes para que la ponga la persona; no te la inventes.',
+		hint: 'Una prueba de que lo tuyo funciona. El molde: los resultados van PRIMERO y desnudos, uno por línea, en formato "quién: de dónde salía → a dónde llegó". Luego el plazo, en una línea sola ("en un año"). Luego, y solo entonces, de dónde salen esos datos. Y al final uno o dos casos contados en corto. La prueba abre, la explicación va detrás: al revés se lee como un folleto. Si en los datos no hay una prueba real, deja un hueco entre corchetes para que la ponga la persona; no te la inventes.',
 		example: `Marta llegó diciendo que ella "no servía para correr".
 
 Le costaba subir dos pisos sin ahogarse.
@@ -132,7 +162,7 @@ Ocho semanas después cruzó su primer 10K. No cambió de cuerpo, cambió de pla
 		id: 'historia',
 		name: 'Historia personal',
 		bestFor: 'Una historia tuya. Conecta y vende sin vender.',
-		hint: 'Una historia tuya, mejor si es normal y cualquiera se ve en ella. Usa el molde de Pixar: érase una vez, cada día, hasta que un día, por eso, por eso, hasta que al final. Muestra lo que pasó, no lo expliques.',
+		hint: 'Una historia tuya, mejor si es normal y cualquiera se ve en ella. El molde que funciona en redes no es el de cuento, es el del desinflado: primero apilas lo que conseguiste, un hecho por línea y sin adornos, hasta que suena bien; luego lo desinflas con una frase corta que lo tira todo ("pero nadie sabía quién era yo"); luego la causa en una línea; luego "¿el resultado?" y una lista de lo que te costó; y al final el giro y qué haces distinto ahora. Una frase por párrafo, con línea en blanco entre medias. Muestra lo que pasó, no lo expliques.',
 		example: `Yo tampoco servía para correr.
 
 Cada día me prometía empezar el lunes, y cada lunes lo dejaba para el siguiente.

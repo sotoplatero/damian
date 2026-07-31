@@ -41,22 +41,32 @@ const OUTPUT_SHAPE = `- Un objeto en "posts" por cada tipo pedido, en el mismo o
 - Solo el JSON, sin explicaciones ni bloques de código.`;
 
 /**
- * Prompt del primer paso: lee una página y, en la misma pasada, escribe el post
- * gratis (el primero de la lista). Una sola llamada para leer y escribir.
+ * Prompt del primer paso: lee la idea que ha escrito la persona y, en la misma
+ * pasada, escribe el post gratis (el primero de la lista).
+ *
+ * La entrada es TEXTO, no una URL. Antes se raspaba una web y de ahí se deducía
+ * el tema, lo que obligaba a tener una web y a que dijera algo aprovechable. Una
+ * idea escrita a mano llega más directa y sirve para quien todavía no tiene sitio.
+ * La contrapartida es que puede venir en dos palabras, así que el prompt tiene que
+ * saber trabajar con poco y decirlo cuando no da.
  */
 export const extractPrompt = () => {
 	const free = postTypes[0];
 
 	return `${ROLE}
 
-Recibes el texto plano de una página web. Puede ser la web de un negocio, una newsletter,
-una página de producto, un artículo o un post. Viene sucia, con restos de menús y pies de
-página: ignóralos.
+Recibes una idea escrita por la persona, con sus palabras. Puede venir muy suelta —dos
+líneas, un tema a secas— o bien explicada, con su público y su experiencia dentro.
 
 Haces dos cosas de una vez:
 
-1. Averiguar de qué va: cuál es el tema de esa persona, a quién le habla y qué le hace distinta.
+1. Ordenar la idea: cuál es el tema, a quién le habla y qué le hace distinta.
 2. Escribir un post del tipo "${free.name}" sobre ese tema.
+
+**Trabaja con lo que te dé, sin pedirle más.** Si la idea no dice a quién le habla, deduce
+el público más probable de ese tema y sigue. Si no dice qué le hace distinta, usa el ángulo
+que se desprenda de cómo lo ha escrito. Lo que no puedas deducir con fundamento, no lo
+rellenes con adornos: es mejor un ángulo sobrio que uno inventado.
 
 ${STYLE}
 
@@ -73,20 +83,20 @@ Devuelves SOLO un objeto JSON con esta forma exacta:
     "tema": "De qué va su contenido, su especialidad, en una frase",
     "publico": "A quién le habla y qué le duele o quiere, en una frase",
     "angulo": "Lo que le hace distinto: su punto de vista, su experiencia, su forma de verlo",
-    "prueba": "Cifras, casos, testimonios, años o clientes reales que aparezcan literalmente en la página. Cadena vacía si no hay nada."
+    "prueba": "Cifras, casos, testimonios o años que haya escrito ELLA en su idea. Cadena vacía si no hay nada."
   },
   "confidence": "alta" | "baja",
   "posts": [ { "id": "${free.id}", "text": "<el post entero>" } ]
 }
 
 Sobre "topic":
-- "tema", "publico" y "angulo" los escribes tú a partir de lo que leas. No copias sus frases
-  de marketing tal cual.
-- En "prueba" solo van datos que aparezcan en la página: no te inventas ninguno. Pero lo
-  escribes en español. Si la página está en inglés, traduces el dato; no lo copias tal cual.
-  Si no hay nada, cadena vacía.
-- Si la página no deja claro de qué va (un login, un error, una página casi vacía),
-  pon "confidence": "baja" y haz tu mejor conjetura.
+- "tema", "publico" y "angulo" los escribes tú a partir de lo que ha escrito, ordenado y en
+  una frase cada uno. No le devuelvas sus mismas palabras copiadas.
+- En "prueba" solo va lo que ella haya puesto: **no te inventas ni una cifra**. Si no ha dado
+  ninguna, cadena vacía — y entonces los posts que necesiten prueba dejan el hueco entre
+  corchetes en vez de rellenarlo.
+- Pon "confidence": "baja" cuando la idea es demasiado corta o vaga para saber de qué va de
+  verdad (una palabra, un saludo, algo sin tema). Haz tu mejor conjetura de todas formas.
 
 Sobre "posts":
 ${OUTPUT_SHAPE}`;

@@ -61,10 +61,10 @@ Every tool under `src/routes/tool/*` is reachable by URL; only the ones in
 
 `lyra`, `uuid-generator` and `character-counter` were removed.
 
-`7-frameworks` and `10-post-types` follow the same shape: **URL in → free preview on
-screen → full result emailed in exchange for the address.** The expensive half never
-reaches the browser. (`newsletter` shares the URL-in / email-gate shape but reports rather
-than generates.)
+`7-frameworks` and `10-post-types` follow the same shape: **something in → free preview on
+screen → full result emailed in exchange for the address.** The expensive half never reaches
+the browser. What goes in differs: `7-frameworks` and `newsletter` take a URL and fetch it;
+`10-post-types` takes a written idea and fetches nothing.
 
 **`/tool/7-frameworks`** scrapes a page and rewrites the offer with the seven
 copywriting frameworks in `src/lib/tools/7-frameworks/frameworks.ts`. The first is free
@@ -72,22 +72,39 @@ on screen; the other six are emailed. Framework definitions were audited against
 cheatsheet **image** in Neal O'Grady's article (the text alone is not enough) — don't
 change a `hint` without checking the source.
 
-**`/tool/10-post-types`** scrapes a page, deduces the topic behind it (topic, audience,
-angle, proof), and writes that one topic as ten social posts — one per type in
-`src/lib/tools/10-post-types/types.ts`. The first (`practico`) is free on screen; the
-other nine are emailed. Same URL-in → free-preview → gated-by-email shape as
-`7-frameworks`, but simpler underneath: a post type has no steps, so the model returns one
-`text` per type instead of keyed `blocks`. The ten types are translated and condensed from
-Neal O'Grady's "The 10 Types of Posts" — a `hint` says how to write the type, not what it
-is; don't change one without checking the source. Shares `voice.ts` with the other tools;
-the Lista and Práctico types are the only ones allowed line-separated items, and
-`format.ts` escapes leading markdown so those lines survive the email shell. Each type also
-carries an `example` — a full sample post of that type, all ten on one shared off-topic
-subject (running a first 10K) so they read as "the same topic, ten ways." The article pairs
-every type with an example screenshot (real posts by Justin Welsh, Jon Brosio, etc.); those
-can't be pulled in, so the examples are rewritten in the site voice. They're used twice: fed
-to the model as a shape anchor (with a caveat not to copy the running topic) and shown on the
-locked cards, so a visitor sees each type's flavour while their own nine stay in the email.
+**`/tool/10-post-types`** takes **a written idea, not a URL** — nothing is fetched. It orders
+the idea (topic, audience, angle, proof) and writes that one topic as ten social posts, one
+per type in `src/lib/tools/10-post-types/types.ts`. The first (`practico`) is free on screen;
+the other nine are emailed. Simpler underneath than `7-frameworks`: a post type has no steps,
+so the model returns one `text` per type instead of keyed `blocks`.
+
+The input used to be a scraped URL, which required having a site that said something usable.
+Text works for someone who doesn't. The trade-off is that it can arrive in two words, so the
+server enforces `IDEA_MIN`/`IDEA_MAX` (20–2000 chars, duplicated in the page and named in the
+copy file) and the prompt is told to work with little and set `confidence: baja` when it does.
+The field is a textarea, so `InlineForm` doesn't fit — `TextareaForm.svelte` is its stacked
+sibling, and submits on Ctrl/Cmd+Enter because Enter has to insert a newline.
+
+The ten types are translated and condensed from Neal O'Grady's "The 10 Types of Posts" — a
+`hint` says how to write the type, not what it is; don't change one without checking the
+source. **The article's example screenshots were read** (they can be: download the image and
+open it) and six hints now carry the concrete mechanism from a real post — anaphora plus a
+naming line for `observacion`, results-first for `caso`, mock-naive satire for
+`contracorriente`. Which post each came from is listed in `types.ts`. The other four kept
+their hints because their screenshots are a carousel cover and an infographic: no text
+structure to take from a picture.
+
+**The real posts are not copied into `example`.** That field is rendered on the public page,
+so pasting them would republish Naval's and Lara Acosta's writing on Damian's site. Structure
+goes in the `hint` (a shape belongs to nobody), the `example` stays ours: one per type, all
+ten on the same off-topic subject (running a first 10K) so they read as "the same topic, ten
+ways", and far enough from any real user's topic that the model copies the form and not the
+subject. Each `example` is used twice — as a shape anchor in the prompt and on the locked
+cards, so a visitor sees each type's flavour while their own nine stay in the email.
+
+Shares `voice.ts` with the other tools. Lista and Práctico are the only types allowed
+line-separated items, and `format.ts` escapes leading markdown so those lines survive the
+email shell.
 
 **`/tool/newsletter`** audits a Substack from what it shows publicly. **Unlisted while the
 judgement half is reworked — read `docs/auditoria-de-referencia.md` before touching it.**
@@ -152,10 +169,17 @@ accepts a **strict JSON schema**, so the model cannot return a shape we didn't e
 `json_object` the JSON was valid but the shape wasn't guaranteed, and sections vanished from
 reports in silence.
 
-Three things about the gpt-5 family that each cost a 400, documented in the file: the output
-cap is `max_output_tokens`; only the default temperature is accepted; and the answer is **not**
-in `choices[0].message.content` — it's in `output[]`, where reasoning models put a `reasoning`
-item first, so you walk the array looking for the `message`.
+Four things that each cost a 400, documented in the file: the output cap is
+`max_output_tokens`; only the default temperature is accepted; the answer is **not** in
+`choices[0].message.content` — it's in `output[]`, where reasoning models put a `reasoning`
+item first, so you walk the array looking for the `message`; and with `json_object` (no
+schema) the word **"json" must appear in `input`**, not in `instructions` — the client appends
+it when missing. That last one is a real difference from `chat/completions`, where system and
+user shared one `messages` array, and it broke both non-schema tools until it was found by
+actually running them.
+
+**Run the tools after touching this file.** Type-checking passes either way; the failures are
+all 400s from the API.
 
 **Never change the model.** It's `gpt-5.4-mini`, chosen by Damian after benchmarking eight.
 
