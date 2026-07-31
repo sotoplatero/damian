@@ -6,6 +6,7 @@ import { signEmail } from './tokens';
 import toolCopyTemplate from '../emails/tool-7-frameworks.md?raw';
 import toolNewsletterTemplate from '../emails/tool-newsletter.md?raw';
 import toolPostsTemplate from '../emails/tool-10-post-types.md?raw';
+import toolRepurposeTemplate from '../emails/tool-repurpose.md?raw';
 
 /** A subscriber as stored in the Resend audience. */
 export type Contact = {
@@ -91,11 +92,11 @@ export async function sendSequenceEmail(to: string, index: number): Promise<bool
  * frameworks already formatted as markdown; it replaces `{{COPIES}}` in
  * `src/lib/emails/tool-7-frameworks.md`.
  */
-export async function sendToolCopyEmail(to: string, copiesMarkdown: string): Promise<void> {
+async function sendToolEmail(template: string, marker: string, to: string, markdown: string): Promise<void> {
 	const from = env.RESEND_FROM;
 	if (!from) throw new Error('RESEND_FROM no configurada');
 	const url = unsubscribeUrl(to);
-	const rendered = renderStandalone(toolCopyTemplate, url, { COPIES: copiesMarkdown });
+	const rendered = renderStandalone(template, url, { [marker]: markdown });
 
 	const { error } = await client().emails.send({
 		from,
@@ -108,6 +109,10 @@ export async function sendToolCopyEmail(to: string, copiesMarkdown: string): Pro
 		}
 	});
 	if (error) throw new Error(error.message);
+}
+
+export async function sendToolCopyEmail(to: string, copiesMarkdown: string): Promise<void> {
+	await sendToolEmail(toolCopyTemplate, 'COPIES', to, copiesMarkdown);
 }
 
 /**
@@ -116,22 +121,7 @@ export async function sendToolCopyEmail(to: string, copiesMarkdown: string): Pro
  * `src/lib/emails/tool-10-post-types.md`.
  */
 export async function sendToolPostsEmail(to: string, postsMarkdown: string): Promise<void> {
-	const from = env.RESEND_FROM;
-	if (!from) throw new Error('RESEND_FROM no configurada');
-	const url = unsubscribeUrl(to);
-	const rendered = renderStandalone(toolPostsTemplate, url, { POSTS: postsMarkdown });
-
-	const { error } = await client().emails.send({
-		from,
-		to,
-		subject: rendered.subject,
-		html: rendered.html,
-		headers: {
-			'List-Unsubscribe': `<${url}>`,
-			'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
-		}
-	});
-	if (error) throw new Error(error.message);
+	await sendToolEmail(toolPostsTemplate, 'POSTS', to, postsMarkdown);
 }
 
 /**
@@ -139,20 +129,9 @@ export async function sendToolPostsEmail(to: string, postsMarkdown: string): Pro
  * cifras y el nicho; todo lo demás vive en este correo.
  */
 export async function sendNewsletterReportEmail(to: string, reportMarkdown: string): Promise<void> {
-	const from = env.RESEND_FROM;
-	if (!from) throw new Error('RESEND_FROM no configurada');
-	const url = unsubscribeUrl(to);
-	const rendered = renderStandalone(toolNewsletterTemplate, url, { REPORT: reportMarkdown });
+	await sendToolEmail(toolNewsletterTemplate, 'REPORT', to, reportMarkdown);
+}
 
-	const { error } = await client().emails.send({
-		from,
-		to,
-		subject: rendered.subject,
-		html: rendered.html,
-		headers: {
-			'List-Unsubscribe': `<${url}>`,
-			'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
-		}
-	});
-	if (error) throw new Error(error.message);
+export async function sendToolPiecesEmail(to: string, piecesMarkdown: string): Promise<void> {
+	await sendToolEmail(toolRepurposeTemplate, 'PIECES', to, piecesMarkdown);
 }

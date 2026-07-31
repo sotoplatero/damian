@@ -56,6 +56,7 @@ Every tool under `src/routes/tool/*` is reachable by URL; only the ones in
 |---|---|
 | `7-frameworks` | Listed. Built on the site theme. |
 | `10-post-types` | Listed. Built on the site theme. |
+| `repurpose` | Listed. Built on the site theme. |
 | `newsletter` | **Live by URL, unlisted.** Built on the site theme; pulled from the home page while the judgement half is reworked. See below. |
 | `places-evaluator` | Live by URL, unlisted. Predates the theme, still Paraglide + DaisyUI. |
 
@@ -105,6 +106,16 @@ cards, so a visitor sees each type's flavour while their own nine stay in the em
 Shares `voice.ts` with the other tools. Lista and Práctico are the only types allowed
 line-separated items, and `format.ts` escapes leading markdown so those lines survive the
 email shell.
+
+**`/tool/repurpose`** takes an article URL and returns nine native pieces: three Substack
+notes, three X posts and three LinkedIn posts. One per channel is free on screen; the other
+six and a publication order are emailed. Its formats are ours and live in
+`src/lib/tools/repurpose/formats.ts`.
+
+The quote-based pieces stay behind the gate because their verbatim quote is verified after
+extraction. The shared guards live in `src/lib/tools/quotes.ts`: normalize the haystack with
+`normalizeQuoteText` before `verifyQuote`. Markdown escaping is shared in `markdown.ts`.
+Only `nota-teaser` may carry the article URL, which is validated again as http/https.
 
 **`/tool/newsletter`** audits a Substack from what it shows publicly. **Unlisted while the
 judgement half is reworked.**
@@ -216,8 +227,9 @@ Resend sends everything. **There is no cron.**
   immediately. `01-03.md` are drafts for Substack posts, not scheduled sends. Damian exports
   the Resend contacts and imports them into Substack by hand.
 - Only strictly numbered `NN.md` files join that sequence. One-off emails
-  (`tool-7-frameworks.md`, `tool-newsletter.md`) live in the same folder under non-numeric
+  (`tool-7-frameworks.md`, `tool-newsletter.md`, `tool-repurpose.md`) live in the same folder under non-numeric
   names and are rendered on demand with `renderStandalone`.
+- Tool deliveries share the private `sendToolEmail` body in `resend.ts`.
 - **`renderStandalone` substitutes variables only in the body, after parsing the
   frontmatter.** Doing it before once injected content into the frontmatter and shipped
   emails with no subject. Don't undo that.

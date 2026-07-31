@@ -42,5 +42,11 @@ export const tools: Tool[] = [
 		href: '/tool/10-post-types',
 		blurb: 'Pegas tu web y te devuelvo el mismo tema contado en diez posts para redes.',
 		capturesEmail: true
+	},
+	{
+		name: 'Un artículo, repartido en 9 piezas',
+		href: '/tool/repurpose',
+		blurb: 'Pegas el enlace de un artículo tuyo y te lo devuelvo en notas de Substack y posts de X y LinkedIn.',
+		capturesEmail: true
 	}
 ];
