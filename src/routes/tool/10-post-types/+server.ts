@@ -1,6 +1,6 @@
 import { json } from '@sveltejs/kit';
-import { env } from '$env/dynamic/private';
 import type { RequestHandler } from './$types';
+import { askJson } from '$lib/server/openai';
 import { scrape, UnreadableError } from '$lib/server/scrape';
 import { subscribe, sendToolPostsEmail } from '$lib/server/resend';
 import { isDisposable } from '$lib/server/email-validation';
@@ -18,39 +18,24 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
  */
 const MODEL = 'gpt-5.4-mini';
 
-/** Una llamada a OpenAI que devuelve JSON ya parseado. */
-async function askJson(
-	system: string,
-	user: string,
-	maxTokens: number
-): Promise<Record<string, unknown>> {
-	const key = env.OPENAI_API_KEY;
-	if (!key) throw new Error('OPENAI_API_KEY no configurada');
-
-	const response = await fetch('https://api.openai.com/v1/chat/completions', {
-		method: 'POST',
-		headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
-		body: JSON.stringify({
-			model: MODEL,
-			messages: [
-				{ role: 'system', content: system },
-				{ role: 'user', content: user }
-			],
-			response_format: { type: 'json_object' },
-			// La familia gpt-5 usa max_completion_tokens (no max_tokens) y solo
-			// acepta la temperatura por defecto: mandar `temperature` da un 400.
-			max_completion_tokens: maxTokens
-		})
+/**
+ * Una llamada a OpenAI que devuelve JSON ya parseado.
+ *
+ * Aquí un fallo sí es fatal —sin posts no hay nada que enseñar—, así que se
+ * convierte el `null` del cliente en una excepción. El cliente y las rarezas de
+ * la Responses API están en `$lib/server/openai.ts`, que es de donde tiran los
+ * tres tools: aquí no va un `fetch` suelto.
+ */
+async function ask(system: string, user: string, maxTokens: number): Promise<Record<string, unknown>> {
+	const data = await askJson({
+		model: MODEL,
+		instructions: system,
+		input: user,
+		maxOutputTokens: maxTokens,
+		tag: 'tool/10-post-types'
 	});
-
-	if (!response.ok) {
-		const detail = await response.text();
-		console.error('[tool/10-post-types] OpenAI error:', response.status, detail);
-		throw new Error('openai_failed');
-	}
-
-	const data = await response.json();
-	return JSON.parse(data.choices?.[0]?.message?.content ?? '{}');
+	if (!data) throw new Error('openai_failed');
+	return data;
 }
 
 function readTopic(input: unknown): Topic | null {
@@ -70,7 +55,7 @@ function readTopic(input: unknown): Topic | null {
 }
 
 async function write(topic: Topic, ids: string[], maxTokens: number): Promise<GeneratedPost[]> {
-	const raw = await askJson(writePrompt(ids), topicMessage(topic), maxTokens);
+	const raw = await ask(writePrompt(ids), topicMessage(topic), maxTokens);
 	return sanitizePosts(raw);
 }
 
@@ -105,7 +90,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 				throw error;
 			}
 
-			const raw = await askJson(
+			const raw = await ask(
 				extractPrompt(),
 				`URL: ${page.finalUrl}
 Título: ${page.title}

@@ -143,7 +143,7 @@ disagree.
 
 ### OpenAI
 
-**All model calls go through `src/lib/server/openai.ts`.** Both tools use it; neither has its
+**All model calls go through `src/lib/server/openai.ts`.** All three tools use it; none has its
 own `fetch`. When an external API needs wiring, the client goes in a reusable `$lib/server`
 module — not duplicated per endpoint.
 
