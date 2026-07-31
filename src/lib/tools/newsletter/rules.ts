@@ -19,12 +19,13 @@ import type { Measurements } from './checks';
  * porque un cuestionario **solo encuentra lo que a alguien se le ocurrió
  * preguntar**, y lo que de verdad le duele a un autor no está en esa lista.
  *
- * La prueba está en `docs/auditoria-de-referencia.md`: de los diez hallazgos de
- * la auditoría escrita a mano de Kloshletter, el cuestionario encontraba tres.
- * Se le escapaba que el 100% de sus enlaces salen por un redirector de Mailchimp
- * con el hash de un suscriptor publicado — nadie iba a escribir una regla para
- * eso. Y encima el `aplica: true/false` presionaba al modelo a opinar sobre las
- * cinco reglas aunque no hubiera nada que decir.
+ * La prueba está en la auditoría de referencia escrita a mano (no está en el
+ * repo, ver CLAUDE.md): de sus diez hallazgos, el cuestionario encontraba tres.
+ * Uno de los que se le escapaban era que todos los enlaces del archivo salían por
+ * el redirector de un proveedor antiguo, con un identificador de suscriptor
+ * colgando de la URL — nadie iba a escribir una regla para eso, y es exactamente
+ * el tipo de cosa que hace daño. Y encima el `aplica: true/false` presionaba al
+ * modelo a opinar sobre las cinco reglas aunque no hubiera nada que decir.
  *
  * EL CANDADO: `verifyQuote`. Todo hallazgo abierto trae una cita literal, y se
  * comprueba contra el material que se le pasó ANTES de aceptarlo. Sin este
@@ -773,7 +774,7 @@ export function openFindings(
  * cuando el descubrimiento mejora.** Con un canal abierto, el número de hallazgos
  * es variable y no acotado, así que una nota castigaría a la publicación por que
  * nosotros auditemos mejor. Y la prueba final: el tool le daba 92 a Kloshletter
- * donde la auditoría escrita a mano le da 55 (`docs/auditoria-de-referencia.md`).
+ * donde la auditoría escrita a mano de la misma publicación le daba 55.
  *
  * Lo que queda es defendible frase a frase: un estado que sale de una regla de
  * una línea, y recuentos, que son hechos y no juicios. Si alguien vuelve a querer

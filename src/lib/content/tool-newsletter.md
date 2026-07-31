@@ -13,7 +13,8 @@ restart: Probar con otra
 #
 # YA NO HAY NOTA SOBRE 100. Se quitó porque cualquier número agregado sobre los
 # hallazgos empeora cuando el tool encuentra más cosas, y porque se desviaba 37
-# puntos de la auditoría escrita a mano (docs/auditoria-de-referencia.md). El
+# puntos de la auditoría escrita a mano de referencia (no está en el repo: es
+# una auditoría con nombre y el repo es público; pídesela a Damian). El
 # motivo largo está en `tally`, en src/lib/tools/newsletter/rules.ts.
 readLine: Auditado {site}.
 stateNote: Ordenado por gravedad, no por dimensión: lo de arriba es lo que más cuesta dejar sin arreglar.

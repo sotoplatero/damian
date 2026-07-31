@@ -26,3 +26,10 @@ vite.config.ts.timestamp-*
 src/lib/paraglide
 
 .vercel
+
+# La auditoria de referencia de /tool/newsletter NO va al repo.
+# Es una auditoria critica de una publicacion real, con nombre, y este repo es
+# publico: publicarla seria senalar a alguien sin que lo sepa. Se queda en local
+# como diana contra la que medir el informe. Lo que si es durable -el metodo y las
+# lecciones- esta en CLAUDE.md y en los comentarios de src/lib/tools/newsletter/.
+docs/auditoria-de-referencia.md

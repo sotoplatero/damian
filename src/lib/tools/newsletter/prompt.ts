@@ -17,8 +17,9 @@ import type { Measurements } from './checks';
  * **Se le manda el texto de los números, entero.** Antes se le mandaba un resumen
  * de nuestras propias expresiones regulares —«sin botón de suscripción, 22
  * enlaces, cierra así…»— y por eso no encontraba nada que no estuviera ya
- * previsto en una regla. Ver `docs/auditoria-de-referencia.md`: de diez hallazgos
- * escritos a mano, el cuestionario cerrado encontraba tres.
+ * previsto en una regla. Medido contra la auditoría de referencia escrita a mano
+ * (no está en el repo, ver CLAUDE.md): de sus diez hallazgos, el cuestionario
+ * cerrado encontraba tres y el canal abierto cuatro.
  *
  * **No hay lista de preguntas.** Hay áreas en las que mirar y permiso explícito
  * para no devolver nada. Un `aplica: true/false` por regla presiona al modelo a

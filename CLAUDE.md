@@ -107,7 +107,21 @@ line-separated items, and `format.ts` escapes leading markdown so those lines su
 email shell.
 
 **`/tool/newsletter`** audits a Substack from what it shows publicly. **Unlisted while the
-judgement half is reworked — read `docs/auditoria-de-referencia.md` before touching it.**
+judgement half is reworked.**
+
+There is a **reference audit** — a hand-written audit of one real publication against real
+data — that the report is measured against. It is **deliberately not in this repo**: it names
+a real publication and criticises it, and this repo is public. Ask Damian for it before
+reworking the judgement half. Everything durable that came out of it is written down here and
+in the comments of `src/lib/tools/newsletter/`, so you are not blocked without it:
+
+- The measure of a finding is **"does this help the person who writes the newsletter — will
+  they change something tomorrow?"**, judged by reading, not by counting.
+- Using the reference as a checklist to hit is a **mistake that was already made**: the prompt
+  got tuned until one specific known finding appeared, which is a hidden questionnaire
+  overfitted to a single publication. Don't hint at findings you already know.
+- A deliberate operational choice is not a defect. The prompt says so; that instruction came
+  from grading someone's mid-migration setup as GRAVE and being wrong.
 That file is a hand-written audit of Kloshletter against real data, and it is the target the
 report is measured against. It is *not* a checklist to hit: measuring coverage against it
 led to overfitting the prompt to one publication, and that mistake is recorded there.

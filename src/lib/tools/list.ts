@@ -15,8 +15,10 @@
  *     con el resto. Para sacarlo a la home hay que migrarlo al tema del sitio.
  *   - `newsletter` — funciona, pero el informe todavía no aporta lo que debería.
  *     Se está reescribiendo la parte de juicio y la referencia contra la que se
- *     mide está en `docs/auditoria-de-referencia.md`. Vuelve a la home cuando el
- *     informe pase el filtro de ese documento: que quien lo lea cambie algo.
+ *     mide es una auditoría escrita a mano que NO está en el repo (nombra una
+ *     publicación real y esto es público; pídesela a Damian). Vuelve a la home
+ *     cuando el informe pase el filtro de ese documento: que quien lo lea cambie
+ *     algo.
  */
 export type Tool = {
 	/** Lo que se lee en el enlace. Que diga qué hace, no cómo se llama por dentro. */
