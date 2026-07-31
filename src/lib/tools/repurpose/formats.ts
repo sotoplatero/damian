@@ -67,7 +67,7 @@ export const formats: Format[] = [
 		channel: 'substack',
 		name: 'Nota con pregunta',
 		bestFor: 'Abrir conversación con quien ya te lee',
-		hint: `Coge la duda que resuelve el artículo y devuélvesela al lector como pregunta abierta, sin resolverla. Dos o tres frases, cada una en su línea y por debajo de 55 caracteres, que es lo que se lee de un golpe en el móvil. Termina preguntando, no afirmando: esta nota vive de lo que contesten.`,
+		hint: `Coge la duda que resuelve el artículo y devuélvesela al lector como pregunta abierta, sin resolverla. Dos o tres frases, cada una en su línea y corta, de las que se leen de un golpe en el móvil. Termina preguntando, no afirmando: esta nota vive de lo que contesten.`,
 		example: `Llevo tres meses corriendo y sigo sin poder con cinco kilómetros seguidos.
 
 Un amigo me dice que pare y camine treinta segundos cada kilómetro. Que así llego antes a los diez.
