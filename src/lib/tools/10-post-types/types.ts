@@ -58,6 +58,154 @@
  * A diferencia de los 7 frameworks, un tipo de post no tiene pasos: cada uno
  * produce UN post entero de una tacada. Por eso aquí no hay `steps`.
  */
+/**
+ * Un post real de cada tipo, para el prompt y SOLO para el prompt.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ESTO NO SE RENDERIZA NUNCA. Va en un mapa aparte, y no como campo de
+ * `PostType`, justamente para que no se cuele en una tarjeta por descuido: lo que
+ * se enseña en la página es `example`, que es nuestro.
+ *
+ * Son los posts de las capturas del artículo, copiados tal cual (en inglés).
+ * Sirven de ancla de forma: el modelo ve cómo respira un post que de verdad
+ * funcionó y escribe OTRO, en español y sobre el tema de quien usa el tool. Eso es
+ * few-shot, y no publica nada de nadie.
+ *
+ * **No todos los tipos tienen ancla, y no hay que forzarlo.** Faltan `practico`,
+ * `contraste`, `analisis` y `meme` porque sus ejemplos en el artículo no son
+ * posts de texto: son portadas de carrusel, una infografía, una ficha de Product
+ * Hunt y un meme. No es casualidad — en LinkedIn esos cuatro son formatos de
+ * imagen. Inventar un ancla para ellos sería peor que no tenerla.
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+export const ANCHORS: Record<string, { author: string; text: string }> = {
+	observacion: {
+		author: 'Naval Ravikant (59.000 me gusta)',
+		text: `Bitcoin is an exit from the Fed.
+
+DeFi is an exit from Wall Street.
+
+Social media is an exit from mass media.
+
+Homeschooling is an exit from industrial education.
+
+Remote work is an exit from 9-5.
+
+Creator economy is an exit from employment.
+
+Individuals are leaving institutions.`
+	},
+
+	motivacion: {
+		author: 'Lara Acosta',
+		text: `I made my first 10K with no logo, website, or pitch deck.
+
+People don't care about your logo; they care about YOU.
+
+- Know your ideal audience
+- Post on one platform daily
+- Solve their problem through content
+
+Stop overcomplicating it.`
+	},
+
+	lista: {
+		author: "Neal O'Grady",
+		text: `You're only as smart as the information you consume.
+Here's my LinkedIn info diet to be a better founder and marketer:
+
+1. Katelyn Bourgoin: Buyer's psychology. One of the smartest marketers I know.
+
+2. Amanda Natividad: Content marketing. Champion of "zero-click content." Love her quirky humour.
+
+3. Louis Grenier. How to stand the f*ck out in a crowded space.
+
+4. Justin Welsh: Solopreneurship and audience building. Honestly one of the most clever audience builders I've seen.
+
+5. Greg Isenberg: Community. Also one of the best networkers and serial founders I've met.
+
+[la lista sigue hasta 10]`
+	},
+
+	contracorriente: {
+		author: "Neal O'Grady",
+		text: `Wow, I just got off the call with a unicorn founder. They were telling me about the hottest new trend in startups in 2022.
+
+It's called something like "strap booting"
+
+Apparently, it's when you don't take a ton of money from people in suits. And instead, you use your own money to try to build a PROFITABLE business.
+
+(If you don't know, profitable means your revenue is HIGHER than your costs—crazy right!?)
+
+Apparently, the founder got the idea when he realized that the people in suits are now broke.
+
+Can't wait to see how this plays out`
+	},
+
+	caso: {
+		author: "Neal O'Grady",
+		text: `Zain Kahn: 0 -> 500k followers
+Blake Burge: 10k -> 410k followers
+Nathan Baugh: 5k -> 235k followers
+Amanda Natividad: 8k -> 146k followers
+Dave Kline: 0 -> 103k followers
+Brian Bourque: 0 -> 80k followers
+Joe Portsmouth: 0 -> 52k followers
+
+In ~1 year.
+
+These are some of the 754 students of the Audience Building course we ran with Sahil Bloom.
+
+Here's a brief story of our top students.
+
+1) Zain
+
+Zain went from working a 9-5 and having an audience of 0.
+
+A year later he has:
+
+- 4 income streams
+- Constant job offers
+- 500k followers
+- Book deal
+- A network of billionaires
+
+[sigue con el resto de alumnos]`
+	},
+
+	historia: {
+		author: "Neal O'Grady",
+		text: `6 years ago, I started my 4th business
+
+We raised $450k in a crowdfunding campaign for our first client.
+
+Within 2 years, we worked with Microsoft, Segment, Envoy, Perfect Keto, and dozens of other clients.
+
+We wrote for Techcrunch.
+We gave talks at YC and Google.
+We even got accepted into YC in 2019.
+
+After 5.5 years, we had created two 7-figure brands, Bell Curve and Demand Curve.
+
+But nobody knew who I was.
+
+I hid behind the brands—and let my cofounder, Julian, be the face.
+
+The result?
+
+- My network was small
+- I was never asked to be an advisor
+- I was never asked to speak on podcasts
+- I only got DMs to sell me things
+- I relied on Julian to meet cool founders
+
+That all changed a year ago.
+I decided to stop hiding behind the brand.
+
+[sigue contando qué hizo]`
+	}
+};
+
 export type PostType = {
 	id: string;
 	/** Nombre tal y como se ve en pantalla. */
@@ -174,11 +322,14 @@ El día que crucé mi primer 10K lloré. Ahora ayudo a que otros lleguen a llora
 		id: 'meme',
 		name: 'Meme',
 		bestFor: 'Hace reír a los tuyos y refuerza tu punto de vista.',
-		hint: 'Un texto con gracia para los tuyos, no para cualquiera con dedos. Adapta un formato de meme a tu tema, o suelta una frase con remate que haga reír y pensar a la vez. Que refuerce tu punto de vista. Como es solo texto: si hace falta, describe la imagen entre paréntesis y debajo va el texto del meme. Una o dos líneas, no más.',
-		example: `(Foto de alguien reventado tirado en el sofá)
+		// Este tipo NO es texto y hay que decirlo: en el artículo, el ejemplo de meme
+		// es un post cuyo texto entero es «You've been there, right?» y el chiste va
+		// en la imagen. Un chiste solo en texto es otra cosa y sale flojo. Así que la
+		// salida son dos piezas y la segunda es un encargo, no un adorno.
+		hint: 'En redes un meme es una imagen con una línea encima, y el chiste está en la imagen. Aquí solo se escribe texto, así que devuelves DOS cosas: primero la línea que va encima —corta, la que hace que alguien pare a mirar—, y luego, en una línea que empiece por "Imagen:", qué imagen hay que poner. Sé concreto con la imagen: di el formato de meme conocido o describe la escena, y qué texto va dentro si lleva. Tiene que hacer reír a los tuyos y reforzar tu punto de vista, no a cualquiera con dedos. Nada de chistes que necesiten explicación.',
+		example: `Cuando dices que vas a correr un 10K y lo primero que te preguntan es el tiempo objetivo.
 
-Yo: mañana salgo a correr sin falta.
-El mañana: lleva tres años sin llegar.`
+Imagen: el meme de los dos botones, con el tío sudando. Botón izquierdo: "decir una hora clavada". Botón derecho: "decir que solo quiero terminar".`
 	}
 ];
 

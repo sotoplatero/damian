@@ -1,4 +1,4 @@
-import { postTypes, type PostType } from './types';
+import { ANCHORS, postTypes, type PostType } from './types';
 import { STYLE } from '$lib/tools/voice';
 
 /** El tema del usuario, sacado de su web o de lo que escriba. */
@@ -13,15 +13,41 @@ export type Topic = {
 	prueba?: string;
 };
 
+function indent(text: string): string {
+	return text
+		.split('\n')
+		.map((line) => `      ${line}`)
+		.join('\n');
+}
+
+/**
+ * La ficha de cada tipo para el modelo: para qué sirve, cómo se hace, y hasta dos
+ * muestras.
+ *
+ * La segunda muestra es el ancla: un post real que funcionó, en inglés y sobre otro
+ * tema (ver `ANCHORS`). Solo la tienen seis de los diez tipos, y se omite sin más
+ * en los otros cuatro — es mejor no tener ancla que inventarse una.
+ *
+ * Va en inglés a propósito y se avisa de que lo está: lo que tiene que copiar es el
+ * ritmo y el esqueleto, no el idioma ni el tema.
+ */
 function typeSpec(list: PostType[]): string {
 	return list
-		.map(
-			(type) =>
-				`- id "${type.id}" — ${type.name}\n   Para qué: ${type.bestFor}\n   Cómo: ${type.hint}\n   Ejemplo de la forma (es de OTRO tema, correr un 10K; enseña el molde, no lo copies):\n${type.example
-					.split('\n')
-					.map((line) => `      ${line}`)
-					.join('\n')}`
-		)
+		.map((type) => {
+			const anchor = ANCHORS[type.id];
+			return [
+				`- id "${type.id}" — ${type.name}`,
+				`   Para qué: ${type.bestFor}`,
+				`   Cómo: ${type.hint}`,
+				`   Ejemplo de la forma (de OTRO tema, correr un 10K; enseña el molde, no lo copies):`,
+				indent(type.example),
+				anchor
+					? `   Y un post REAL de este tipo que funcionó, de ${anchor.author}. Está en inglés y va de otro tema: fíjate en el esqueleto y en el ritmo —cuántas líneas, dónde respira, cómo abre y cómo remata— y escribe el tuyo en español sobre el tema del usuario. No lo traduzcas ni lo calques:\n${indent(anchor.text)}`
+					: ''
+			]
+				.filter(Boolean)
+				.join('\n');
+		})
 		.join('\n\n');
 }
 
@@ -33,7 +59,8 @@ const OUTPUT_SHAPE = `- Un objeto en "posts" por cada tipo pedido, en el mismo o
 - Cada "text" es el post entero, listo para copiar y pegar en redes. Sin comillas alrededor,
   sin repetir el nombre del tipo dentro del post, sin títulos tipo "Post práctico:".
 - Puedes usar saltos de línea dentro de un post. Los tipos Lista y Práctico van en líneas
-  separadas, una cosa por línea. Ningún otro markdown: nada de negrita, viñetas ni almohadillas.
+  separadas, una cosa por línea, y el Meme lleva la línea de encima y debajo la que empieza
+  por "Imagen:". Ningún otro markdown: nada de negrita, viñetas ni almohadillas.
 - Es el mismo tema en los diez, pero cada post lo cuenta desde su ángulo. No repitas las mismas
   frases de un tipo a otro.
 - Los ejemplos de cada tipo son de correr un 10K y están SOLO para que veas la forma. Escribe
