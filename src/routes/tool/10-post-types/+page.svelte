@@ -121,8 +121,8 @@
 </script>
 
 <PageMeta
-	title="Tu tema, en 10 tipos de post — Damian Soto"
-	description="Escribe una idea y te la devuelvo contada en los 10 tipos de post que más funcionan en redes. El primero, gratis."
+	title="Saca 10 posts distintos de una sola idea — Damian Soto"
+	description="Escribe un tema y recibe diez posts distintos listos para publicar. El primero es gratis."
 />
 
 <!--
@@ -150,28 +150,30 @@
 {/snippet}
 
 {#if !posts.length}
-	{@render intro_()}
+	<section class="screen-center">
+		{@render intro_()}
 
-	{#if error}
-		<p class="mt-6 text-sm text-error">{error}</p>
-	{/if}
+		{#if error}
+			<p class="mt-6 text-sm text-error">{error}</p>
+		{/if}
 
-	<div class="mt-8">
-		<TextareaForm
-			bind:value={idea}
-			placeholder={t.ideaPlaceholder}
-			label={t.ideaButton}
-			busyLabel={t.ideaWorking}
-			busy={busy === 'analyzing'}
-			minLength={IDEA_MIN}
-			maxLength={IDEA_MAX}
-			hint={idea.trim().length >= IDEA_MIN ? t.ideaShortcut : t.ideaHint}
-			onsubmit={analyze}
-		/>
-	</div>
+		<div class="mt-8">
+			<TextareaForm
+				bind:value={idea}
+				placeholder={t.ideaPlaceholder}
+				label={t.ideaButton}
+				busyLabel={t.ideaWorking}
+				busy={busy === 'analyzing'}
+				minLength={IDEA_MIN}
+				maxLength={IDEA_MAX}
+				hint={idea.trim().length >= IDEA_MIN ? t.ideaShortcut : t.ideaHint}
+				onsubmit={analyze}
+			/>
+		</div>
 
-	<!-- El crédito, justo debajo del formulario. -->
-	<div class="mt-6">{@render credit()}</div>
+		<!-- El crédito, justo debajo del formulario. -->
+		<div class="mt-6">{@render credit()}</div>
+	</section>
 {:else}
 	{@render intro_()}
 

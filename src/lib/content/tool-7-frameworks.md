@@ -36,8 +36,6 @@ errorGeneric: Algo ha fallado por mi parte. Inténtalo otra vez.
 errorOffline: No se pudo conectar. Revisa tu conexión.
 ---
 
-# Tu oferta, escrita de 7 formas.
+# Reescribe tu oferta con 7 fórmulas de venta.
 
-**Pega tu web.** Te la leo y te la devuelvo montada sobre los siete frameworks de copywriting que más venden.
-
-Siete ángulos del mismo producto. Uno funciona mejor que el que tienes hoy.
+**Pega tu web.** Te doy siete versiones listas para usar. Así dejas de pelearte con la página en blanco.

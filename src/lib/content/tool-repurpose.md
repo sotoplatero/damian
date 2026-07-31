@@ -31,8 +31,6 @@ errorGeneric: Algo ha fallado por mi parte. Inténtalo otra vez.
 errorOffline: No se pudo conectar. Revisa tu conexión.
 ---
 
-# Repropósito.
+# Reparte un artículo entre Substack, X y LinkedIn.
 
-**Pega el enlace de un artículo tuyo.** Te lo devuelvo repartido en nueve piezas para redes: tres notas de Substack, tres posts de X y tres de LinkedIn. Cada una escrita para su sitio, no la misma copiada tres veces.
-
-El artículo ya lo escribiste. Esto es cobrarlo nueve veces.
+**Pega el enlace.** Te doy nueve publicaciones listas para usar. El artículo ya está escrito. Haz que trabaje un poco más.

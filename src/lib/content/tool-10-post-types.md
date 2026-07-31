@@ -41,8 +41,6 @@ errorGeneric: Algo ha fallado por mi parte. Inténtalo otra vez.
 errorOffline: No se pudo conectar. Revisa tu conexión.
 ---
 
-# Tu tema, en 10 tipos de post.
+# Saca 10 posts distintos de una sola idea.
 
-**Escribe una idea.** Lo que sea: tu tema, algo que has aprendido, una cosa que te repiten tus clientes. Te la devuelvo contada de diez formas distintas: práctico, historia, caso, a contracorriente, meme y cinco más.
-
-Diez posts para redes de una sentada. Uno para cada día que no sabes qué publicar.
+**Escribe el tema.** Te doy diez posts listos para publicar. Así no vuelves a mirar el cursor sin saber qué decir.

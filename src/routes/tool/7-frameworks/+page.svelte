@@ -117,8 +117,8 @@
 </script>
 
 <PageMeta
-	title="Tu oferta, escrita de 7 formas distintas — Damian Soto"
-	description="Pega la web de tu negocio y te devuelvo tu oferta escrita con los 7 frameworks de copywriting que más se usan para vender. El primero, gratis."
+	title="Reescribe tu oferta con 7 fórmulas de venta — Damian Soto"
+	description="Pega tu web y recibe siete versiones de tu oferta listas para usar. La primera es gratis."
 />
 
 <!--
@@ -146,27 +146,29 @@
 {/snippet}
 
 {#if !copies.length}
-	{@render intro_()}
+	<section class="screen-center">
+		{@render intro_()}
 
-	{#if error}
-		<p class="mt-6 text-sm text-error">{error}</p>
-	{/if}
+		{#if error}
+			<p class="mt-6 text-sm text-error">{error}</p>
+		{/if}
 
-	<div class="mt-8">
-		<InlineForm
-			bind:value={url}
-			placeholder={t.urlPlaceholder}
-			label={t.urlButton}
-			busyLabel={t.urlScanning}
-			busy={busy === 'analyzing'}
-			inputmode="url"
-			autocomplete="url"
-			onsubmit={analyze}
-		/>
-	</div>
+		<div class="mt-8">
+			<InlineForm
+				bind:value={url}
+				placeholder={t.urlPlaceholder}
+				label={t.urlButton}
+				busyLabel={t.urlScanning}
+				busy={busy === 'analyzing'}
+				inputmode="url"
+				autocomplete="url"
+				onsubmit={analyze}
+			/>
+		</div>
 
-	<!-- El crédito, justo debajo del formulario. -->
-	<div class="mt-6">{@render credit()}</div>
+		<!-- El crédito, justo debajo del formulario. -->
+		<div class="mt-6">{@render credit()}</div>
+	</section>
 {:else}
 	{@render intro_()}
 

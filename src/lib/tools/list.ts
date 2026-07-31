@@ -32,21 +32,21 @@ export type Tool = {
 
 export const tools: Tool[] = [
 	{
-		name: 'Tu oferta, escrita de 7 formas',
+		name: 'Reescribe tu oferta con 7 fórmulas de venta',
 		href: '/tool/7-frameworks',
-		blurb: 'Pegas tu web y te devuelvo tu oferta escrita de siete formas distintas.',
+		blurb: 'Pega tu web. Te doy siete versiones listas para usar.',
 		capturesEmail: true
 	},
 	{
-		name: 'Tu tema, en 10 tipos de post',
+		name: 'Saca 10 posts distintos de una sola idea',
 		href: '/tool/10-post-types',
-		blurb: 'Pegas tu web y te devuelvo el mismo tema contado en diez posts para redes.',
+		blurb: 'Escribe el tema. Te doy diez posts listos para publicar.',
 		capturesEmail: true
 	},
 	{
-		name: 'Un artículo, repartido en 9 piezas',
+		name: 'Reparte un artículo entre Substack, X y LinkedIn',
 		href: '/tool/repurpose',
-		blurb: 'Pegas el enlace de un artículo tuyo y te lo devuelvo en notas de Substack y posts de X y LinkedIn.',
+		blurb: 'Pega el enlace. Te doy nueve publicaciones listas para usar.',
 		capturesEmail: true
 	}
 ];

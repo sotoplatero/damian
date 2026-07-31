@@ -53,14 +53,36 @@
 	function restart() { busy = ''; error = ''; url = ''; article = null; finalUrl = ''; site = ''; lowConfidence = false; pieces = []; sent = false; email = ''; copiedId = ''; }
 </script>
 
-<PageMeta title="Repropósito — Damian Soto" description="Un artículo repartido en nueve piezas nativas para Substack, X y LinkedIn." />
+<PageMeta
+	title="Reparte un artículo entre Substack, X y LinkedIn — Damian Soto"
+	description="Pega un artículo y recibe nueve publicaciones listas para Substack, X y LinkedIn."
+/>
 
-<article class="prose prose-xl prose-neutral max-w-none">{@html intro}</article>
-{#if error}<p class="mt-6 text-sm text-error">{error}</p>{/if}
+{#snippet credit()}
+	<p class="muted">
+		Lecturas detrás de esto:
+		<a class="link" href="https://vilmanunez.com/como-crear-mucho-contenido-partiendo-de-una-idea/">Vilma Núñez</a>
+		y <a class="link" href="https://nataliapapiol.substack.com/">Natalia Papiol</a>. Los nueve formatos son míos.
+	</p>
+{/snippet}
+
+{#snippet intro_()}
+	<article class="prose prose-xl prose-neutral max-w-none">{@html intro}</article>
+{/snippet}
 
 {#if !pieces.length}
-	<div class="mt-8"><InlineForm bind:value={url} placeholder={t.urlPlaceholder} label={t.urlButton} busyLabel={t.urlWorking} busy={busy === 'reading'} inputmode="url" autocomplete="url" onsubmit={read} /><p class="muted mt-2">{t.urlHint}</p></div>
+	<section class="screen-center">
+		{@render intro_()}
+		{#if error}<p class="mt-6 text-sm text-error">{error}</p>{/if}
+		<div class="mt-8">
+			<InlineForm bind:value={url} placeholder={t.urlPlaceholder} label={t.urlButton} busyLabel={t.urlWorking} busy={busy === 'reading'} inputmode="url" autocomplete="url" onsubmit={read} />
+			<p class="muted mt-2">{t.urlHint}</p>
+		</div>
+		<div class="mt-6">{@render credit()}</div>
+	</section>
 {:else}
+	{@render intro_()}
+	{#if error}<p class="mt-6 text-sm text-error">{error}</p>{/if}
 	<section id="resultado" class="mt-10 space-y-6">
 		{#if site}<p class="muted">{t.readLine.replace('{site}', site)}</p>{/if}
 		{#if lowConfidence}<p class="muted">{t.lowConfidence}</p>{/if}
@@ -75,6 +97,5 @@
 		{#each lockedGroups as group (group.channel)}<h2 class="eyebrow">{group.name}</h2>{#each group.items as format (format.id)}<article class="box-locked"><h3 class="box-title text-muted">{format.name}</h3><p class="muted mb-4">{format.bestFor}</p><p class="eyebrow opacity-70">{t.exampleLabel}</p><p class="body-text mt-1 whitespace-pre-wrap text-muted">{format.example}</p></article>{/each}{/each}
 		<button type="button" onclick={restart} class="link-quiet">{t.restart}</button>
 	</section>
+	<footer class="section border-t border-line pt-6">{@render credit()}</footer>
 {/if}
-
-<footer class="section border-t border-line pt-6"><p class="muted">Lecturas detrás de esto: <a class="link" href="https://vilmanunez.com/como-crear-mucho-contenido-partiendo-de-una-idea/">Vilma Núñez</a> y <a class="link" href="https://nataliapapiol.substack.com/">Natalia Papiol</a>. Los nueve formatos son míos.</p></footer>
