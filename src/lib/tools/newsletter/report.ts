@@ -10,6 +10,7 @@ import {
 	type Tally
 } from './rules';
 import type { NewsletterSnapshot } from '$lib/server/newsletter';
+import { escapeMarkdown } from '$lib/tools/markdown';
 
 /**
  * La auditoría completa, en markdown, para el correo.
@@ -41,18 +42,6 @@ import type { NewsletterSnapshot } from '$lib/server/newsletter';
  */
 
 const { t } = parseCopy(raw);
-
-/** Ver el comentario de $lib/tools/7-frameworks/format.ts: mismo problema, misma cura. */
-function escapeMarkdown(text: string): string {
-	return text
-		.split('\n')
-		.map((line) => {
-			if (/^\s*(-{2,}|={2,}|_{3,})\s*$/.test(line)) return line.replace(/(.)/g, '$1 ').trimEnd();
-			if (/^\s*\d+[.)]/.test(line)) return line.replace(/^(\s*\d+)([.)])/, '$1\\$2');
-			return line.replace(/^(\s*)([#>+\-*=|])/, '$1\\$2');
-		})
-		.join('\n');
-}
 
 function clean(value: unknown): string {
 	return typeof value === 'string' && value.trim() ? escapeMarkdown(value.trim()) : '';
