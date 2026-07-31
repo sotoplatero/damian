@@ -1,5 +1,6 @@
 import type { NewsletterSnapshot, PostBody } from '$lib/server/newsletter';
 import type { Measurements } from './checks';
+import { normalizeQuoteText, verifyQuote } from '$lib/tools/quotes';
 
 /**
  * Las reglas medidas, y el candado del canal abierto.
@@ -670,35 +671,16 @@ export type RawOpenFinding = {
 };
 
 /**
- * Normaliza para comparar citas: minúsculas, espacios colapsados y fuera los
- * caracteres que un modelo cambia sin darse cuenta (comillas curvas, guiones
- * largos, puntos suspensivos). Sin esto, una cita correcta se rechazaría por
- * haber convertido `"` en `«`.
- */
-function normalize(text: string): string {
-	return text
-		.toLowerCase()
-		.replace(/[«»""'']/g, '"')
-		.replace(/[–—]/g, '-')
-		.replace(/…/g, '...')
-		.replace(/\s+/g, ' ')
-		.trim();
-}
-
-/** Mínimo de caracteres de una cita. Menos que esto no prueba nada: "España" no es evidencia. */
-const QUOTE_MIN = 15;
-
-/**
  * El candado del canal abierto: la cita tiene que existir en el material.
  *
  * Es una comparación de cadenas, barata y brutal. Un hallazgo cuya cita no
  * aparece se cae entero — no se intenta rescatar, porque si el modelo se inventó
  * la prueba no hay razón para creerse el resto.
+ *
+ * `verifyQuote` y `normalizeQuoteText` viven en `$lib/tools/quotes` — `repurpose`
+ * necesita el mismo candado y duplicarlo habría sido pedir que las dos copias
+ * dejaran de coincidir con el tiempo.
  */
-export function verifyQuote(cita: string, haystack: string): boolean {
-	const needle = normalize(cita);
-	return needle.length >= QUOTE_MIN && haystack.includes(needle);
-}
 
 const SEVERITIES = new Set<string>(['grave', 'medio', 'leve', 'oportunidad']);
 const EFFORTS = new Set<string>(['minutos', 'tarde', 'semanas']);
@@ -717,7 +699,7 @@ export function openFindings(
 ): { items: AuditItem[]; dropped: string[] } {
 	const items: AuditItem[] = [];
 	const dropped: string[] = [];
-	const normalized = normalize(haystack);
+	const normalized = normalizeQuoteText(haystack);
 
 	for (const f of raw ?? []) {
 		const hecho = f.hecho?.trim();
