@@ -54,13 +54,13 @@ Every tool under `src/routes/tool/*` is reachable by URL; only the ones in
 
 | Tool | State |
 |---|---|
-| `newsletter` | Listed. Built on the site theme. |
 | `7-frameworks` | Listed. Built on the site theme. |
+| `newsletter` | **Live by URL, unlisted.** Built on the site theme; pulled from the home page while the judgement half is reworked. See below. |
 | `places-evaluator` | Live by URL, unlisted. Predates the theme, still Paraglide + DaisyUI. |
 
 `lyra`, `uuid-generator` and `character-counter` were removed.
 
-Both listed tools follow the same shape: **URL in → free preview on screen → full
+Both working tools follow the same shape: **URL in → free preview on screen → full
 result emailed in exchange for the address.** The expensive half never reaches the
 browser.
 
@@ -70,38 +70,75 @@ on screen; the other six are emailed. Framework definitions were audited against
 cheatsheet **image** in Neal O'Grady's article (the text alone is not enough) — don't
 change a `hint` without checking the source.
 
-**`/tool/newsletter`** evaluates what a Substack shows from the outside. Two halves,
-deliberately:
+**`/tool/newsletter`** audits a Substack from what it shows publicly. **Unlisted while the
+judgement half is reworked — read `docs/auditoria-de-referencia.md` before touching it.**
+That file is a hand-written audit of Kloshletter against real data, and it is the target the
+report is measured against. It is *not* a checklist to hit: measuring coverage against it
+led to overfitting the prompt to one publication, and that mistake is recorded there.
 
-- `src/lib/tools/newsletter/checks.ts` measures everything countable. Deterministic, can't
-  hallucinate a number. **Its severities are calibrated against five real newsletters and
-  the evidence is written in the file — do not raise them without new data.** Notably:
-  empty SEO fields, titles over 60 characters and the default "Suscribirse" button are
-  *not* defects, because the most-read Spanish newsletters do all three.
-- The model only judges what no `if` can: niche, ideal reader, promise, CTA, titles.
+Two halves, deliberately:
 
-Every `Finding` carries a **written fix** (`fix`), the Substack path plus the text to
-paste — not "improve your subtitle". It lives in `checks.ts` and not in the prompt because
-it isn't opinion: the settings path is what it is, and a model would invent it.
+- `src/lib/tools/newsletter/rules.ts` holds the **measured** rules — everything countable.
+  Deterministic, can't hallucinate a number, and each carries a **written fix** (`propuesta`)
+  with the literal Substack settings path. That lives in code and not in the prompt because
+  it isn't opinion: a model invents the path.
+- The model gets an **open channel**: the full text of the five sampled issues, and no list
+  of questions. Unbounded findings, and an empty array is explicitly a valid answer.
 
-`score()` **sums the penalties out of 100; it does not average the five dimensions.** That
-was tried and a publication abandoned 117 days scored 85, because one catastrophic
-dimension diluted into four healthy ones. The calibration targets are in the file.
+**Severities are calibrated against four real publications and the evidence is written in
+`rules.ts` — do not raise them without new data.** Notably *not* defects, because everyone
+does them: empty SEO fields, titles over 60 characters, the default "Suscribirse" button,
+and `showIntroModule: false`.
+
+**Every open finding must carry a verbatim quote, verified server-side** against the same
+material the model was given (`verifyQuote`). A finding whose quote isn't found is dropped
+whole. This is the only thing keeping the open channel honest — it has already caught a
+model synthesis presented as evidence.
+
+**There is no score.** `score()`, `PENALTY` and `impact` were deleted. Two formulas were
+tried and both failed for one structural reason: any aggregate over findings gets worse as
+discovery improves. Summing gave a 39k-subscriber bestseller **2 out of 100**; averaging
+five dimensions passed a publication abandoned 101 days. The report now shows a state
+(`roto` / `fugas` / `sano`, from a one-line rule) plus counts. The long version is in
+`tally` in `rules.ts`. **Don't reintroduce a number without solving that problem first.**
 
 **Do not add a check for Substack's boilerplate meta description** ("Click to read…, a
 Substack publication"). It was tried: all five publications have it, because Substack
 appends it to everyone's tagline and it cannot be removed. Flagging it invents a defect
-with no possible fix. Instead the report shows it verbatim in the Google preview and says
-whose it is.
+with no possible fix. Instead the report shows it verbatim and says whose it is.
 
-`src/lib/tools/newsletter/report.ts` builds the emailed report. Two rules hold there:
-every section carries a datum or an action or it doesn't exist, and the fix is written, not
-described. **No markdown tables** — the email shell doesn't style them and they overflow at
-320px; a numbered index scans the same and survives.
+`src/lib/tools/newsletter/report.ts` builds the emailed report as **one loop** over the
+findings — it used to be eleven conditional sections, and each could vanish silently. It is
+the same document as the screen with the locked half opened, and it deliberately repeats
+what was shown free: the email is the only artifact left after the tab closes. Section
+labels are read from the same `src/lib/content/tool-newsletter.md` the page uses, so they
+cannot drift. **No markdown tables** — the email shell doesn't style them and they overflow
+at 320px.
 
-`src/lib/server/newsletter.ts` collects the data in two requests: the homepage (meta tags,
-`window._preloads` with the full publication object) and Substack's undocumented
-`/api/v1/archive`. Public GETs pass fine from the server.
+`src/lib/server/newsletter.ts` collects the homepage (meta tags, `window._preloads` — **142
+keys, of which we read a couple of dozen; the header comment says which and why**) and
+Substack's undocumented `/api/v1/archive`. Post bodies need one extra request each:
+`body_html` comes back empty from the archive and `/api/v1/posts/by-slug/` 302s to the page.
+Bodies are fetched in **both** steps — if only the paid step had them, screen and email would
+disagree.
+
+### OpenAI
+
+**All model calls go through `src/lib/server/openai.ts`.** Both tools use it; neither has its
+own `fetch`. When an external API needs wiring, the client goes in a reusable `$lib/server`
+module — not duplicated per endpoint.
+
+It uses **`POST /v1/responses`**, not `chat/completions`. The reason isn't novelty: `text.format`
+accepts a **strict JSON schema**, so the model cannot return a shape we didn't expect. With
+`json_object` the JSON was valid but the shape wasn't guaranteed, and sections vanished from
+reports in silence.
+
+Three things about the gpt-5 family that each cost a 400, documented in the file: the output
+cap is `max_output_tokens`; only the default temperature is accepted; and the answer is **not**
+in `choices[0].message.content` — it's in `output[]`, where reasoning models put a `reasoning`
+item first, so you walk the array looking for the `message`.
+
+**Never change the model.** It's `gpt-5.4-mini`, chosen by Damian after benchmarking eight.
 
 ### Rate limits
 
