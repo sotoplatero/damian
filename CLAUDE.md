@@ -81,7 +81,13 @@ other nine are emailed. Same URL-in → free-preview → gated-by-email shape as
 Neal O'Grady's "The 10 Types of Posts" — a `hint` says how to write the type, not what it
 is; don't change one without checking the source. Shares `voice.ts` with the other tools;
 the Lista and Práctico types are the only ones allowed line-separated items, and
-`format.ts` escapes leading markdown so those lines survive the email shell.
+`format.ts` escapes leading markdown so those lines survive the email shell. Each type also
+carries an `example` — a full sample post of that type, all ten on one shared off-topic
+subject (running a first 10K) so they read as "the same topic, ten ways." The article pairs
+every type with an example screenshot (real posts by Justin Welsh, Jon Brosio, etc.); those
+can't be pulled in, so the examples are rewritten in the site voice. They're used twice: fed
+to the model as a shape anchor (with a caveat not to copy the running topic) and shown on the
+locked cards, so a visitor sees each type's flavour while their own nine stay in the email.
 
 **`/tool/newsletter`** evaluates what a Substack shows from the outside. Two halves,
 deliberately:

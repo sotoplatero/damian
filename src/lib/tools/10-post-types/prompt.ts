@@ -15,7 +15,13 @@ export type Topic = {
 
 function typeSpec(list: PostType[]): string {
 	return list
-		.map((type) => `- id "${type.id}" — ${type.name}\n   Para qué: ${type.bestFor}\n   Cómo: ${type.hint}`)
+		.map(
+			(type) =>
+				`- id "${type.id}" — ${type.name}\n   Para qué: ${type.bestFor}\n   Cómo: ${type.hint}\n   Ejemplo de la forma (es de OTRO tema, correr un 10K; enseña el molde, no lo copies):\n${type.example
+					.split('\n')
+					.map((line) => `      ${line}`)
+					.join('\n')}`
+		)
 		.join('\n\n');
 }
 
@@ -30,6 +36,8 @@ const OUTPUT_SHAPE = `- Un objeto en "posts" por cada tipo pedido, en el mismo o
   separadas, una cosa por línea. Ningún otro markdown: nada de negrita, viñetas ni almohadillas.
 - Es el mismo tema en los diez, pero cada post lo cuenta desde su ángulo. No repitas las mismas
   frases de un tipo a otro.
+- Los ejemplos de cada tipo son de correr un 10K y están SOLO para que veas la forma. Escribe
+  siempre sobre el tema del usuario, nunca sobre correr (salvo que correr sea de verdad su tema).
 - Solo el JSON, sin explicaciones ni bloques de código.`;
 
 /**

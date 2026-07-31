@@ -14,6 +14,8 @@ freeBadge: Gratis
 copyAction: Copiar
 copiedAction: Copiado
 restart: Probar con otra web
+# Etiqueta sobre el ejemplo de cada tipo bloqueado. El ejemplo es de otro tema (correr un 10K).
+exampleLabel: Un ejemplo de este tipo (otro tema):
 
 # --- El muro ---
 gateTitle: Los otros nueve van por correo
