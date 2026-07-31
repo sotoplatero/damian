@@ -34,5 +34,11 @@ export const tools: Tool[] = [
 		href: '/tool/7-frameworks',
 		blurb: 'Pegas tu web y te devuelvo tu oferta escrita de siete formas distintas.',
 		capturesEmail: true
+	},
+	{
+		name: 'Tu tema, en 10 tipos de post',
+		href: '/tool/10-post-types',
+		blurb: 'Pegas tu web y te devuelvo el mismo tema contado en diez posts para redes.',
+		capturesEmail: true
 	}
 ];

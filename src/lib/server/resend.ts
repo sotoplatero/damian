@@ -5,6 +5,7 @@ import { renderEmail, renderStandalone } from './emails';
 import { signEmail } from './tokens';
 import toolCopyTemplate from '../emails/tool-7-frameworks.md?raw';
 import toolNewsletterTemplate from '../emails/tool-newsletter.md?raw';
+import toolPostsTemplate from '../emails/tool-10-post-types.md?raw';
 
 /** A subscriber as stored in the Resend audience. */
 export type Contact = {
@@ -95,6 +96,30 @@ export async function sendToolCopyEmail(to: string, copiesMarkdown: string): Pro
 	if (!from) throw new Error('RESEND_FROM no configurada');
 	const url = unsubscribeUrl(to);
 	const rendered = renderStandalone(toolCopyTemplate, url, { COPIES: copiesMarkdown });
+
+	const { error } = await client().emails.send({
+		from,
+		to,
+		subject: rendered.subject,
+		html: rendered.html,
+		headers: {
+			'List-Unsubscribe': `<${url}>`,
+			'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
+		}
+	});
+	if (error) throw new Error(error.message);
+}
+
+/**
+ * Deliver the 10-post-types tool's output. `postsMarkdown` is the ten generated
+ * posts already formatted as markdown; it replaces `{{POSTS}}` in
+ * `src/lib/emails/tool-10-post-types.md`.
+ */
+export async function sendToolPostsEmail(to: string, postsMarkdown: string): Promise<void> {
+	const from = env.RESEND_FROM;
+	if (!from) throw new Error('RESEND_FROM no configurada');
+	const url = unsubscribeUrl(to);
+	const rendered = renderStandalone(toolPostsTemplate, url, { POSTS: postsMarkdown });
 
 	const { error } = await client().emails.send({
 		from,

@@ -55,20 +55,39 @@ Every tool under `src/routes/tool/*` is reachable by URL; only the ones in
 | Tool | State |
 |---|---|
 | `7-frameworks` | Listed. Built on the site theme. |
+| `10-post-types` | Listed. Built on the site theme. |
 | `newsletter` | **Live by URL, unlisted.** Built on the site theme; pulled from the home page while the judgement half is reworked. See below. |
 | `places-evaluator` | Live by URL, unlisted. Predates the theme, still Paraglide + DaisyUI. |
 
 `lyra`, `uuid-generator` and `character-counter` were removed.
 
-Both working tools follow the same shape: **URL in → free preview on screen → full
-result emailed in exchange for the address.** The expensive half never reaches the
-browser.
+`7-frameworks` and `10-post-types` follow the same shape: **URL in → free preview on
+screen → full result emailed in exchange for the address.** The expensive half never
+reaches the browser. (`newsletter` shares the URL-in / email-gate shape but reports rather
+than generates.)
 
 **`/tool/7-frameworks`** scrapes a page and rewrites the offer with the seven
 copywriting frameworks in `src/lib/tools/7-frameworks/frameworks.ts`. The first is free
 on screen; the other six are emailed. Framework definitions were audited against the
 cheatsheet **image** in Neal O'Grady's article (the text alone is not enough) — don't
 change a `hint` without checking the source.
+
+**`/tool/10-post-types`** scrapes a page, deduces the topic behind it (topic, audience,
+angle, proof), and writes that one topic as ten social posts — one per type in
+`src/lib/tools/10-post-types/types.ts`. The first (`practico`) is free on screen; the
+other nine are emailed. Same URL-in → free-preview → gated-by-email shape as
+`7-frameworks`, but simpler underneath: a post type has no steps, so the model returns one
+`text` per type instead of keyed `blocks`. The ten types are translated and condensed from
+Neal O'Grady's "The 10 Types of Posts" — a `hint` says how to write the type, not what it
+is; don't change one without checking the source. Shares `voice.ts` with the other tools;
+the Lista and Práctico types are the only ones allowed line-separated items, and
+`format.ts` escapes leading markdown so those lines survive the email shell. Each type also
+carries an `example` — a full sample post of that type, all ten on one shared off-topic
+subject (running a first 10K) so they read as "the same topic, ten ways." The article pairs
+every type with an example screenshot (real posts by Justin Welsh, Jon Brosio, etc.); those
+can't be pulled in, so the examples are rewritten in the site voice. They're used twice: fed
+to the model as a shape anchor (with a caveat not to copy the running topic) and shown on the
+locked cards, so a visitor sees each type's flavour while their own nine stay in the email.
 
 **`/tool/newsletter`** audits a Substack from what it shows publicly. **Unlisted while the
 judgement half is reworked — read `docs/auditoria-de-referencia.md` before touching it.**
