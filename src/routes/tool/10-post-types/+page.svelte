@@ -142,7 +142,7 @@
 {/snippet}
 
 {#snippet intro_()}
-	<article class="prose prose-xl prose-neutral max-w-none">
+	<article class="rich-text">
 		<!-- Markdown propio del repo (src/lib/content/tool-10-post-types.md), igual
 		     que la home. No hay nada del visitante aquí dentro. -->
 		{@html intro}
@@ -153,7 +153,7 @@
 	{@render intro_()}
 
 	{#if error}
-		<p class="mt-6 text-sm text-error">{error}</p>
+		<p class="error-text mt-6">{error}</p>
 	{/if}
 
 	<div class="mt-8">
@@ -176,7 +176,7 @@
 	{@render intro_()}
 
 	{#if error}
-		<p class="mt-6 text-sm text-error">{error}</p>
+		<p class="error-text mt-6">{error}</p>
 	{/if}
 {/if}
 

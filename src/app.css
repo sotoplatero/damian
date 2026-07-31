@@ -1,5 +1,4 @@
 @import 'tailwindcss';
-@plugin '@tailwindcss/typography';
 @plugin 'daisyui';
 
 /*
@@ -60,15 +59,30 @@
 	font-display: swap;
 }
 
-
 /*
- * Tema del sitio.
+ * ─────────────────────────────────────────────────────────────────────────────
+ * TEMA DEL SITIO
+ * ─────────────────────────────────────────────────────────────────────────────
  *
- * La paleta entera son un negro, dos grises y una línea. Si hay que cambiar un
- * tono se cambia aquí, no en cuarenta sitios. Tailwind genera solo las
- * utilidades: text-ink, text-soft, text-muted, border-line...
+ * Aquí está TODA la medida del sitio: color, tamaños de letra, interlineados,
+ * ritmo vertical y radios. Nada de esto se escribe en el markup, y ya no lo
+ * decide nadie más.
+ *
+ * Antes lo decidían dos sitios a la vez. Este archivo llevaba el color y las
+ * clases (.box, .section...), y @tailwindcss/typography llevaba el texto largo:
+ * `prose prose-xl prose-neutral` traía su propia escala de tamaños, su propio
+ * ritmo vertical (márgenes en em, distintos de los de aquí) y su propia paleta
+ * (prose-neutral). O sea, un segundo tema en paralelo, invisible desde este
+ * archivo, y encima había que pelearle con `.prose h1 { }` cada vez que un
+ * número suyo no valía. El plugin está fuera: el texto largo se pinta con
+ * `.rich-text`, más abajo, con estos mismos tokens.
+ *
+ * Los valores son los que el plugin daba en prose-xl, para que la carta se lea
+ * exactamente igual que antes. Lo que cambia es de dónde salen.
  */
 @theme {
+	/* ── Fuentes ──────────────────────────────────────────────────────────── */
+
 	/* Sans solo para interfaz: botones, etiquetas, la lista de herramientas. */
 	--font-sans: 'Public Sans', ui-sans-serif, system-ui, sans-serif;
 	/* Serif para todo lo que se lee: la carta y los textos de las herramientas. */
@@ -76,14 +90,120 @@
 	/* Sin descarga: la JetBrains que se cargaba antes no la usaba nada. */
 	--font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
 
-	--color-ink: #171717; /* texto principal */
-	--color-soft: #525252; /* texto secundario */
+	/* ── Color ────────────────────────────────────────────────────────────── */
+	/* Un negro, tres grises y una línea. Si hay que cambiar un tono se cambia
+	   aquí, no en cuarenta sitios. Tailwind genera solo las utilidades:
+	   text-ink, text-soft, text-muted, border-line... */
+
+	--color-ink: #171717; /* texto principal, titulares, negritas */
+	--color-read: #404040; /* el gris de la carta: bloques largos de lectura */
+	--color-soft: #525252; /* texto secundario de interfaz: entradillas, tarjetas */
 	--color-muted: #737373; /* notas, pies, cosas que no piden atención */
 	--color-line: #e5e5e5; /* bordes y separadores */
+
+	/* `read` y `soft` son dos grises a un paso uno del otro, y sí, son dos.
+	   `read` es el que traía prose-neutral y con el que está escrita la carta;
+	   `soft` es el de la interfaz. Si algún día se quiere la paleta en tres
+	   grises, este par es el que hay que fundir — pero eso cambia el tono de la
+	   carta entera, así que es una decisión de diseño, no una limpieza. */
 
 	/* Azul de Substack. El alta se hace en su formulario embebido, así que el
 	   sitio usa su mismo acento para que no parezcan dos productos. */
 	--color-brand: #0076ff;
+
+	/* ── Tamaños de letra ─────────────────────────────────────────────────── */
+	/*
+	 * CINCO TAMAÑOS, Y NINGUNO MÁS: display, title, body, note, micro. (El sexto,
+	 * `ui`, no es un tamaño del diseño: es el base del <main>, el que heredan los
+	 * controles de DaisyUI y cualquier texto sin clase.)
+	 *
+	 * Cada uno lleva su interlineado pegado, así que `text-body` ya trae el suyo
+	 * y no hay que acordarse de un `leading-*`.
+	 *
+	 * La jerarquía la hace el COLOR y el PESO (ink > read > soft > muted), no el
+	 * tamaño: por eso un h2 de markdown y un título de sección miden lo mismo, y
+	 * un h3 mide lo mismo que el cuerpo en negrita. Si te ves escribiendo
+	 * text-lg o leading-7 en el markup, es que falta una clase abajo.
+	 */
+
+	/* El titular. Fluido, y el mínimo no es capricho: a 320px de ancho una
+	   palabra larga ("herramienta") medía más que la columna, no partía, y sacaba
+	   scroll horizontal a TODA la página, porque el desbordamiento del h1 empuja
+	   al <main>. En negrita una palabra así ocupa unas 6 veces el tamaño de
+	   letra, y en la columna de 288px que queda a 320px caben unos 47px: 2,75rem
+	   (44px) entra con margen. `overflow-wrap: anywhere` (al final del archivo)
+	   es la red por si algún día hay una palabra más larga. */
+	--text-display: clamp(2.75rem, 12vw, 4rem);
+	--text-display--line-height: 1.02;
+	--text-display--letter-spacing: -0.02em;
+
+	/* Título de sección, y h2 de markdown. */
+	--text-title: 1.875rem;
+	--text-title--line-height: 1.2;
+
+	/* Cuerpo: la carta, los textos de las herramientas, los títulos de caja.
+	   Todo lo que se lee mide esto. */
+	--text-body: 1.25rem;
+	--text-body--line-height: 1.625;
+
+	/* Nota: pies, avisos, errores, enlaces discretos. */
+	--text-note: 0.875rem;
+	--text-note--line-height: 1.25rem;
+
+	/* Etiqueta: versalitas encima de un bloque, gravedad de un hallazgo. */
+	--text-micro: 0.75rem;
+	--text-micro--line-height: 1rem;
+
+	/* Interfaz: el tamaño base del <main>. Lo heredan los controles de DaisyUI
+	   y cualquier texto sin clase. No se usa para leer. */
+	--text-ui: 1rem;
+	--text-ui--line-height: 1.5rem;
+
+	/* Interlineado de la carta. Es el único que no va pegado a un tamaño: el
+	   mismo 1.25rem se lee a 1.8 en un bloque largo de markdown y a 1.625 en un
+	   párrafo suelto de interfaz. */
+	--leading-read: 1.8;
+
+	/* ── Ancho de la columna ──────────────────────────────────────────────── */
+
+	/*
+	 * El sitio es una sola columna, y este es su ancho. Lo usa el layout raíz
+	 * (max-w-column) y no hay otro sitio donde se decida.
+	 *
+	 * Era max-w-2xl (42rem) y 45rem es un paso corto a propósito. Medido en la
+	 * carta (Source Serif a 1,25rem, descontando el px-5), la línea más larga da:
+	 *
+	 *   42rem -> 66 caracteres      48rem (max-w-3xl) -> 78
+	 *   45rem -> 70 caracteres      56rem             -> 86
+	 *
+	 * El límite cómodo para leer está sobre los 75, así que 45rem es lo último
+	 * que entra: el siguiente escalón de Tailwind ya se pasa. Si algún día hace
+	 * falta más ancho, hay que bajar el interlineado de la carta
+	 * (--leading-read) o las líneas se pierden al volver.
+	 *
+	 * Los números son medidos, no estimados: a ojo salían 10 caracteres más de
+	 * los que son, y con eso 48rem parecía imposible cuando solo se pasa un poco.
+	 */
+	--container-column: 45rem;
+
+	/* ── Ritmo vertical y cajas ───────────────────────────────────────────── */
+
+	/* Separación entre párrafos, listas y bloques dentro de un mismo texto.
+	   1,5rem = el 1.2em que daba prose-xl sobre 1,25rem. */
+	--spacing-block: 1.5rem;
+	/* Relleno de una caja. */
+	--spacing-box: 1.25rem;
+	/* Separación entre bloques grandes de la página. Una sola medida. */
+	--spacing-section: 5rem;
+	/* Aire arriba y abajo del layout raíz (py-page en +layout.svelte). */
+	--spacing-page: 4rem;
+	/* La pantalla menos ese aire: lo que de verdad se ve sin hacer scroll. Lo
+	   usan .screen-center y la cáscara de las herramientas, que antes repetían
+	   el calc a mano en dos sitios y podían desincronizarse del layout. */
+	--spacing-fold: calc(100dvh - var(--spacing-page) * 2);
+
+	/* Radio de las cajas. Propio y no --radius-box, que es de DaisyUI. */
+	--radius-frame: 0.5rem;
 }
 
 /*
@@ -100,72 +220,101 @@
  * Vocabulario del sitio. Con estas clases se pinta todo: la home y los tools
  * usan las mismas. Antes de añadir una nueva, comprobar si alguna ya sirve.
  *
- * SOLO HAY DOS TAMAÑOS DE LETRA:
- *   cuerpo  1.25rem  (el de la carta, prose-xl) -> .body-text y todo lo legible
- *   nota     0.875rem                           -> .muted, pies y avisos
- * La jerarquía la hace el color (ink > soft > muted), no el tamaño. Si te ves
- * escribiendo text-base o text-lg en el markup, es que falta una clase aquí.
+ * Ni un tamaño de letra, ni un color, ni un radio, ni una separación entre
+ * bloques está escrito aquí: todos salen del @theme de arriba, y por eso el
+ * sitio se cambia desde un solo sitio. Lo que sí va en utilidades son los
+ * ajustes finos (mt-2, px-1.5, underline-offset-4), que son pasos de la escala
+ * --spacing de Tailwind y no medidas propias del diseño.
  */
 @layer components {
+	/* ── Estructura ───────────────────────────────────────────────────────── */
+
 	/* Separación entre bloques grandes. Una sola medida en todo el sitio. */
 	.section {
-		@apply mt-20;
+		@apply mt-section;
 	}
 	.section-title {
-		@apply text-3xl font-bold;
+		@apply text-title font-bold;
 	}
 	.section-intro {
-		@apply mt-2 text-xl leading-relaxed text-soft;
+		@apply mt-2 font-serif text-body text-soft;
 	}
 
-	/* Cuerpo de texto fuera de .prose: mismo tamaño que la carta. */
+	/* Estado inicial de una herramienta: el contenido cabe de sobra, así que se
+	   centra en la pantalla. El alto ya descuenta el aire del layout. */
+	.screen-center {
+		@apply flex min-h-fold flex-col justify-center;
+	}
+
+	/* ── Texto ────────────────────────────────────────────────────────────── */
+
+	/* Cuerpo de texto suelto, fuera de un bloque de markdown. Serif, como todo lo
+	   que se lee: la sans es solo de interfaz. Cada clase declara su fuente, que
+	   antes era una lista aparte al final del archivo y se olvidaba al añadir
+	   una clase nueva. */
 	.body-text {
-		@apply text-xl leading-relaxed;
+		@apply font-serif text-body;
 	}
 
 	/* Texto que no pide atención: pies, notas, avisos. */
 	.muted {
-		@apply text-sm text-muted;
+		@apply text-note text-muted;
 	}
 
-	/* Enlace discreto: volver al home, empezar de nuevo, probar otra web. */
-	.link-quiet {
-		@apply text-sm text-muted underline underline-offset-4 transition-colors hover:text-ink;
-	}
-
-	/* Caja con borde: la unidad visual del sitio. Una herramienta, un texto
-	   generado, un bloque de contenido. */
-	.box {
-		@apply rounded-lg border border-line p-5;
-	}
-	/* Lo que está ahí pero todavía no se puede leer. */
-	.box-locked {
-		@apply rounded-lg border border-dashed border-line p-5;
-	}
-	/* Caja que además es enlace: el borde se marca al pasar por encima. */
-	.box-link {
-		@apply block rounded-lg border border-line p-5 transition-colors hover:border-ink;
-	}
-
-	/* Título y cuerpo dentro de una caja. */
-	.box-title {
-		@apply text-xl font-bold;
-	}
-	/* Subtítulo de una tarjeta. Cortado a dos líneas: si el texto se va, la
-	   tarjeta crece y el listado deja de leerse de un vistazo. */
-	.box-text {
-		@apply mt-2 line-clamp-2 text-xl leading-relaxed text-soft;
-	}
-
-	/* Estado inicial de una herramienta: el contenido cabe de sobra, así que se
-	   centra en la pantalla. Se descuenta el py-16 del layout. */
-	.screen-center {
-		@apply flex min-h-[calc(100dvh-8rem)] flex-col justify-center;
+	/* Un error del formulario. Mismo tamaño que una nota, en el rojo del tema. */
+	.error-text {
+		@apply text-note text-error;
 	}
 
 	/* Etiqueta pequeña en versales encima de un bloque de texto. */
 	.eyebrow {
-		@apply text-xs font-semibold tracking-wide text-muted uppercase;
+		@apply text-micro font-semibold tracking-wide text-muted uppercase;
+	}
+
+	/* Enlace discreto: volver al home, empezar de nuevo, probar otra web. */
+	.link-quiet {
+		@apply text-note text-muted underline underline-offset-4 transition-colors hover:text-ink;
+	}
+
+	/* ── Cajas ────────────────────────────────────────────────────────────── */
+
+	/* Caja con borde: la unidad visual del sitio. Una herramienta, un texto
+	   generado, un bloque de contenido. */
+	.box {
+		@apply rounded-frame border border-line p-box;
+	}
+	/* Lo que está ahí pero todavía no se puede leer. */
+	.box-locked {
+		@apply rounded-frame border border-dashed border-line p-box;
+	}
+	/* Caja que además es enlace: el borde se marca al pasar por encima. */
+	.box-link {
+		@apply block rounded-frame border border-line p-box transition-colors hover:border-ink;
+	}
+
+	/* Título y cuerpo dentro de una caja. */
+	.box-title {
+		@apply text-body leading-snug font-bold;
+	}
+	/* Subtítulo de una tarjeta. Cortado a dos líneas: si el texto se va, la
+	   tarjeta crece y el listado deja de leerse de un vistazo. */
+	.box-text {
+		@apply mt-2 line-clamp-2 font-serif text-body text-soft;
+	}
+
+	/* ── Cifras y marcadores ──────────────────────────────────────────────── */
+
+	/* Una cifra medida: posts, cadencia, interacción.
+	   Se llama .figure y no .stat porque `.stat`, `.stat-value` y `.stat-title`
+	   son de DaisyUI: su regla se imprime después de esta capa y le gana, así
+	   que la cifra se convertía en un grid con su propio relleno. */
+	.figure {
+		@apply text-body leading-snug font-bold;
+	}
+	/* La misma cosa cuando va al lado de su etiqueta y no debe pesar más que
+	   ella: el recuento de una dimensión. */
+	.figure-note {
+		@apply text-note font-bold;
 	}
 
 	/* Barra: sirve para una nota y para un hallazgo tapado. El relleno lo pone
@@ -179,38 +328,152 @@
 
 	/* Etiqueta de gravedad de un hallazgo. El color lo decide quien la pinta. */
 	.chip {
-		@apply inline-block rounded px-1.5 py-0.5 text-xs font-semibold tracking-wide uppercase;
+		@apply inline-block rounded px-1.5 py-0.5 text-micro font-semibold tracking-wide uppercase;
 	}
 }
 
-/* Todo lo que es texto para leer, en serif. La interfaz hereda la sans del <main>. */
-.prose,
-.body-text,
-.section-intro,
-.box-text {
+/*
+ * ─────────────────────────────────────────────────────────────────────────────
+ * .rich-text — texto largo salido de markdown
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * La carta de la home y las entradillas de las herramientas se escriben en
+ * markdown (src/lib/content/*.md), se pasan por `marked` y entran con {@html}.
+ * Ahí dentro no se pueden poner clases, así que hay que estilar los elementos.
+ * Esto es lo que hacía `prose prose-xl prose-neutral max-w-none`.
+ *
+ * Va fuera de @layer components a propósito: los selectores de descendiente
+ * tienen que ganarle a las utilidades que se pongan en el mismo <article>, y
+ * dentro de la capa perderían. Es también el motivo de que ya no haga falta
+ * pelearse con la especificidad de :where() del plugin.
+ *
+ * El markdown que hay hoy solo usa h1, p, strong, em e img. Lo demás está
+ * cubierto igual para que el día que alguien escriba una lista o una cita no se
+ * quede sin estilo, con los mismos números del @theme.
+ */
+.rich-text {
 	font-family: var(--font-serif);
+	font-size: var(--text-body);
+	line-height: var(--leading-read);
+	color: var(--color-read);
 }
 
-/*
- * El titular, a tamaño fluido.
- *
- * prose-xl deja el h1 en 3,5rem fijos. A 320px de ancho una palabra larga
- * ("herramienta") mide más que la columna, no parte, y saca scroll horizontal a
- * TODA la página: el desbordamiento del h1 empuja el <main>.
- *
- * El mínimo del clamp lo marca la palabra más larga del titular: en una fuente
- * de palo seco en negrita ocupa unas 6 veces el tamaño de letra, así que en la
- * columna de 288px que queda a 320px de ancho caben unos 47px. 2,75rem (44px)
- * entra con margen. Y `overflow-wrap: break-word` de abajo es la red por si
- * algún día escribes una palabra más larga.
- *
- * `.prose h1` gana al plugin de tipografía, que usa :where() y no tiene
- * especificidad.
- */
-.prose h1 {
-	font-size: clamp(2.75rem, 12vw, 4rem);
-	line-height: 1.02;
-	letter-spacing: -0.02em;
+/* Ritmo vertical: una sola separación entre bloques, y ninguna en los extremos
+   para que el <article> no empuje a lo que tenga alrededor. Los márgenes
+   colapsan entre hermanos, así que la distancia entre dos párrafos es
+   --spacing-block, no el doble. */
+.rich-text p,
+.rich-text ul,
+.rich-text ol,
+.rich-text blockquote,
+.rich-text pre {
+	margin-block: var(--spacing-block);
+}
+.rich-text > :first-child {
+	margin-top: 0;
+}
+.rich-text > :last-child {
+	margin-bottom: 0;
+}
+
+/* El titular. El margen inferior va en em para que crezca con el clamp. */
+.rich-text h1 {
+	margin-top: 0;
+	margin-bottom: 0.857em;
+	font-size: var(--text-display);
+	line-height: var(--text-display--line-height);
+	letter-spacing: var(--text-display--letter-spacing);
+	font-weight: 800;
+	color: var(--color-ink);
+}
+
+.rich-text h2 {
+	margin-top: calc(var(--spacing-block) * 2);
+	margin-bottom: calc(var(--spacing-block) / 2);
+	font-size: var(--text-title);
+	line-height: var(--text-title--line-height);
+	font-weight: 700;
+	color: var(--color-ink);
+}
+
+/* h3 no tiene tamaño propio: mide lo que el cuerpo y se distingue por el peso.
+   Es la misma regla que en el resto del sitio (.box-title). */
+.rich-text h3 {
+	margin-top: calc(var(--spacing-block) * 1.5);
+	margin-bottom: calc(var(--spacing-block) / 3);
+	font-size: var(--text-body);
+	line-height: var(--text-body--line-height);
+	font-weight: 600;
+	color: var(--color-ink);
+}
+
+.rich-text strong {
+	font-weight: 600;
+	color: var(--color-ink);
+}
+
+/* 500 y no 600 a propósito: de la serif solo hay caras 400 y 600, así que un
+   enlace pesa lo mismo que el texto y se distingue por el subrayado. */
+.rich-text a {
+	font-weight: 500;
+	color: var(--color-ink);
+	text-decoration: underline;
+	text-underline-offset: 2px;
+}
+
+.rich-text ul,
+.rich-text ol {
+	padding-inline-start: calc(var(--spacing-block) * 4 / 3);
+}
+.rich-text ul {
+	list-style: disc;
+}
+.rich-text ol {
+	list-style: decimal;
+}
+.rich-text li {
+	margin-block: calc(var(--spacing-block) / 2);
+}
+.rich-text li::marker {
+	color: var(--color-muted);
+}
+
+.rich-text blockquote {
+	border-inline-start: 0.25rem solid var(--color-line);
+	padding-inline-start: var(--spacing-block);
+	font-style: italic;
+	color: var(--color-ink);
+}
+
+.rich-text hr {
+	margin-block: calc(var(--spacing-block) * 2);
+	border-top: 1px solid var(--color-line);
+}
+
+.rich-text code {
+	font-family: var(--font-mono);
+	font-size: 0.9em;
+	font-weight: 600;
+	color: var(--color-ink);
+}
+
+/* La foto familiar dentro de la carta: esquinas suaves y aire alrededor, con el
+   pie pegado debajo. */
+.rich-text img {
+	max-width: 100%;
+	height: auto;
+	border-radius: var(--radius-frame);
+	margin-block: calc(var(--spacing-block) * 4 / 3) 0.75rem;
+}
+
+/* El pie de foto: el párrafo en cursiva que va justo después de una imagen.
+   Se lee como una nota, no como cuerpo. */
+.rich-text img + p em,
+.rich-text p:has(img) + p em {
+	display: block;
+	font-size: var(--text-note);
+	font-style: normal;
+	color: var(--color-muted);
 }
 
 /*
@@ -233,8 +496,8 @@ iframe {
  * intrínseco del elemento. Con `break-word`, una palabra larga puede seguir
  * ensanchando su contenedor (y con él la página); con `anywhere` no puede.
  */
-.prose,
-.prose *,
+.rich-text,
+.rich-text *,
 .body-text,
 .box-text,
 .box-title,
@@ -242,19 +505,4 @@ iframe {
 .section-intro,
 .muted {
 	overflow-wrap: anywhere;
-}
-
-/* La foto familiar dentro de la carta: esquinas suaves y aire alrededor,
-   con el pie pegado debajo. */
-.prose img {
-	border-radius: 0.5rem;
-	margin-block: 2rem 0.75rem;
-}
-
-.prose img + p em,
-.prose p:has(img) + p em {
-	display: block;
-	font-size: 0.875rem;
-	font-style: normal;
-	color: var(--color-muted);
 }

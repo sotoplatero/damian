@@ -160,12 +160,12 @@
 />
 
 {#snippet introBlock()}
-	<article class="prose prose-xl prose-neutral max-w-none">{@html intro}</article>
+	<article class="rich-text">{@html intro}</article>
 {/snippet}
 
 {#if !preview}
 	{@render introBlock()}
-	{#if error}<p class="mt-6 text-sm text-error">{error}</p>{/if}
+	{#if error}<p class="error-text mt-6">{error}</p>{/if}
 	<div class="mt-8">
 		<InlineForm
 			bind:value={url}
@@ -180,7 +180,7 @@
 	</div>
 {:else}
 	{@render introBlock()}
-	{#if error}<p class="mt-6 text-sm text-error">{error}</p>{/if}
+	{#if error}<p class="error-text mt-6">{error}</p>{/if}
 
 	<section id="informe" class="mt-10 space-y-6">
 		<p class="muted">{t.readLine.replace('{site}', preview.site)}</p>
@@ -209,7 +209,7 @@
 					<div>
 						<div class="flex items-baseline justify-between gap-2">
 							<p class="eyebrow">{DIMENSIONS[dimension]}</p>
-							<p class="text-sm font-bold">{d.total || '—'}</p>
+							<p class="figure-note">{d.total || '—'}</p>
 						</div>
 						<!-- La barra dice cuánto pesa lo peor de esa dimensión, no una nota. -->
 						<div class="meter mt-1">
@@ -231,7 +231,7 @@
 			] as stat (stat.k)}
 				<div>
 					<p class="eyebrow">{stat.k}</p>
-					<p class="text-xl font-bold">{stat.v}</p>
+					<p class="figure">{stat.v}</p>
 				</div>
 			{/each}
 		</div>

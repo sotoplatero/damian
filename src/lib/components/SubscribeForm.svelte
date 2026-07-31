@@ -106,7 +106,7 @@
 				{status === 'loading' ? sending : button}
 			</button>
 			{#if status === 'error'}
-				<p class="text-sm text-error">{errorMessage}</p>
+				<p class="error-text">{errorMessage}</p>
 			{/if}
 		</form>
 	{/if}
@@ -117,7 +117,7 @@
 		font-family: var(--font-mono, ui-monospace, monospace);
 		font-size: 0.95rem;
 		line-height: 1.9;
-		color: #404040;
+		color: var(--color-read);
 	}
 	.terminal-line {
 		white-space: pre-wrap;

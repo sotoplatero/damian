@@ -41,7 +41,7 @@
 <!-- #4 — the line that knows the time. Reserves its height to avoid layout shift. -->
 <p class="greeting muted">{greeting}</p>
 
-<article class="prose prose-xl prose-neutral max-w-none">
+<article class="rich-text">
 	<!-- Sales copy (editable in src/lib/content/home.md) -->
 	{@html html}
 </article>

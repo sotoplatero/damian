@@ -10,13 +10,14 @@
 	 * resultados). Así el layout no necesita saber en qué estado está la página,
 	 * que es algo que no puede saber.
 	 *
-	 * El alto descuenta el py-16 del layout raíz para que la suma sea 100dvh justos
-	 * y no aparezca scroll en la pantalla inicial.
+	 * El alto es min-h-fold, que sale del tema: la pantalla menos el aire del
+	 * layout raíz, para que la suma sea 100dvh justos y no aparezca scroll en la
+	 * pantalla inicial. Antes ese calc estaba escrito a mano aquí y en app.css.
 	 */
 	let { children } = $props();
 </script>
 
-<div class="flex min-h-[calc(100dvh-8rem)] flex-col">
+<div class="flex min-h-fold flex-col">
 	<a href="/" class="link-quiet">&larr; Damian Soto</a>
 	<div class="my-auto w-full">
 		{@render children?.()}

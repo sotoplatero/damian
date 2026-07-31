@@ -229,20 +229,59 @@ Resend sends everything. **There is no cron.**
 
 ### Styling
 
-The theme is in `src/app.css`, in two blocks:
+**`src/app.css` is the only place with a number in it.** Colour, type sizes, line heights,
+vertical rhythm and radii all live in its `@theme`; every class below is written from those
+tokens and no class has a hand-written value. Three blocks:
 
-1. `@theme` — the whole palette: `ink`, `soft`, `muted`, `line`, plus `#0076ff` (Substack's
-   blue, so the embedded form doesn't look bolted on). DaisyUI's `--color-primary` is
-   overridden to match.
-2. `@layer components` — the site vocabulary: `.section`, `.box`, `.box-link`,
-   `.box-locked`, `.box-title`, `.box-text`, `.body-text`, `.muted`, `.link-quiet`,
-   `.eyebrow`, `.screen-center`, `.meter`, `.chip`. `.meter` is a bar that knows nothing
-   about what it measures — the fill is a child with its own width, so it serves both a
-   dimension score and a locked finding.
+1. `@theme` — the tokens.
+   - Palette: `ink` (#171717), `read` (#404040), `soft` (#525252), `muted` (#737373),
+     `line` (#e5e5e5), `brand` (#0076ff, Substack's blue so the embedded form doesn't look
+     bolted on — DaisyUI's `--color-primary` is overridden to match). `read` and `soft` are
+     two greys one step apart and yes, that's on purpose: `read` is what the letter is
+     written in (it came from `prose-neutral`), `soft` is the interface's secondary. Merging
+     them changes the tone of the whole letter, so it's a design decision, not a cleanup.
+   - Type: **five sizes, and no more** — `display` (fluid clamp, the h1), `title`
+     (1.875rem), `body` (1.25rem), `note` (0.875rem), `micro` (0.75rem), plus `ui` (1rem)
+     for the `<main>` default that DaisyUI controls inherit. Each carries its own line
+     height, so `text-body` needs no `leading-*`. Hierarchy comes from **colour and weight**,
+     not from a ladder of sizes: a markdown `h2` is the same size as a section title, and an
+     `h3` is the same size as bold body. Writing `text-lg` or `leading-7` in markup means a
+     class is missing from `app.css`.
+   - Width: `--container-column` (45rem) is the site's single column, used by the root
+     layout as `max-w-column`. It was `max-w-2xl` (42rem). **The numbers in that comment are
+     measured, not estimated** — the letter's longest line is 66 characters at 42rem, 70 at
+     45rem, 78 at 48rem (`max-w-3xl`) and 86 at 56rem. Comfortable reading tops out around
+     75, so 45rem is the last step that fits; going wider means dropping `--leading-read`
+     too, or lines get lost on the way back.
+   - Rhythm: `--spacing-block` (between paragraphs), `--spacing-box` (box padding),
+     `--spacing-section`, `--spacing-page` (the root layout's `py-page`) and
+     `--spacing-fold` = `100dvh` minus that page padding. `min-h-fold` is used by
+     `.screen-center` and by the tools' shell; that `calc` used to be typed by hand in both
+     places and could drift from the layout.
+2. `@layer components` — the site vocabulary: `.section`, `.section-title`,
+   `.section-intro`, `.body-text`, `.muted`, `.error-text`, `.eyebrow`, `.link-quiet`,
+   `.box`, `.box-link`, `.box-locked`, `.box-title`, `.box-text`, `.figure`, `.figure-note`,
+   `.screen-center`, `.meter`, `.chip`. `.meter` is a bar that knows nothing about what it
+   measures — the fill is a child with its own width, so it serves both a dimension score
+   and a locked finding. The measured numbers are `.figure`/`.figure-note` and **not
+   `.stat`**: `.stat`, `.stat-value` and `.stat-title` belong to DaisyUI, whose rule prints
+   after this layer and wins, turning the number into a grid with its own padding.
+3. `.rich-text` — the markdown blocks (`{@html}`), outside any layer so its descendant
+   selectors beat utilities on the same element.
 
-**There are only two font sizes on the site**: body `1.25rem` and note `0.875rem`.
-Hierarchy comes from colour, not size. Writing `text-base` or `text-lg` in markup means a
-class is missing from `app.css`.
+**`@tailwindcss/typography` is gone. Don't bring it back.** `prose prose-xl prose-neutral`
+was a second theme running in parallel to this file: its own size scale, its own vertical
+rhythm (em-based margins, unrelated to the ones here) and its own palette, none of it
+visible from `app.css`, and every value it got wrong had to be fought with a
+`.prose h1 { }` override that had to beat the plugin's `:where()`. The markdown that the
+four pages render (`src/lib/content/*.md` → `marked` → `{@html}`) is styled by `.rich-text`
+instead, with the same numbers `prose-xl` produced — so the letter reads exactly as it did,
+but the values now come from the `@theme` above.
+
+Which classes are serif is declared per class (`font-serif` on `.body-text`,
+`.section-intro`, `.box-text`, and on `.rich-text`). That used to be one list at the bottom
+of the file, which is easy to forget when adding a class — and was forgotten once already
+during this change.
 
 `src/lib/tools/voice.ts` holds the shared writing rules for everything a model writes:
 Spanish voice plus the anti-AI rules (vary sentence rhythm, repeat words instead of hunting
