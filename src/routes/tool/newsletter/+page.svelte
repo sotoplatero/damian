@@ -3,7 +3,15 @@
 	import PageMeta from '$lib/components/PageMeta.svelte';
 	import { tick } from 'svelte';
 	import raw from '$lib/content/tool-newsletter.md?raw';
-	import { AREAS, effortLabel, type Area, type Finding, type Measurements, type Scores } from '$lib/tools/newsletter/checks';
+	import type { Measurements } from '$lib/tools/newsletter/checks';
+	import {
+		DIMENSIONS,
+		EFFORT_LABEL,
+		type AuditItem,
+		type Dimension,
+		type Severity,
+		type Tally
+	} from '$lib/tools/newsletter/rules';
 	import { parseCopy } from '$lib/content';
 	import InlineForm from '$lib/components/InlineForm.svelte';
 
@@ -17,8 +25,12 @@
 	 * palabra que lo de detrás del muro vale algo.
 	 *
 	 * Lo que queda tapado son barras a la anchura de su impacto: se ve cuántos son
-	 * y cómo de gordos, no qué dicen. Del servidor solo bajan gravedad, área e
+	 * y cómo de gordos, no qué dicen. Del servidor solo bajan gravedad, dimensión e
 	 * impacto, así que no hay ni un hallazgo que sacar del HTML.
+	 *
+	 * El orden y las etiquetas de aquí son los del correo: `report.ts` lee las
+	 * mismas claves de `tool-newsletter.md`. Antes esta pantalla y el correo
+	 * llamaban de forma distinta a los mismos bloques y parecían dos informes.
 	 */
 
 	const { t, body } = parseCopy(raw);
@@ -29,17 +41,10 @@
 		name: string;
 		card: { tagline: string; image: string | null; hasLogo: boolean };
 		measurements: Measurements;
-		scores: Scores;
-		niche: {
-			veredicto?: string;
-			loQueSeEntiende?: string;
-			claro?: boolean;
-			porQue?: string;
-			paraQuien?: string;
-		} | null;
-		first: Finding | null;
-		locked: { severity: Finding['severity']; area: Area; impact: number }[];
-		quickWins: number;
+		tally: Tally;
+		diagnosis: { veredicto: string; loQueSeEntiende: string; paraQuien: string } | null;
+		first: AuditItem | null;
+		locked: { severity: Severity; dimension: Dimension }[];
 	};
 
 	let url = $state('');
@@ -50,15 +55,36 @@
 	/** El informe completo ya ha salido por correo. */
 	let sent = $state(false);
 
-	/** Una palabra y un color por gravedad. Rojo solo para lo que de verdad sangra. */
-	const SEVERITY: Record<Finding['severity'], { label: string; chip: string }> = {
-		grave: { label: 'Grave', chip: 'bg-error/15 text-error' },
-		medio: { label: 'Importante', chip: 'bg-ink/10 text-ink' },
-		leve: { label: 'Menor', chip: 'bg-line text-muted' },
-		oportunidad: { label: 'Libre', chip: 'bg-brand/10 text-brand' }
+	/**
+	 * Una palabra, un color y un ancho por gravedad. Rojo solo para lo que de
+	 * verdad sangra. El ancho es lo que rellena la barra de cada dimensión: dice
+	 * cuánto pesa lo peor que hay ahí, no una nota — las notas se quitaron.
+	 */
+	const SEVERITY: Record<Severity, { label: string; chip: string; width: number }> = {
+		grave: { label: 'Grave', chip: 'bg-error/15 text-error', width: 100 },
+		medio: { label: 'Importante', chip: 'bg-ink/10 text-ink', width: 65 },
+		leve: { label: 'Menor', chip: 'bg-line text-muted', width: 30 },
+		oportunidad: { label: 'Libre', chip: 'bg-brand/10 text-brand', width: 45 }
 	};
 
-	const areas = Object.keys(AREAS) as Area[];
+	/** El titular, de una regla de una línea. Ver `tally` en rules.ts. */
+	const STATE_LINE: Record<Tally['state'], string> = {
+		roto: 'Hay algo roto.',
+		fugas: 'Funciona, y tiene fugas.',
+		sano: 'Está sano.'
+	};
+
+	/** «3 hallazgos, 1 grave» — un recuento, que es un hecho y no un juicio. */
+	function countLine(tally: Tally): string {
+		if (!tally.total) return 'Ni un hallazgo';
+		const parts = [`${tally.total} ${tally.total === 1 ? 'hallazgo' : 'hallazgos'}`];
+		if (tally.grave) parts.push(`${tally.grave} grave${tally.grave === 1 ? '' : 's'}`);
+		if (tally.medio) parts.push(`${tally.medio} importante${tally.medio === 1 ? '' : 's'}`);
+		if (tally.oportunidad) parts.push(`${tally.oportunidad} de terreno libre`);
+		return parts.join(', ');
+	}
+
+	const dimensions = Object.keys(DIMENSIONS) as Dimension[];
 
 	function errorFor(code: unknown): string {
 		if (code === 'unreadable') return t.errorUnreadable;
@@ -124,13 +150,13 @@
 			? ''
 			: (preview.locked.length ? t.gateBody : t.gateBodyClean)
 					.replace('{rest}', String(preview.locked.length))
-					.replace('{quickWins}', String(preview.quickWins))
+					.replace('{quickWins}', String(preview.tally.quickWins))
 	);
 </script>
 
 <PageMeta
-	title="Qué se ve de tu newsletter desde fuera — Damian Soto"
-	description="Pega tu Substack y te doy una nota sobre 100, lo que ve quien comparte tu enlace, y el primer fallo con su arreglo. Sin pedirte métricas."
+	title="Auditoría de tu newsletter — Damian Soto"
+	description="Pega tu Substack y te digo qué está mal, con qué gravedad y cómo se arregla. Nota sobre 100 y el primer hallazgo con su arreglo escrito. Sin pedirte métricas."
 />
 
 {#snippet introBlock()}
@@ -159,28 +185,40 @@
 	<section id="informe" class="mt-10 space-y-6">
 		<p class="muted">{t.readLine.replace('{site}', preview.site)}</p>
 
-		<!-- La nota. Va primero porque es lo único que se entiende sin leer nada. -->
+		<!-- El estado y el recuento. Va primero porque es lo único que se entiende
+		     sin leer nada. Aquí había una nota sobre 100: se quitó porque cualquier
+		     agregado sobre los hallazgos empeora cuando el tool encuentra más cosas.
+		     El motivo largo está en `tally`, en rules.ts. -->
 		<div class="box">
-			<div class="flex items-baseline gap-3">
-				<p class="text-6xl font-bold leading-none">{preview.scores.total}</p>
-				<p class="muted">{t.scoreOutOf}</p>
-			</div>
-			{#if preview.niche?.veredicto}
-				<p class="body-text mt-3">{preview.niche.veredicto}</p>
+			<p class="section-title">{STATE_LINE[preview.tally.state]}</p>
+			<p class="body-text mt-2">
+				<strong>{countLine(preview.tally)}.</strong>
+				{#if preview.tally.quickWins}
+					{preview.tally.quickWins === 1
+						? ' Uno se hace hoy mismo.'
+						: ` ${preview.tally.quickWins} se hacen hoy mismo.`}
+				{/if}
+			</p>
+			{#if preview.diagnosis?.veredicto}
+				<p class="body-text mt-3">{preview.diagnosis.veredicto}</p>
 			{/if}
 
 			<div class="mt-5 grid gap-3 sm:grid-cols-5">
-				{#each areas as area (area)}
+				{#each dimensions as dimension (dimension)}
+					{@const d = preview.tally.byDimension[dimension]}
 					<div>
 						<div class="flex items-baseline justify-between gap-2">
-							<p class="eyebrow">{AREAS[area]}</p>
-							<p class="text-sm font-bold">{preview.scores.byArea[area]}</p>
+							<p class="eyebrow">{DIMENSIONS[dimension]}</p>
+							<p class="text-sm font-bold">{d.total || '—'}</p>
 						</div>
-						<div class="meter mt-1"><span style="width: {preview.scores.byArea[area]}%"></span></div>
+						<!-- La barra dice cuánto pesa lo peor de esa dimensión, no una nota. -->
+						<div class="meter mt-1">
+							<span style="width: {d.worst ? SEVERITY[d.worst].width : 0}%"></span>
+						</div>
 					</div>
 				{/each}
 			</div>
-			<p class="muted mt-4">{t.scoreNote}</p>
+			<p class="muted mt-4">{t.stateNote}</p>
 		</div>
 
 		<!-- Las cifras: lo único que nadie puede discutir. -->
@@ -233,20 +271,19 @@
 		</div>
 
 		<!-- Para quién escribe. Nadie se lo dice nunca, y es lo que más sorprende. -->
-		{#if preview.niche?.paraQuien}
+		{#if preview.diagnosis?.paraQuien}
 			<article class="box">
 				<p class="eyebrow">{t.labelAudience}</p>
-				<p class="body-text mt-1">{preview.niche.paraQuien}</p>
+				<p class="body-text mt-1">{preview.diagnosis.paraQuien}</p>
 				<p class="muted mt-3">{t.audienceNote}</p>
 			</article>
 		{/if}
 
-		<!-- El nicho: el juicio que demuestra que el análisis vale algo. -->
-		{#if preview.niche?.loQueSeEntiende}
+		<!-- El nicho: el juicio que demuestra que la auditoría vale algo. -->
+		{#if preview.diagnosis?.loQueSeEntiende}
 			<article class="box">
 				<p class="eyebrow">{t.labelNiche}</p>
-				<p class="body-text mt-1">{preview.niche.loQueSeEntiende}</p>
-				{#if preview.niche.porQue}<p class="muted mt-2">{preview.niche.porQue}</p>{/if}
+				<p class="body-text mt-1">{preview.diagnosis.loQueSeEntiende}</p>
 			</article>
 		{/if}
 
@@ -258,14 +295,20 @@
 					<p class="eyebrow">{t.labelFirst.replace('{total}', String(total))}</p>
 					<span class="chip {SEVERITY[f.severity].chip}">{SEVERITY[f.severity].label}</span>
 				</div>
-				<p class="box-title mt-2">{f.fact}</p>
-				{#if f.detail}<p class="mt-1 text-soft">{f.detail}</p>{/if}
-				<p class="muted mt-3">
-					{t.labelImpact.replace('{impact}', String(f.impact))} · {effortLabel(f.effort)}
-				</p>
+				<p class="box-title mt-2">{f.hecho}</p>
+				{#if f.evidencia}
+					<!-- Si lo encontró leyendo, la evidencia es una cita literal ya
+					     verificada contra el original: se enseña como cita. -->
+					{#if f.origen === 'abierto'}
+						<blockquote class="mt-2 border-l-2 border-line pl-3 text-soft">{f.evidencia}</blockquote>
+					{:else}
+						<p class="mt-1 text-soft">{f.evidencia}</p>
+					{/if}
+				{/if}
+				<p class="muted mt-3">{DIMENSIONS[f.dimension]} · {EFFORT_LABEL[f.effort]}</p>
 				<div class="mt-4 border-t border-line pt-4">
 					<p class="eyebrow">{t.labelFix}</p>
-					<p class="body-text mt-1">{f.fix}</p>
+					<p class="body-text mt-1">{f.propuesta}</p>
 				</div>
 			</article>
 		{/if}
@@ -280,9 +323,10 @@
 							<span class="chip {SEVERITY[item.severity].chip} shrink-0">
 								{SEVERITY[item.severity].label}
 							</span>
-							<!-- El ancho es su impacto: se ve el tamaño de lo que falta, no el texto. -->
+							<p class="eyebrow shrink-0">{DIMENSIONS[item.dimension]}</p>
+							<!-- El ancho es su gravedad: se ve el tamaño de lo que falta, no el texto. -->
 							<div class="meter flex-1 opacity-40">
-								<span style="width: {item.impact * 10}%"></span>
+								<span style="width: {SEVERITY[item.severity].width}%"></span>
 							</div>
 						</div>
 					{/each}

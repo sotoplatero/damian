@@ -1,49 +1,46 @@
-import { AREAS, isQuickWin, effortLabel, strengths, type Area, type Finding, type Measurements, type Scores } from './checks';
+import raw from '$lib/content/tool-newsletter.md?raw';
+import { parseCopy } from '$lib/content';
+import { strengths, type Measurements } from './checks';
+import {
+	DIMENSIONS,
+	EFFORT_LABEL,
+	isQuickWin,
+	type AuditItem,
+	type Dimension,
+	type Tally
+} from './rules';
 import type { NewsletterSnapshot } from '$lib/server/newsletter';
 
 /**
- * El informe completo, en markdown, para el correo.
+ * La auditoría completa, en markdown, para el correo.
  *
- * Dos reglas que aguantan cualquier cambio aquí:
+ * Tres reglas que aguantan cualquier cambio aquí:
  *
- * 1. **Cada sección lleva un dato o una acción, o no existe.** Salió de auditar
- *    un informe SEO de referencia que tenía dos páginas repetidas literalmente y
- *    recomendaciones del tipo "mejora la experiencia de usuario". Se paga con la
- *    confianza de quien deja su correo, así que aquí no entra relleno.
- * 2. **El arreglo va escrito, no descrito.** "Pega esto: «...»" y no "mejora tu
- *    subtítulo". Los arreglos deterministas vienen en `Finding.fix`; los que hay
- *    que redactar los escribe el modelo.
+ * 1. **Es el MISMO documento que la pantalla, con lo tapado abierto.** No una
+ *    segunda versión. El orden es el de `+page.svelte` y las etiquetas salen del
+ *    mismo `tool-newsletter.md`, así que no pueden divergir por descuido. Y sí
+ *    repite lo que ya vio gratis, a propósito: el correo es lo único que le queda
+ *    cuando cierra la pestaña.
+ * 2. **Cada sección lleva un dato o una propuesta, o no existe.** Salió de auditar
+ *    un informe SEO de referencia con dos páginas repetidas literalmente y
+ *    recomendaciones del tipo "mejora la experiencia de usuario".
+ * 3. **El arreglo va escrito, no descrito.** Eso ya lo garantiza el tipo:
+ *    `AuditItem` exige `propuesta`, y lo que llega sin ella se cae antes.
  *
- * El orden no es decorativo: primero la nota (para que se sepa dónde está), luego
- * lo que se ve desde fuera (para que se reconozca), luego el índice de hallazgos
- * (para que se pueda escanear) y solo después el detalle. Termina por dónde
- * empezar, que es lo único que se recuerda al cerrarlo.
+ * El cuerpo es UN BUCLE sobre los hallazgos. Antes eran once secciones
+ * condicionales concatenando strings, y cada una podía desaparecer en silencio.
+ *
+ * NO hay nota sobre 100: se quitó, y el motivo está en `tally` (`rules.ts`). En su
+ * sitio va el estado y el recuento, que son hechos.
  *
  * NO se usan tablas markdown a propósito: el shell de correo no las estiliza y en
- * un móvil de 320px se salen. Un índice numerado escanea igual y no se rompe.
+ * un móvil de 320px se salen. Una lista numerada escanea igual y no se rompe.
  *
- * El texto del modelo se escapa antes de meterlo en el markdown por el mismo
- * motivo que en el otro tool: una línea que empiece por "#" o "-" la pintaría el
- * cliente de correo como titular o lista.
+ * El texto del modelo se escapa antes de meterlo en el markdown: una línea que
+ * empiece por "#" o "-" la pintaría el cliente de correo como titular o lista.
  */
 
-export type Niche = {
-	veredicto?: string;
-	loQueSeEntiende?: string;
-	claro?: boolean;
-	porQue?: string;
-	paraQuien?: string;
-};
-export type Block = { veredicto?: string; reescritura?: string };
-export type Titles = { veredicto?: string; mejorTitulo?: string; peorTitulo?: string };
-export type SeoTitle = { slug?: string; titulo?: string; descripcion?: string };
-export type FullVerdict = {
-	promesa?: Block;
-	cta?: Block;
-	titulares?: Titles;
-	seoTitles?: SeoTitle[];
-	acciones?: string[];
-};
+const { t } = parseCopy(raw);
 
 /** Ver el comentario de $lib/tools/7-frameworks/format.ts: mismo problema, misma cura. */
 function escapeMarkdown(text: string): string {
@@ -65,79 +62,102 @@ function section(title: string, body: string): string {
 	return body ? `## ${title}\n\n${body}` : '';
 }
 
-function sub(title: string, body: string): string {
-	return body ? `**${title}**\n\n${body}` : '';
-}
-
-/** Como lo corta Google: por caracteres, sin cortar una palabra por la mitad. */
-function cut(text: string, max: number): string {
-	if (text.length <= max) return text;
-	const trimmed = text.slice(0, max);
-	const space = trimmed.lastIndexOf(' ');
-	return `${(space > max * 0.6 ? trimmed.slice(0, space) : trimmed).trimEnd()}…`;
-}
-
 /**
  * El rabo que Substack pega detrás del subtítulo de todo el mundo en la meta
- * descripción. Ver el comentario de checks.ts: no es un hallazgo porque no tiene
- * arreglo, pero enseñarlo explica por qué el subtítulo tiene que ir al grano.
+ * descripción. No es un hallazgo porque no tiene arreglo posible (lo llevan las
+ * cinco publicaciones medidas), pero explicarlo sí es información: es el motivo
+ * de que el subtítulo tenga que decir lo importante al principio.
  */
 const SUBSTACK_TAIL = /click to read|a substack publication/i;
 
-/** Una palabra para la gravedad, que es lo que se lee en el índice. */
-const LABEL: Record<Finding['severity'], string> = {
+/** Una palabra para la gravedad. Es lo que se lee al escanear. */
+const LABEL = {
 	grave: 'GRAVE',
 	medio: 'Importante',
 	leve: 'Menor',
 	oportunidad: 'Libre'
+} as const;
+
+/**
+ * El titular del informe. Sustituye a la nota sobre 100 y sale de una regla de
+ * una línea: hay algo grave, hay fallos, o solo queda terreno libre.
+ */
+const STATE_LINE = {
+	roto: 'Hay algo roto.',
+	fugas: 'Funciona, y tiene fugas.',
+	sano: 'Está sano.'
+} as const;
+
+export type ReportInput = {
+	site: string;
+	snapshot: NewsletterSnapshot;
+	m: Measurements;
+	/** Todos los hallazgos, medidos y abiertos, ya ordenados por gravedad. */
+	items: AuditItem[];
+	tally: Tally;
+	diagnosis: { veredicto: string; loQueSeEntiende: string; paraQuien: string } | null;
 };
 
-function verdictLine(total: number): string {
-	if (total >= 85) return 'Está sano. Lo que queda es terreno que nadie pisa.';
-	if (total >= 70) return 'Funciona, y hay dos o tres cosas que lo subirían sin tocar lo que escribes.';
-	if (total >= 50) return 'La base está, pero hay fugas que cuestan suscriptores.';
-	return 'Hay algo roto que hace que un lector nuevo se vaya sin dejar el correo.';
+/** «3 hallazgos, 1 grave» — el recuento, que es un hecho y no un juicio. */
+function countLine(tally: Tally): string {
+	if (!tally.total) return 'Ni un hallazgo.';
+	const parts = [`${tally.total} ${tally.total === 1 ? 'hallazgo' : 'hallazgos'}`];
+	if (tally.grave) parts.push(`${tally.grave} grave${tally.grave === 1 ? '' : 's'}`);
+	if (tally.medio) parts.push(`${tally.medio} importante${tally.medio === 1 ? '' : 's'}`);
+	if (tally.oportunidad) parts.push(`${tally.oportunidad} de terreno libre`);
+	return parts.join(', ');
 }
 
-export function toMarkdown(
-	site: string,
-	snapshot: NewsletterSnapshot,
-	m: Measurements,
-	findings: Finding[],
-	scores: Scores,
-	niche: Niche | null,
-	verdict: FullVerdict | null
-): string {
-	const defects = findings.filter((f) => f.severity !== 'oportunidad');
-	const quickWins = findings.filter(isQuickWin);
-	// El más reciente por fecha, no el primero del archivo: el orden lo pone Substack.
-	const latest = [...snapshot.posts].sort((a, b) => Date.parse(b.date) - Date.parse(a.date))[0];
+export function toMarkdown({ site, snapshot, m, items, tally, diagnosis }: ReportInput): string {
 	const good = strengths(snapshot, m);
 
-	/** Una línea del índice: gravedad, hecho, cuánto mueve y cuánto cuesta. */
-	const indexLine = (f: Finding, i: number) =>
-		`${i + 1}\\. **${LABEL[f.severity]}** — ${clean(f.fact)}  \n` +
-		`Impacto ${f.impact}/10 · ${effortLabel(f.effort)}${isQuickWin(f) ? ' · **se hace hoy**' : ''}`;
-
-	/** El detalle: el hecho, el dato y el arreglo escrito. */
-	const detailBlock = (f: Finding, i: number) =>
+	/**
+	 * Un hallazgo: qué pasa, cuánto pesa, la prueba y el arreglo. Es el único
+	 * bloque que se repite, y de él sale todo el cuerpo del informe.
+	 */
+	const renderItem = (item: AuditItem, i: number) =>
 		[
-			`**${i + 1}. ${clean(f.fact)}**`,
-			f.detail ? clean(f.detail) : '',
-			`*Cómo se arregla:* ${clean(f.fix)}`
+			`**${i + 1}. ${clean(item.hecho)}**`,
+			`${LABEL[item.severity]} · ${DIMENSIONS[item.dimension]} · ${EFFORT_LABEL[item.effort]}` +
+				(isQuickWin(item) ? ' · **se hace hoy**' : ''),
+			item.evidencia
+				? item.origen === 'abierto'
+					? `> ${clean(item.evidencia)}`
+					: clean(item.evidencia)
+				: '',
+			`*${t.labelFix}:* ${clean(item.propuesta)}`
 		]
 			.filter(Boolean)
 			.join('\n\n');
 
 	const parts = [
-		`# ${scores.total} sobre 100`,
-
-		clean(niche?.veredicto) || verdictLine(scores.total),
-
+		// --- La introducción: qué es esto y de dónde sale. Sin ella el correo
+		//     empezaba con un número a pelo, que además es el preheader de Gmail.
 		[
-			...(Object.keys(AREAS) as Area[]).map((a) => `- **${AREAS[a]}** ${scores.byArea[a]}`),
+			`Esta es la auditoría completa de **${site}**, la que te prometí cuando dejaste tu correo.`,
+			`Es la misma que viste en pantalla, con ${items.length === 1 ? 'el hallazgo' : `los ${items.length} hallazgos`} ${items.length === 1 ? 'abierto' : 'abiertos'} y el arreglo de cada uno escrito. Empieza igual, así que puedes bajar directo a **Qué está mal**.`,
+			`Una cosa antes: lo que va marcado como **${LABEL.oportunidad}** no es un fallo. Son cosas que no hace ni la competencia que mejor va, y por eso están libres.`
+		].join('\n\n'),
+
+		'---',
+
+		// --- El estado y el recuento. Igual que en pantalla. ---
+		`# ${STATE_LINE[tally.state]}`,
+
+		`**${countLine(tally)}.**${tally.quickWins ? ` ${tally.quickWins === 1 ? 'Uno se hace' : `${tally.quickWins} se hacen`} hoy mismo.` : ''}`,
+
+		clean(diagnosis?.veredicto),
+
+		// Por dimensión, un recuento y nada más: ni barras ni notas, porque cualquier
+		// número aquí volvería a ser el agregado que se quitó.
+		[
+			...(Object.keys(DIMENSIONS) as Dimension[]).map((d) => {
+				const { total, worst } = tally.byDimension[d];
+				if (!total) return `- **${DIMENSIONS[d]}** — nada que señalar`;
+				return `- **${DIMENSIONS[d]}** — ${total} ${total === 1 ? 'hallazgo' : 'hallazgos'}${worst ? `, el peor ${LABEL[worst].toLowerCase()}` : ''}`;
+			}),
 			'',
-			'*Es mi escala, no un estándar del sector: sirve para ver de un vistazo dónde está el problema, no para compararte con nadie. Parto de 100 y resto el peso de cada hallazgo.*'
+			`*${t.stateNote}*`
 		].join('\n'),
 
 		// --- Las cifras: lo único que no se puede discutir ---
@@ -145,8 +165,11 @@ export function toMarkdown(
 			'Las cifras',
 			[
 				`- **${m.posts}** posts leídos (${m.freePosts} gratis, ${m.paidPosts} de pago)`,
-				`- Un post cada **${m.cadenceMedianDays} días** de mediana, con huecos de ${m.cadenceMinDays} a ${m.cadenceMaxDays}`,
-				`- El último, hace **${m.daysSinceLast} días**`,
+				`- Un post cada **${m.cadenceMedianDays} ${m.cadenceMedianDays === 1 ? 'día' : 'días'}** de mediana, con huecos de ${m.cadenceMinDays} a ${m.cadenceMaxDays}`,
+				m.daysSinceLast === 0
+					? '- El último, **hoy**'
+					: `- El último, hace **${m.daysSinceLast} ${m.daysSinceLast === 1 ? 'día' : 'días'}**`,
+				m.monthsLive ? `- La publicación lleva **${m.monthsLive} meses** en pie` : '',
 				`- De ${m.wordsMin} a ${m.wordsMax} palabras por post (mediana ${m.wordsMedian})`,
 				`- **${m.engagementPerPost}** reacciones y comentarios por post — ${m.engagementFirstHalf} en tu mitad más antigua, ${m.engagementSecondHalf} en la más reciente`,
 				m.bestPost ? `- El que más conectó: «${clean(m.bestPost.title)}» (${m.bestPost.engagement})` : '',
@@ -156,156 +179,44 @@ export function toMarkdown(
 				.join('\n')
 		),
 
-		// --- Cómo te ven: los tres sitios donde apareces sin estar delante ---
+		// --- La tarjeta, la misma que vio en pantalla y con la misma etiqueta ---
 		section(
-			'Cómo te ven',
+			t.labelCard,
 			[
-				'Estos son los tres únicos sitios donde alguien te encuentra sin haberte leído nunca. Reconstruidos con lo que hay puesto ahora mismo.',
-				sub(
-					'Cuando alguien comparte tu enlace',
-					[
-						`> **${snapshot.name.trim() || '(sin nombre)'}**  `,
-						`> ${clean(snapshot.tagline) || '*(sin subtítulo: aquí no sale nada)*'}  `,
-						`> ${snapshot.ogImage ? 'Con imagen' : '**Sin imagen** — la tarjeta sale como un enlace de texto'}`
-					].join('\n')
-				),
-				latest
-					? sub(
-							'En la bandeja de entrada',
-							[
-								`> De: **${snapshot.name || '(sin nombre)'}**  `,
-								`> ${clean(latest.title)}  `,
-								`> ${clean(latest.subtitle) || '*(sin subtítulo: Substack rellena con las primeras palabras del texto)*'}`
-							].join('\n')
-						)
-					: '',
-				sub(
-					'En Google',
-					[
-						`> ${site}  `,
-						`> **${clean(cut(snapshot.pageTitle, 60))}**  `,
-						`> ${clean(cut(snapshot.metaDescription, 160)) || '*(sin descripción: Google elige un trozo del texto a su gusto)*'}`,
-						// El rabo de la plantilla no es culpa suya y no hay forma de quitarlo,
-						// así que no es un hallazgo. Pero verlo escrito sí es información:
-						// explica por qué su subtítulo tiene que decir lo importante primero.
-						SUBSTACK_TAIL.test(snapshot.metaDescription)
-							? '\n*Ese «Click to read...» del final no lo has escrito tú: Substack lo pega detrás de tu subtítulo y no hay forma de quitarlo. Lo llevan todas. Lo único que está en tu mano es que tu subtítulo diga lo importante al principio, porque Google corta a los 160 caracteres.*'
-							: ''
-					]
-						.filter(Boolean)
-						.join('\n')
-				)
+				`> **${snapshot.name.trim() || '(sin nombre)'}**  `,
+				`> ${clean(snapshot.tagline) || `*${t.cardNoTagline}*`}  `,
+				`> ${snapshot.ogImage ? 'Con imagen' : `**${t.cardNoImage}**`}`,
+				SUBSTACK_TAIL.test(snapshot.metaDescription)
+					? '\n*En Google, detrás de tu subtítulo, Substack pega un «Click to read...» que no has escrito tú y que no se puede quitar. Lo llevan todas. Lo único que está en tu mano es que tu subtítulo diga lo importante al principio, porque Google corta a los 160 caracteres.*'
+					: ''
 			]
 				.filter(Boolean)
-				.join('\n\n')
+				.join('\n')
 		),
 
-		// --- Lo que solo se puede juzgar leyendo ---
-		niche?.paraQuien
-			? section(
-					'Para quién escribes',
-					`${clean(niche.paraQuien)}\n\n*Esto sale solo de lo que enseñas. Si no es a quien tenías en la cabeza, el problema no es el lector: es lo que se lee.*`
-				)
+		// --- Lo que solo se puede juzgar leyendo. También estaba en pantalla. ---
+		clean(diagnosis?.paraQuien)
+			? section(t.labelAudience, `${clean(diagnosis?.paraQuien)}\n\n*${t.audienceNote}*`)
 			: '',
 
-		niche?.loQueSeEntiende
-			? section('Lo que se entiende', `${clean(niche.loQueSeEntiende)}\n\n${clean(niche.porQue)}`.trim())
-			: '',
+		clean(diagnosis?.loQueSeEntiende) ? section(t.labelNiche, clean(diagnosis?.loQueSeEntiende)) : '',
 
-		verdict?.promesa?.veredicto
-			? section(
-					'La promesa',
-					[
-						clean(verdict.promesa.veredicto),
-						clean(verdict.promesa.reescritura)
-							? `**Pega esto en Settings → Publication details → Short description:**\n\n> ${clean(verdict.promesa.reescritura)}`
-							: ''
-					]
-						.filter(Boolean)
-						.join('\n\n')
-				)
-			: '',
-
-		verdict?.cta?.veredicto
-			? section(
-					'El botón',
-					[
-						clean(verdict.cta.veredicto),
-						clean(verdict.cta.reescritura)
-							? `**Pon esto en el botón que insertes dentro de un post:**\n\n> ${clean(verdict.cta.reescritura)}`
-							: ''
-					]
-						.filter(Boolean)
-						.join('\n\n')
-				)
-			: '',
-
-		verdict?.titulares?.veredicto
-			? section(
-					'Los títulos',
-					[
-						clean(verdict.titulares.veredicto),
-						verdict.titulares.mejorTitulo ? `**El mejor:** «${clean(verdict.titulares.mejorTitulo)}»` : '',
-						verdict.titulares.peorTitulo ? `**El más flojo:** «${clean(verdict.titulares.peorTitulo)}»` : ''
-					]
-						.filter(Boolean)
-						.join('\n\n')
-				)
-			: '',
-
-		// --- El índice: de un vistazo, qué hay y en qué orden ---
+		// --- El cuerpo: un bucle, de más a menos grave ---
 		section(
-			findings.length ? `Los ${findings.length} hallazgos, de más a menos impacto` : 'Hallazgos',
-			findings.length
-				? [
-						findings.map(indexLine).join('\n\n'),
-						'',
-						`${defects.length} son fallos y ${findings.length - defects.length} son terreno libre: cosas que no hace ni la competencia que mejor va.` +
-							(quickWins.length ? ` ${quickWins.length} se pueden hacer hoy mismo.` : '')
-					].join('\n')
+			items.length ? `Qué está mal (${items.length})` : 'Qué está mal',
+			items.length
+				? items.map(renderItem).join('\n\n---\n\n')
 				: 'Nada que señalar. No es habitual.'
 		),
 
-		// --- El detalle con el arreglo escrito ---
-		findings.length ? section('Uno por uno', findings.map(detailBlock).join('\n\n')) : '',
-
-		// --- Los títulos de buscador, ya escritos ---
-		verdict?.seoTitles?.length && m.seoOpportunities.length
-			? section(
-					'Escritos para buscadores',
-					[
-						'Tus posts con más respuesta y sin título de buscador. Los he escrito yo: cópialos en ⋯ → Manage → SEO de cada post. El título del post no cambia.',
-						...verdict.seoTitles.slice(0, 3).map((t) => {
-							const post = m.seoOpportunities.find((p) => p.slug === t.slug);
-							return [
-								`**${clean(post?.title ?? t.slug ?? '')}**`,
-								clean(t.titulo) ? `*Título:* ${clean(t.titulo)}` : '',
-								clean(t.descripcion) ? `*Descripción:* ${clean(t.descripcion)}` : ''
-							]
-								.filter(Boolean)
-								.join('  \n');
-						})
-					].join('\n\n')
-				)
-			: '',
-
 		// --- Lo que ya está bien: saber qué no tocar vale tanto como saber qué tocar ---
-		good.length
-			? section('Lo que sí funciona', good.map((g) => `- ${clean(g)}`).join('\n'))
-			: '',
+		good.length ? section('Qué está bien', good.map((g) => `- ${clean(g)}`).join('\n')) : '',
 
 		// --- Y lo único que se recuerda al cerrar el correo ---
-		verdict?.acciones?.length
+		items.length
 			? section(
 					'Por dónde empezar',
-					[
-						verdict.acciones
-							.slice(0, 3)
-							.map((a, i) => `**${i + 1}.** ${clean(a)}`)
-							.join('\n\n'),
-						'',
-						'Haz la primera y para. Si cambias el subtítulo, el botón y los títulos el mismo día, dentro de un mes no vas a saber qué fue lo que funcionó.'
-					].join('\n')
+					'Por el **1**, y para. Si cambias el subtítulo, el botón y los títulos el mismo día, dentro de un mes no vas a saber qué fue lo que funcionó.'
 				)
 			: ''
 	];

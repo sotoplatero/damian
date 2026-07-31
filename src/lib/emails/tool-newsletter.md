@@ -1,23 +1,17 @@
 ---
 # Correo de /tool/newsletter. NO forma parte de la secuencia: el nombre del
 # fichero no es numérico, así que emails.ts lo deja fuera.
-# El marcador REPORT del cuerpo se sustituye por el informe completo.
+# El marcador REPORT del cuerpo se sustituye por la auditoría completa.
 #
-# Aquí solo va lo que NO depende de la publicación evaluada: cómo leer el
-# informe y a dónde ir después. Todo lo que sí depende de ella lo escribe
-# report.ts, y ahí no entra una sección sin un dato o una acción detrás.
-subject: Tu newsletter, vista desde fuera
+# Aquí solo va lo que NO depende de la publicación auditada: a dónde ir después.
+# Todo lo que sí depende de ella lo escribe report.ts, incluida la introducción
+# y la explicación de la etiqueta «Libre» — van ahí porque necesitan la URL y el
+# número de hallazgos, y porque la leyenda tiene que ir ANTES de la primera
+# etiqueta que explica, no al final del correo como estaba.
+subject: La auditoría de tu newsletter
 ---
 
 {{REPORT}}
-
----
-
-**Cómo leer esto**
-
-Lo que sale marcado como **Libre** no son fallos. Son cosas que no hace ni la competencia que mejor va, y por eso están libres. No corren prisa, pero ahí están.
-
-Y lo dicho arriba: haz una sola cosa y para. Es la única forma de saber qué fue lo que funcionó.
 
 ---
 

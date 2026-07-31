@@ -1,26 +1,51 @@
 import { json } from '@sveltejs/kit';
-import { env } from '$env/dynamic/private';
 import type { RequestHandler } from './$types';
-import { collectNewsletter, UnreadableError } from '$lib/server/newsletter';
+import { askJson } from '$lib/server/openai';
+import { cacheAudit, readAudit } from '$lib/server/audit-cache';
+import {
+	collectNewsletter,
+	collectPostBodies,
+	normalizeOrigin,
+	UnreadableError
+} from '$lib/server/newsletter';
 import { subscribe, sendNewsletterReportEmail } from '$lib/server/resend';
 import { isDisposable } from '$lib/server/email-validation';
 import { overLimit } from '$lib/server/rate-limit';
-import { measure, check, score, isQuickWin } from '$lib/tools/newsletter/checks';
-import { nichePrompt, fullPrompt, auditMessage } from '$lib/tools/newsletter/prompt';
-import { toMarkdown, type FullVerdict, type Niche } from '$lib/tools/newsletter/report';
+import { measure, slugsToSample, type Measurements } from '$lib/tools/newsletter/checks';
+import {
+	bySeverity,
+	openFindings,
+	runMeasured,
+	tally,
+	type AuditItem,
+	type Tally
+} from '$lib/tools/newsletter/rules';
+import {
+	auditMessage,
+	auditPrompt,
+	auditSchema,
+	type Audited
+} from '$lib/tools/newsletter/prompt';
+import { toMarkdown } from '$lib/tools/newsletter/report';
 
 /**
- * Evalúa lo que un newsletter de Substack enseña desde fuera.
+ * Audita una newsletter de Substack por lo que enseña desde fuera.
  *
- * Dos mitades bien separadas, a propósito:
- *   - checks.ts mide y detecta todo lo contable. Es determinista y no alucina.
- *   - el modelo juzga lo que no se puede contar y recibe los números ya medidos.
+ * Dos mitades, a propósito:
+ *   - `rules.ts` mide lo contable. Determinista, no alucina.
+ *   - el modelo LEE los números enteros y dice lo que ve, con cita literal que se
+ *     verifica contra el original antes de aceptarla.
  *
- * Y dos pasos, este por motivo de negocio:
- *   - `analyze`: cifras y nicho. Es lo que se enseña gratis, y basta para que
- *     alguien vea que el juicio vale algo.
- *   - `unlock`: a cambio del email, el informe completo por correo. Lo demás no
- *     se manda nunca al navegador.
+ * Y dos pasos, por negocio:
+ *   - `analyze`: la auditoría completa. Se enseña la primera cosa y se tapan las
+ *     demás. Corre aquí porque de aquí sale todo lo que se muestra.
+ *   - `unlock`: a cambio del correo, el informe entero por email. **No hay
+ *     segunda llamada al modelo**: solo se renderiza lo que ya está en el caché.
+ *
+ * `auditFor()` es la misma función en los dos pasos, así que no hay dos tuberías
+ * que puedan divergir. Si el caché falla en `unlock`, se rehace lo mismo — puede
+ * salir una lista algo distinta, porque el canal abierto no es determinista, pero
+ * nunca una peor ni una que contradiga a la otra.
  */
 
 /** El mismo que /tool/7-frameworks. Ver el comentario de allí antes de cambiarlo. */
@@ -28,46 +53,84 @@ const MODEL = 'gpt-5.4-mini';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-async function judge(
-	system: string,
-	user: string,
-	maxTokens: number
-): Promise<Record<string, unknown> | null> {
-	const key = env.OPENAI_API_KEY;
-	if (!key) return null;
+/** Cuántos números se leen. Ver `POST_BODIES` en server/newsletter.ts. */
+const SAMPLE = 5;
 
-	try {
-		const response = await fetch('https://api.openai.com/v1/chat/completions', {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
-			body: JSON.stringify({
-				model: MODEL,
-				messages: [
-					{ role: 'system', content: system },
-					{ role: 'user', content: user }
-				],
-				response_format: { type: 'json_object' },
-				max_completion_tokens: maxTokens
-			})
-		});
-		if (!response.ok) {
-			console.error('[tool/newsletter] OpenAI:', response.status, await response.text());
-			return null;
-		}
-		const data = await response.json();
-		return JSON.parse(data.choices?.[0]?.message?.content ?? '{}');
-	} catch (error) {
-		console.error('[tool/newsletter] fallo al juzgar:', error);
-		return null;
+/**
+ * Tope de salida. Es generoso porque el canal abierto no tiene número fijo de
+ * hallazgos y cada uno lleva cita y propuesta escrita: quedarse corto aquí
+ * significa JSON cortado, y eso se ve en los logs como `incomplete`.
+ */
+const MAX_OUTPUT = 6000;
+
+type Audit = {
+	site: string;
+	snapshot: Awaited<ReturnType<typeof collectNewsletter>>;
+	m: Measurements;
+	items: AuditItem[];
+	tally: Tally;
+	diagnosis: { veredicto: string; loQueSeEntiende: string; paraQuien: string } | null;
+};
+
+/**
+ * La auditoría completa: descarga, mide, corre las reglas y le da al modelo los
+ * números enteros para que los lea.
+ *
+ * Los cuerpos se bajan también en el paso gratis, aunque sean cinco peticiones
+ * más: son la materia prima de casi todos los hallazgos, así que sin ellos no hay
+ * nada que enseñar antes del muro.
+ */
+async function auditFor(url: string): Promise<Audit> {
+	const snapshot = await collectNewsletter(url);
+	const bodies = await collectPostBodies(snapshot.url, slugsToSample(snapshot, SAMPLE));
+
+	const m = measure(snapshot, Date.now());
+	const measured = runMeasured({ snapshot, m, bodies });
+
+	const { input, haystack } = auditMessage(snapshot, m, measured, bodies);
+
+	const audited = await askJson<Audited>({
+		model: MODEL,
+		instructions: auditPrompt(),
+		input,
+		schema: auditSchema(),
+		maxOutputTokens: MAX_OUTPUT,
+		tag: 'tool/newsletter'
+	});
+
+	// El candado: lo que no se puede citar contra el original no entra.
+	const { items: open, dropped } = openFindings(audited?.hallazgos, haystack);
+	if (dropped.length) {
+		// Se registra porque es la señal de que el prompt se está yendo: si un día
+		// se cae la mitad, hay que verlo aquí y no en un informe corto.
+		console.warn(`[tool/newsletter] ${dropped.length} hallazgos descartados:`, dropped);
 	}
+
+	const items = [...measured, ...open].sort(bySeverity);
+
+	return {
+		site: new URL(snapshot.url).hostname.replace(/^www\./, ''),
+		snapshot,
+		m,
+		items,
+		tally: tally(items),
+		diagnosis: audited
+			? {
+					veredicto: audited.veredicto,
+					loQueSeEntiende: audited.loQueSeEntiende,
+					paraQuien: audited.paraQuien
+				}
+			: null
+	};
 }
 
-/** Lee la publicación y mide. Lo hacen los dos pasos, así que va aparte. */
-async function read(url: string) {
-	const snapshot = await collectNewsletter(url);
-	const measurements = measure(snapshot, Date.now());
-	const findings = check(snapshot, measurements);
-	return { snapshot, measurements, findings, scores: score(findings) };
+/**
+ * La clave del caché: el origen normalizado. `null` si la URL no se puede
+ * normalizar, y entonces no se cachea ni se busca — que es lo correcto, porque
+ * tampoco se va a poder descargar.
+ */
+function cacheKey(raw: string): string | null {
+	return normalizeOrigin(raw)?.toLowerCase() ?? null;
 }
 
 export const POST: RequestHandler = async ({ request, getClientAddress }) => {
@@ -88,46 +151,38 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	if (!url) return json({ error: 'bad_request' }, { status: 400 });
 
 	try {
-		// --- Paso 1: cifras y nicho. Lo único que se enseña sin pedir nada. ---
+		// --- Paso 1: la auditoría. Se enseña la primera y se tapan las demás. ---
 		if (body.step === 'analyze') {
-			const { snapshot, measurements, findings, scores } = await read(url);
+			const audit = await auditFor(url);
+			const key = cacheKey(url);
+			if (key) cacheAudit(key, audit);
 
-			const niche = (await judge(
-				nichePrompt(),
-				auditMessage(snapshot, measurements, findings),
-				900
-			)) as Niche | null;
-
-			// El primero SÍ va completo, con su arreglo. Es la prueba de que el
-			// informe da soluciones y no solo regaños: sin verlo, el visitante
-			// tiene que creerse de palabra que lo que hay detrás del muro vale.
-			const [first, ...rest] = findings;
+			// La primera va COMPLETA, con su arreglo. Es la prueba de que la auditoría
+			// propone y no solo regaña: sin verlo, el visitante tiene que creerse de
+			// palabra que lo que hay detrás del muro vale algo.
+			const [first, ...rest] = audit.items;
 
 			return json({
-				site: new URL(snapshot.url).hostname.replace(/^www\./, ''),
-				name: snapshot.name.trim(),
-				// Con esto se reconstruye en pantalla la tarjeta que ve quien
-				// comparte su enlace. Es el bloque que produce el "esto es verdad".
+				site: audit.site,
+				name: audit.snapshot.name.trim(),
+				// Con esto se reconstruye en pantalla la tarjeta que ve quien comparte
+				// su enlace. Es el bloque que produce el "esto es verdad".
 				card: {
-					tagline: snapshot.tagline.trim(),
-					// La imagen de verdad, no un aviso de que la tiene: la tarjeta
-					// reconstruida solo convence si es la suya.
-					image: snapshot.ogImage,
-					hasLogo: snapshot.hasLogo
+					tagline: audit.snapshot.tagline.trim(),
+					image: audit.snapshot.ogImage,
+					hasLogo: audit.snapshot.hasLogo
 				},
-				measurements,
-				scores,
-				niche,
+				measurements: audit.m,
+				tally: audit.tally,
+				diagnosis: audit.diagnosis,
 				first: first ?? null,
-				// De los que quedan solo viajan gravedad, área e impacto: suficiente
-				// para pintar las barras tapadas a un ancho que signifique algo, y no
-				// se filtra ni un hallazgo.
-				locked: rest.map((f) => ({ severity: f.severity, area: f.area, impact: f.impact })),
-				quickWins: findings.filter(isQuickWin).length
+				// De los que quedan solo viajan gravedad y dimensión: suficiente para
+				// decir cuántos son y de qué tipo, y no se filtra ni un hallazgo.
+				locked: rest.map((i) => ({ severity: i.severity, dimension: i.dimension }))
 			});
 		}
 
-		// --- Paso 2: el email. El informe completo va por correo y nunca al navegador. ---
+		// --- Paso 2: el informe por correo. Sin llamar al modelo otra vez. ---
 		if (body.step === 'unlock') {
 			const email = String(body.email ?? '')
 				.trim()
@@ -146,23 +201,19 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 				return json({ error: 'server_error' }, { status: 500 });
 			}
 
-			// Se relee en vez de fiarse de lo que mande el navegador: son dos GET
-			// rápidos y así el informe no se puede manipular desde el cliente.
-			const { snapshot, measurements, findings, scores } = await read(url);
-			const site = new URL(snapshot.url).hostname.replace(/^www\./, '');
+			// Lo cacheado si está, y si no se rehace. Nunca se hace caso de lo que
+			// mande el navegador, que solo aporta la URL.
+			const key = cacheKey(url);
+			const audit = (key ? readAudit<Audit>(key) : null) ?? (await auditFor(url));
 
-			const niche = (await judge(
-				nichePrompt(),
-				auditMessage(snapshot, measurements, findings),
-				900
-			)) as Niche | null;
-			const verdict = (await judge(
-				fullPrompt(),
-				auditMessage(snapshot, measurements, findings, niche),
-				3500
-			)) as FullVerdict | null;
-
-			const report = toMarkdown(site, snapshot, measurements, findings, scores, niche, verdict);
+			const report = toMarkdown({
+				site: audit.site,
+				snapshot: audit.snapshot,
+				m: audit.m,
+				items: audit.items,
+				tally: audit.tally,
+				diagnosis: audit.diagnosis
+			});
 
 			try {
 				await sendNewsletterReportEmail(email, report);
