@@ -1,7 +1,7 @@
 <script lang="ts">
 	/**
-	 * La cáscara común de todas las herramientas: el enlace de vuelta arriba y el
-	 * contenido centrado en la pantalla mientras quepa.
+	 * La cáscara común de todas las herramientas centra el contenido en el espacio
+	 * que queda debajo de la cabecera mientras quepa.
 	 *
 	 * El centrado usa `my-auto` en el hijo y no `justify-center` en el padre, y la
 	 * diferencia es la que hace que esto funcione sin trucos: los márgenes
@@ -10,15 +10,13 @@
 	 * resultados). Así el layout no necesita saber en qué estado está la página,
 	 * que es algo que no puede saber.
 	 *
-	 * El alto descuenta el py-16 del layout raíz para que la suma sea 100dvh justos
-	 * y no aparezca scroll en la pantalla inicial.
+	 * La cabecera global ya enlaza al inicio, así que aquí no se repite ese enlace.
 	 */
 	let { children } = $props();
 </script>
 
-<div class="flex min-h-[calc(100dvh-8rem)] flex-col">
-	<a href="/" class="link-quiet">&larr; Damian Soto</a>
-	<div class="my-auto w-full">
+<div class="tool-shell">
+	<div class="tool-stage">
 		{@render children?.()}
 	</div>
 </div>

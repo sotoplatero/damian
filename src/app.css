@@ -135,10 +135,9 @@
 		@apply col-start-2 mt-2 line-clamp-2 text-xl leading-relaxed text-soft;
 	}
 
-	/* Estado inicial de una herramienta: el contenido cabe de sobra, así que se
-	   centra en la pantalla. Se descuenta el py-16 del layout. */
+	/* El layout de herramientas se ocupa del centrado vertical. */
 	.screen-center {
-		@apply flex min-h-[calc(100dvh-8rem)] flex-col justify-center;
+		@apply flex flex-col;
 	}
 
 	/* Etiqueta pequeña en versales encima de un bloque de texto. */
@@ -175,7 +174,7 @@ body { background: var(--color-paper); }
 	background-size: auto, 100% 32px;
 }
 
-.site-column { position: relative; }
+.site-column { position: relative; display: flex; min-height: 100dvh; flex-direction: column; }
 
 .site-column::before {
 	content: '';
@@ -203,6 +202,9 @@ body { background: var(--color-paper); }
 .site-mark .site-symbol { color: var(--color-ink); }
 .site-status { display: inline-flex; align-items: center; gap: .45rem; color: var(--color-muted); font-weight: 600; }
 .site-status .site-symbol { font-size: .78rem; }
+
+.tool-shell { display: flex; flex: 1; flex-direction: column; }
+.tool-stage { width: 100%; margin-block: auto; }
 
 .prose h1 { text-wrap: balance; }
 .prose > p:first-of-type {
