@@ -33,4 +33,4 @@ errorOffline: No se pudo conectar. Revisa tu conexión.
 
 # Reparte un artículo entre Substack, X y LinkedIn.
 
-**Pega el enlace.** Te doy nueve publicaciones listas para usar. El artículo ya está escrito. Haz que trabaje un poco más.
+**Pega el enlace de tu artículo.** Te lo reparto en nueve publicaciones para que no empieces de cero cada vez.

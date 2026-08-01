@@ -46,7 +46,7 @@ export const tools: Tool[] = [
 	{
 		name: 'Reparte un artículo entre Substack, X y LinkedIn',
 		href: '/tool/repurpose',
-		blurb: 'Pega el enlace. Te doy nueve publicaciones listas para usar.',
+		blurb: 'Pega el enlace de tu artículo. Te lo reparto en nueve publicaciones.',
 		capturesEmail: true
 	}
 ];
