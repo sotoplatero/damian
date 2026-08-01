@@ -30,10 +30,10 @@
 	<div class="site-column mx-auto w-full min-w-0 max-w-2xl px-5 pb-20 pt-7 sm:pt-10">
 		<header class="site-header" aria-label="Cabecera">
 			<a href="/" class="site-mark" aria-label="Damian Soto, inicio">
-				<span class="site-mark-dot" aria-hidden="true"></span>
+				<span class="site-symbol" aria-hidden="true">♦</span>
 				<span>DAMIAN / OBJETO BRILLANTE</span>
 			</a>
-			<span class="site-status"><span aria-hidden="true">●</span> EN CONSTRUCCIÓN</span>
+			<span class="site-status"><span class="site-symbol" aria-hidden="true">⚒︎</span> EN CONSTRUCCIÓN</span>
 		</header>
 		{@render children?.()}
 	</div>
