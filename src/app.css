@@ -2,42 +2,7 @@
 @plugin '@tailwindcss/typography';
 @plugin 'daisyui';
 
-/*
- * Fuentes del sitio, autoalojadas desde /static/fonts (subconjunto latino).
- *
- * Antes no habia ninguna declarada, asi que cada sistema operativo ensenaba una
- * distinta: Segoe UI en Windows, SF Pro en Mac, Roboto en Android. En una pagina
- * cuyo diseno es solo tipografia, eso es que cada visitante veia otro sitio.
- *
- * La eleccion: SERIF para el texto y SANS solo para la interfaz. Todo lo que se
- * genera hoy usa sans de interfaz (Inter, Geist, Bricolage...), asi que una
- * serif diferencia la pagina sin que la fuente grite nada. Y encaja con lo que
- * la pagina es: alguien contandote algo, no un producto.
- *
- * font-display: swap para que el texto se lea desde el primer momento aunque la
- * fuente aun no haya llegado.
- */
-@font-face {
-	font-family: 'Source Serif 4';
-	src: url('/fonts/source-serif-400.woff2') format('woff2');
-	font-weight: 400;
-	font-style: normal;
-	font-display: swap;
-}
-@font-face {
-	font-family: 'Source Serif 4';
-	src: url('/fonts/source-serif-400i.woff2') format('woff2');
-	font-weight: 400;
-	font-style: italic;
-	font-display: swap;
-}
-@font-face {
-	font-family: 'Source Serif 4';
-	src: url('/fonts/source-serif-600.woff2') format('woff2');
-	font-weight: 600;
-	font-style: normal;
-	font-display: swap;
-}
+/* Una sola familia para texto e interfaz, autoalojada y estable entre sistemas. */
 @font-face {
 	font-family: 'Public Sans';
 	src: url('/fonts/public-sans-400.woff2') format('woff2');
@@ -69,10 +34,8 @@
  * utilidades: text-ink, text-soft, text-muted, border-line...
  */
 @theme {
-	/* Sans solo para interfaz: botones, etiquetas, la lista de herramientas. */
 	--font-sans: 'Public Sans', ui-sans-serif, system-ui, sans-serif;
-	/* Serif para todo lo que se lee: la carta y los textos de las herramientas. */
-	--font-serif: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+	--font-serif: 'Public Sans', ui-sans-serif, system-ui, sans-serif;
 	/* Sin descarga: la JetBrains que se cargaba antes no la usaba nada. */
 	--font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
 
@@ -84,6 +47,8 @@
 	/* Azul de Substack. El alta se hace en su formulario embebido, así que el
 	   sitio usa su mismo acento para que no parezcan dos productos. */
 	--color-brand: #0076ff;
+	--color-paper: #f7f6f2;
+	--color-signal: #ff4d00;
 }
 
 /*
@@ -137,14 +102,27 @@
 	   generado, un bloque de contenido. */
 	.box {
 		@apply rounded-lg border border-line p-5;
+		background: color-mix(in srgb, white 82%, transparent);
+		box-shadow: 0 1px 0 rgba(23, 23, 23, 0.04), 0 12px 35px rgba(23, 23, 23, 0.025);
 	}
 	/* Lo que está ahí pero todavía no se puede leer. */
 	.box-locked {
 		@apply rounded-lg border border-dashed border-line p-5;
+		background: repeating-linear-gradient(-45deg, transparent, transparent 8px, rgba(23,23,23,.018) 8px, rgba(23,23,23,.018) 9px);
 	}
 	/* Caja que además es enlace: el borde se marca al pasar por encima. */
 	.box-link {
-		@apply block rounded-lg border border-line p-5 transition-colors hover:border-ink;
+		@apply relative grid rounded-lg border border-line p-5 transition-all;
+		grid-template-columns: 2rem minmax(0, 1fr) auto;
+		background: rgba(255,255,255,.58);
+		box-shadow: 0 1px 0 rgba(23,23,23,.03);
+		transition-duration: 220ms;
+	}
+	.box-link:hover {
+		border-color: var(--color-ink);
+		background: white;
+		transform: translateY(-2px);
+		box-shadow: 0 14px 40px rgba(23,23,23,.07);
 	}
 
 	/* Título y cuerpo dentro de una caja. */
@@ -154,7 +132,7 @@
 	/* Subtítulo de una tarjeta. Cortado a dos líneas: si el texto se va, la
 	   tarjeta crece y el listado deja de leerse de un vistazo. */
 	.box-text {
-		@apply mt-2 line-clamp-2 text-xl leading-relaxed text-soft;
+		@apply col-start-2 mt-2 line-clamp-2 text-xl leading-relaxed text-soft;
 	}
 
 	/* Estado inicial de una herramienta: el contenido cabe de sobra, así que se
@@ -183,7 +161,94 @@
 	}
 }
 
-/* Todo lo que es texto para leer, en serif. La interfaz hereda la sans del <main>. */
+html { scroll-behavior: smooth; }
+
+body { background: var(--color-paper); }
+
+::selection { background: var(--color-ink); color: white; }
+
+.site-shell {
+	background-color: var(--color-paper);
+	background-image:
+		radial-gradient(circle at 12% 4%, rgba(255,255,255,.95), transparent 28rem),
+		linear-gradient(rgba(23,23,23,.026) 1px, transparent 1px);
+	background-size: auto, 100% 32px;
+}
+
+.site-column { position: relative; }
+
+.site-column::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	width: 1px;
+	background: rgba(23,23,23,.08);
+}
+
+.site-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	margin-bottom: clamp(4rem, 10vw, 7rem);
+	font-size: .68rem;
+	font-weight: 700;
+	letter-spacing: .11em;
+}
+
+.site-mark { display: inline-flex; align-items: center; gap: .6rem; }
+.site-mark-dot { width: .5rem; height: .5rem; border-radius: 50%; background: var(--color-signal); box-shadow: 0 0 0 4px rgba(255,77,0,.1); }
+.site-status { color: var(--color-muted); font-weight: 600; }
+.site-status span { color: #29a36a; font-size: .55rem; margin-right: .3rem; }
+
+.prose h1 { text-wrap: balance; }
+.prose > p:first-of-type {
+	max-width: 30rem;
+	margin-top: 1.35rem;
+	font-size: clamp(1.35rem, 3.5vw, 1.6rem);
+	font-weight: 500;
+	line-height: 1.35;
+	letter-spacing: -.018em;
+	color: var(--color-soft);
+}
+.prose a, .link { text-decoration-color: color-mix(in srgb, var(--color-brand) 55%, transparent); text-underline-offset: .22em; }
+
+.tool-index { grid-column: 1; padding-top: .35rem; font-size: .68rem; font-weight: 700; letter-spacing: .1em; color: var(--color-muted); }
+.tool-arrow { grid-column: 3; font-size: 1rem; color: var(--color-muted); transition: transform 220ms ease, color 220ms ease; }
+.box-link:hover .tool-arrow { color: var(--color-signal); transform: translate(2px,-2px); }
+.box-link .box-title { grid-column: 2; }
+
+.embed-shell { overflow: hidden; border: 1px solid var(--color-line); border-radius: .65rem; background: white; box-shadow: 0 16px 50px rgba(23,23,23,.055); }
+.embed-shell iframe { border: 0; background: white; }
+
+.input, .textarea {
+	background: rgba(255,255,255,.8);
+	box-shadow: inset 0 1px 0 rgba(23,23,23,.035);
+	transition: border-color 180ms ease, box-shadow 180ms ease, background 180ms ease;
+}
+.input:focus, .textarea:focus { background: white; border-color: var(--color-ink); box-shadow: 0 0 0 3px rgba(23,23,23,.07); outline: none; }
+.btn { letter-spacing: -.01em; transition: transform 160ms ease, box-shadow 160ms ease; }
+.btn:not(:disabled):active { transform: translateY(1px); }
+.btn-primary { box-shadow: 0 7px 18px rgba(0,118,255,.16); }
+
+@media (prefers-reduced-motion: no-preference) {
+	.site-header, .greeting, .prose, .embed-shell, .section { animation: reveal .6s both; }
+	.greeting { animation-delay: .06s; }
+	.prose { animation-delay: .12s; }
+	.embed-shell { animation-delay: .2s; }
+	.section { animation-delay: .28s; }
+	@keyframes reveal { from { opacity: 0; transform: translateY(9px); } to { opacity: 1; transform: none; } }
+}
+
+@media (max-width: 460px) {
+	.site-status { display: none; }
+	.site-header { margin-bottom: 4.5rem; }
+	.box-link { grid-template-columns: 1.7rem minmax(0, 1fr) auto; }
+}
+
+/* Texto e interfaz comparten la misma familia. */
 .prose,
 .body-text,
 .section-intro,
@@ -208,9 +273,10 @@
  * especificidad.
  */
 .prose h1 {
-	font-size: clamp(2.75rem, 12vw, 4rem);
-	line-height: 1.02;
-	letter-spacing: -0.02em;
+	margin-bottom: 0;
+	font-size: clamp(2.8rem, 11vw, 5.5rem);
+	line-height: 0.96;
+	letter-spacing: -0.045em;
 }
 
 /*

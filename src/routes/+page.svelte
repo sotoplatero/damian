@@ -52,15 +52,16 @@
 	$lib/components/SubscribeForm.svelte, sin usar.
 -->
 <section class="mt-10">
-	<iframe
-		src="https://sotoplatero.substack.com/embed"
-		title="Suscríbete a Objeto Brillante"
-		width="100%"
-		height="320"
-		style="border: 1px solid #EEE; background: white"
-		frameborder="0"
-		scrolling="no"
-	></iframe>
+	<div class="embed-shell">
+		<iframe
+			src="https://sotoplatero.substack.com/embed"
+			title="Suscríbete a Objeto Brillante"
+			width="100%"
+			height="320"
+			frameborder="0"
+			scrolling="no"
+		></iframe>
+	</div>
 </section>
 
 <!--
@@ -73,11 +74,12 @@
 	<p class="section-intro">{t.toolsIntro}</p>
 
 	<ul class="mt-6 space-y-3">
-		{#each tools as tool (tool.href)}
+		{#each tools as tool, index (tool.href)}
 			<li>
 				<a href={tool.href} class="box-link">
+					<span class="tool-index">{String(index + 1).padStart(2, '0')}</span>
 					<span class="box-title">{tool.name}</span>
-					<span aria-hidden="true" class="text-muted">&nbsp;&rarr;</span>
+					<span aria-hidden="true" class="tool-arrow">↗</span>
 					<p class="box-text">{tool.blurb}</p>
 				</a>
 			</li>
