@@ -11,5 +11,11 @@ export default defineConfig({
 			project: './project.inlang',
 			outdir: './src/lib/paraglide'
 		})
-	]
+	],
+	// Tests only cover the pure modules ($lib/authors) and the archive walk
+	// with a simulated fetch. There are no component tests: the DOM adds
+	// nothing here and would pull in jsdom for no reason.
+	test: {
+		include: ['src/**/*.test.ts']
+	}
 });
