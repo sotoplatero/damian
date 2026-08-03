@@ -61,19 +61,9 @@ describe('walkArchive', () => {
 		// reusing one instance with `mockResolvedValue` would throw on the second read.
 		vi.mocked(get).mockImplementation(() => Promise.resolve(jsonResponse([fakePost(1)])));
 		// spacingMs 0: with the production 300 ms this would sleep almost 15 s.
-		const { truncated } = await walkArchive('https://x.substack.com', undefined, 0);
+		const { truncated } = await walkArchive('https://x.substack.com', 0);
 		expect(truncated).toBe(true);
 		expect(vi.mocked(get)).toHaveBeenCalledTimes(MAX_PAGES);
-	});
-
-	it('reports progress with what has been read so far', async () => {
-		vi.mocked(get)
-			.mockResolvedValueOnce(jsonResponse(Array.from({ length: 23 }, (_, i) => fakePost(i))))
-			.mockResolvedValueOnce(jsonResponse([]));
-
-		const seen: number[] = [];
-		await walkArchive('https://x.substack.com', (n) => seen.push(n));
-		expect(seen).toEqual([23]);
 	});
 
 	it('drops posts with no slug instead of silently merging them', async () => {

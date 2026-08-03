@@ -76,8 +76,22 @@ export type PubInfo = {
 	 */
 	createdAt: string;
 	language: string;
+	/**
+	 * Subscribers, **only if the publication shows them on its homepage**.
+	 *
+	 * `freeSubscriberCount` arrives in the payload whether it is displayed or
+	 * not, and the setting that decides that does NOT come through as a key (see
+	 * the comment in `newsletter.ts`). So it isn't read from the payload alone:
+	 * we check whether the number is rendered in the homepage's visible text,
+	 * which is the only proof its author wants it seen.
+	 *
+	 * Measured: the three reference publications render it as "Over 7,000
+	 * subscribers", "Over 297,000 subscribers" and "Over 2,000 subscribers", so
+	 * the positive case is confirmed 3 out of 3. When it isn't found this is
+	 * `null` and the card says **nothing** about subscribers — no number, no
+	 * vague label, no "not available".
+	 */
 	subscriberCount: number | null;
-	subscriberCountLabel: string;
 	logoUrl: string | null;
 	paymentsEnabled: boolean;
 };
@@ -92,6 +106,43 @@ function count(value: unknown): number | null {
 	if (typeof value !== 'string') return null;
 	const digits = value.replace(/[^\d]/g, '');
 	return digits ? Number(digits) : null;
+}
+
+/** The text actually visible on the homepage, without scripts or tags. */
+function visibleText(html: string): string {
+	return html
+		.replace(/<script[\s\S]*?<\/script>/gi, ' ')
+		.replace(/<style[\s\S]*?<\/style>/gi, ' ')
+		.replace(/<[^>]+>/g, ' ')
+		.replace(/&nbsp;/g, ' ')
+		.replace(/\s+/g, ' ');
+}
+
+/**
+ * The subscriber count, only if the publication displays it.
+ *
+ * The payload carries the number whether it is visible or not, so the only
+ * proof its author wants it seen is that it is written on the homepage. We look
+ * for the shapes Substack writes it in: as it arrives ("7,000"), without the
+ * separator ("7000"), and abbreviated ("7K", "7.0K").
+ *
+ * Measured: the three reference publications render it as "Over N subscribers",
+ * so the positive case is confirmed 3 out of 3. No publication that hides it was
+ * found, so the negative branch is not verified against reality — this is a
+ * direct check rather than an inference, but that gap is worth knowing.
+ */
+function shownSubscriberCount(html: string, raw: unknown): number | null {
+	const parsed = count(raw);
+	if (parsed === null) return null;
+	const text = visibleText(html);
+	const forms = [
+		typeof raw === 'string' ? raw : '',
+		String(parsed),
+		parsed.toLocaleString('en-US'),
+		parsed >= 1000 ? `${Math.floor(parsed / 1000)}K` : '',
+		parsed >= 1000 ? `${(parsed / 1000).toFixed(1)}K` : ''
+	].filter(Boolean);
+	return forms.some((form) => text.includes(form)) ? parsed : null;
 }
 
 function readArchivePost(raw: unknown): ArchivePost | null {
@@ -166,8 +217,8 @@ export async function readPubInfo(slug: string): Promise<PubInfo> {
 			authorName: decode(text(pub.author_name)).trim(),
 			createdAt: text(pub.created_at),
 			language: text(pub.language) || 'es',
-			subscriberCount: count(pub.freeSubscriberCount),
-			subscriberCountLabel: text(root.subscriberCountDetails),
+			// Only if it's rendered on the homepage. See `shownSubscriberCount`.
+			subscriberCount: shownSubscriberCount(html, pub.freeSubscriberCount),
 			logoUrl: text(pub.logo_url) || null,
 			paymentsEnabled: text(pub.payments_state) === 'enabled'
 		};
@@ -177,16 +228,9 @@ export async function readPubInfo(slug: string): Promise<PubInfo> {
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-/**
- * Walks the archive until it runs dry.
- *
- * `onPage` receives how many posts have been read so far. It does NOT
- * receive a total: the API doesn't give one, so a denominator would be an
- * invented number.
- */
+/** Walks the archive until it runs dry. */
 export async function walkArchive(
 	origin: string,
-	onPage?: (readSoFar: number) => void,
 	/**
 	 * Wait between pages. This is a parameter and not a fixed constant ONLY so
 	 * tests can pass 0: the test that checks the 50-page cap would otherwise
@@ -236,7 +280,6 @@ export async function walkArchive(
 
 		// By what was received, not by PAGE_SIZE. See the header comment.
 		offset += batch.length;
-		onPage?.(posts.length);
 	}
 
 	return { posts, truncated: true };
