@@ -1,5 +1,14 @@
 node_modules
 
+# Worktrees de Claude Code. Viven dentro de .claude/, que SI tiene ficheros
+# trackeados (settings.local.json), asi que sin esta linea un `git add -A`
+# intenta meter el arbol de trabajo entero de un worktree en un commit.
+.claude/worktrees/
+
+# Espacio de trabajo de subagent-driven-development: ledger, briefs e informes.
+# Es scratch, el registro de verdad es el historial de git.
+.superpowers/
+
 # Output
 .output
 .vercel
