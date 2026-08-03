@@ -222,7 +222,14 @@ export async function walkArchive(
 
 		for (const raw of batch) {
 			const post = readArchivePost(raw);
-			if (!post || seen.has(post.slug)) continue;
+			if (!post) continue;
+			// A post with no slug can't be linked to, but it would still be
+			// deduped on `''` like any other slug. Two distinct slug-less posts
+			// would then look identical to `seen` and the second would be
+			// dropped as a silent "duplicate" — the same silent-skip failure
+			// mode this whole module exists to avoid for pagination. Drop a
+			// slug-less post outright instead of letting it collide with another.
+			if (!post.slug || seen.has(post.slug)) continue;
 			seen.add(post.slug);
 			posts.push(post);
 		}

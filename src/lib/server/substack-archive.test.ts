@@ -75,6 +75,26 @@ describe('walkArchive', () => {
 		await walkArchive('https://x.substack.com', (n) => seen.push(n));
 		expect(seen).toEqual([23]);
 	});
+
+	it('drops posts with no slug instead of silently merging them', async () => {
+		// Two distinct posts that both lack a slug: deduping on slug alone would
+		// treat both as the same '' key, and the second would vanish as a
+		// "duplicate" with no error — the same silent-skip failure mode this
+		// module exists to avoid for pagination (see the offset test above). A
+		// slug-less post can't be linked to anyway, so both must be dropped
+		// rather than one winning and standing in for the other.
+		vi.mocked(get)
+			.mockResolvedValueOnce(
+				jsonResponse([
+					{ ...fakePost(1), slug: '' },
+					{ ...fakePost(2), slug: '' }
+				])
+			)
+			.mockResolvedValueOnce(jsonResponse([]));
+
+		const { posts } = await walkArchive('https://x.substack.com');
+		expect(posts).toHaveLength(0);
+	});
 });
 
 describe('readFeed', () => {
@@ -97,5 +117,40 @@ describe('readFeed', () => {
 		expect(posts[0].reactions).toBe(0);
 		expect(posts[0].comments).toBe(0);
 		expect(posts[0].words).toBe(0);
+	});
+
+	it('never reads title or pubDate out of the content:encoded body', async () => {
+		// `<title>` and `<pubDate>` only ever get matched inside `head`, the
+		// slice of the chunk BEFORE `<content:encoded>`. Real Substack items
+		// always carry their own title/pubDate ahead of content:encoded (see
+		// the header comment), so with a real item this guard is provably
+		// inert: a JS regex match with no `g` flag always returns the
+		// leftmost match, and `head` is a strict prefix of the raw chunk, so
+		// a match found in `head` is always the same match found in the full
+		// chunk — nothing after the cut point can ever outrank it. So the one
+		// case where the cut actually changes the outcome is a malformed item
+		// that carries NO title/pubDate tag of its own: without the cut, a
+		// title- or pubDate-shaped string sitting anywhere inside the body
+		// would be picked up as if it were real data. This item has no
+		// `<title>` or `<pubDate>` of its own — only inside content:encoded —
+		// so it must be dropped rather than manufactured from its body text.
+		const xml = `<rss><channel><item>
+			<title><![CDATA[Un libro en cada maleta]]></title>
+			<description><![CDATA[Recomendaciones de verano]]></description>
+			<link>https://x.substack.com/p/un-libro</link>
+			<pubDate>Fri, 31 Jul 2026 05:02:09 GMT</pubDate>
+		</item><item>
+			<link>https://x.substack.com/p/decoy-only</link>
+			<content:encoded><![CDATA[<title>Decoy title from the body</title><pubDate>Mon, 01 Jan 2001 00:00:00 GMT</pubDate>]]></content:encoded>
+		</item></channel></rss>`;
+		vi.mocked(get).mockResolvedValueOnce(new Response(xml, { status: 200 }));
+
+		const posts = await readFeed('https://x.substack.com');
+
+		// Only the first, well-formed item survives; the decoy-only one never
+		// turns into a post, and its body text never leaks into `title`.
+		expect(posts).toHaveLength(1);
+		expect(posts[0].title).toBe('Un libro en cada maleta');
+		expect(posts.some((p) => p.title.includes('Decoy'))).toBe(false);
 	});
 });
