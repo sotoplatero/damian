@@ -7,6 +7,7 @@ import toolCopyTemplate from '../emails/tool-7-frameworks.md?raw';
 import toolNewsletterTemplate from '../emails/tool-newsletter.md?raw';
 import toolPostsTemplate from '../emails/tool-10-post-types.md?raw';
 import toolRepurposeTemplate from '../emails/tool-repurpose.md?raw';
+import toolSubstackAboutTemplate from '../emails/tool-substack-about.md?raw';
 
 /** A subscriber as stored in the Resend audience. */
 export type Contact = {
@@ -134,4 +135,8 @@ export async function sendNewsletterReportEmail(to: string, reportMarkdown: stri
 
 export async function sendToolPiecesEmail(to: string, piecesMarkdown: string): Promise<void> {
 	await sendToolEmail(toolRepurposeTemplate, 'PIECES', to, piecesMarkdown);
+}
+
+export async function sendSubstackAboutEmail(to: string, reportMarkdown: string): Promise<void> {
+	await sendToolEmail(toolSubstackAboutTemplate, 'REPORT', to, reportMarkdown);
 }

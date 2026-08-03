@@ -32,6 +32,12 @@ export type Tool = {
 
 export const tools: Tool[] = [
 	{
+		name: 'Reescribe el “Acerca de” de tu Substack',
+		href: '/tool/substack-about',
+		blurb: 'Pega tu publicación. Te digo qué no se entiende y te propongo una versión mejor.',
+		capturesEmail: true
+	},
+	{
 		name: 'Reescribe tu oferta con 7 fórmulas de venta',
 		href: '/tool/7-frameworks',
 		blurb: 'Pega tu web. Te doy siete versiones listas para usar.',
