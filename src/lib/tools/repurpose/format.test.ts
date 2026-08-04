@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { formats, freeFormats, gatedFormats, NOTE_MAX_CHARS } from './formats';
-import { pieceContainsQuote, pieceLinksToSource, pieceUsesOnlySourceUrl, readExactPieces, toMarkdown } from './format';
+import { ensureSourceLinks, pieceContainsQuote, pieceLinksToSource, pieceUsesOnlySourceUrl, readExactPieces, toMarkdown } from './format';
 
 describe('repurpose repertoire', () => {
 	it('defines nine unique platform-neutral notes split 3/6', () => {
@@ -15,6 +15,19 @@ describe('repurpose repertoire', () => {
 		expect(formats.every(({ example }) => example.length <= NOTE_MAX_CHARS)).toBe(true);
 		expect(JSON.stringify(formats)).not.toMatch(/substack|linkedin|twitter|posts? de x/i);
 	});
+});
+
+it('adds source links as a bounded fallback without mutating the input', () => {
+	const source = 'https://example.com/articulo';
+	const input = [
+		{ id: 'detalle-revelador', text: 'La más corta.' },
+		{ id: 'puerta-articulo', text: 'La puerta.' },
+		{ id: 'historia', text: 'Una historia algo más larga.' }
+	];
+	const linked = ensureSourceLinks(input, source, 'puerta-articulo', 2);
+	expect(linked?.filter((piece) => pieceLinksToSource(piece, source))).toHaveLength(2);
+	expect(linked?.find(({ id }) => id === 'puerta-articulo')?.text).toContain(source);
+	expect(input.every(({ text }) => !text.includes(source))).toBe(true);
 });
 
 describe('readExactPieces', () => {

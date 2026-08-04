@@ -53,6 +53,31 @@ export function pieceLinksToSource(piece: Piece, sourceUrl: string): boolean {
 	}
 }
 
+export function ensureSourceLinks(
+	pieces: Piece[],
+	sourceUrl: string,
+	requiredId: string,
+	minimum: number
+): Piece[] | null {
+	const output = pieces.map((piece) => ({ ...piece }));
+	const append = (piece: Piece): boolean => {
+		if (pieceLinksToSource(piece, sourceUrl)) return true;
+		const text = `${piece.text}\n\n${sourceUrl}`;
+		if (text.length > NOTE_MAX_CHARS) return false;
+		piece.text = text;
+		return true;
+	};
+	const required = output.find((piece) => piece.id === requiredId);
+	if (!required || !append(required)) return null;
+	for (const piece of output
+		.filter((item) => item.id !== requiredId && !pieceLinksToSource(item, sourceUrl))
+		.sort((a, b) => a.text.length - b.text.length)) {
+		if (output.filter((item) => pieceLinksToSource(item, sourceUrl)).length >= minimum) break;
+		append(piece);
+	}
+	return output.filter((piece) => pieceLinksToSource(piece, sourceUrl)).length >= minimum ? output : null;
+}
+
 export function readOrder(raw: unknown): string[] {
 	const list = (raw as { orden?: unknown })?.orden;
 	if (!Array.isArray(list)) return [];

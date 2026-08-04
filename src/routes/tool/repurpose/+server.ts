@@ -7,7 +7,7 @@ import { isDisposable } from '$lib/server/email-validation';
 import { overLimit } from '$lib/server/rate-limit';
 import { normalizeQuoteText, unwrapQuotes, verifyQuote } from '$lib/tools/quotes';
 import { articleMessage, extractPrompt, writePrompt, type ArticleAnalysis } from '$lib/tools/repurpose/prompt';
-import { pieceContainsQuote, pieceLinksToSource, pieceUsesOnlySourceUrl, readExactPieces, readOrder, toMarkdown } from '$lib/tools/repurpose/format';
+import { ensureSourceLinks, pieceContainsQuote, pieceLinksToSource, pieceUsesOnlySourceUrl, readExactPieces, readOrder, toMarkdown } from '$lib/tools/repurpose/format';
 import { FREE_IDS, GATED_IDS } from '$lib/tools/repurpose/formats';
 import { buildManualPrompt } from '$lib/tools/repurpose/manual-prompt';
 
@@ -79,11 +79,33 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 			const free = readExactPieces({ pieces: body.free }, FREE_IDS);
 			if (!sourceUrl || !free || !free.every((piece) => pieceUsesOnlySourceUrl(piece, sourceUrl))) return json({ error: 'incomplete_article' }, { status: 400 });
 			try { await subscribe(email); } catch (error) { console.error('[tool/repurpose] subscribe failed:', error); return json({ error: 'server_error' }, { status: 500 }); }
-			const raw = await ask(writePrompt(GATED_IDS), articleMessage(article, sourceUrl), 5000);
-			const pieces = readExactPieces(raw, GATED_IDS);
-			if (!pieces || !pieces.every((piece) => pieceUsesOnlySourceUrl(piece, sourceUrl))) return json({ error: 'server_error' }, { status: 502 });
-			if (!pieceLinksToSource(pieces.find((piece) => piece.id === 'puerta-articulo')!, sourceUrl)) return json({ error: 'server_error' }, { status: 502 });
-			if (pieces.filter((piece) => pieceLinksToSource(piece, sourceUrl)).length < 2) return json({ error: 'server_error' }, { status: 502 });
+			let raw: Record<string, unknown> | null = null;
+			let pieces = null;
+			for (let attempt = 1; attempt <= 2; attempt += 1) {
+				const correction = attempt === 2
+					? '\n\nCORRECCIÓN OBLIGATORIA: devuelve exactamente los seis ids pedidos, todos por debajo de 700 caracteres. "puerta-articulo" y al menos otra nota deben contener la URL final exacta.'
+					: '';
+				raw = await ask(writePrompt(GATED_IDS) + correction, articleMessage(article, sourceUrl), 5000);
+				pieces = readExactPieces(raw, GATED_IDS);
+				if (!pieces) {
+					console.warn(`[tool/repurpose] entrega inválida en intento ${attempt}: conjunto incompleto o longitud`);
+					continue;
+				}
+				if (!pieces.every((piece) => pieceUsesOnlySourceUrl(piece, sourceUrl))) {
+					console.warn(`[tool/repurpose] entrega inválida en intento ${attempt}: URL ajena o mal formada`);
+					pieces = null;
+					continue;
+				}
+				const door = pieces.find((piece) => piece.id === 'puerta-articulo');
+				if (!door || !pieceLinksToSource(door, sourceUrl) || pieces.filter((piece) => pieceLinksToSource(piece, sourceUrl)).length < 2) {
+					console.warn(`[tool/repurpose] entrega inválida en intento ${attempt}: faltan enlaces`);
+					if (attempt === 2) pieces = ensureSourceLinks(pieces, sourceUrl, 'puerta-articulo', 2);
+					else pieces = null;
+					if (!pieces) continue;
+				}
+				break;
+			}
+			if (!raw || !pieces) return json({ error: 'server_error' }, { status: 502 });
 			const quoteNote = pieces.find((piece) => piece.id === 'cita-comentada');
 			if (article.frase && (!quoteNote || !pieceContainsQuote(quoteNote, article.frase))) return json({ error: 'server_error' }, { status: 502 });
 			const order = readOrder(raw);
