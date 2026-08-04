@@ -4,6 +4,7 @@ urlButton: Distribuir mi artículo
 urlWorking: Leyendo tu artículo...
 urlHint: El enlace de un artículo tuyo ya publicado.
 readLine: He leído {site}.
+resultTitle: Nueve notas para distribuir {site}
 lowConfidence: Eso no parece un artículo entero, así que he supuesto bastante. Prueba con el enlace del artículo, no con la portada.
 freeBadge: Gratis
 copyAction: Copiar

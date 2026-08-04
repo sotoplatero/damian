@@ -72,11 +72,14 @@
 		</div>
 	</section>
 {:else}
-	{@render intro_()}
-	{#if error}<p class="mt-6 text-sm text-error">{error}</p>{/if}
-	<section id="resultado" class="mt-10 space-y-6">
+	<section id="resultado" class="space-y-6">
+		<button type="button" class="link-quiet" onclick={restart}>← {t.restart}</button>
+		<header class="rich-text">
+			<h1>{t.resultTitle.replace('{site}', site || 'tu artículo')}</h1>
+		</header>
 		{#if site}<p class="muted">{t.readLine.replace('{site}', site)}</p>{/if}
 		{#if lowConfidence}<p class="muted">{t.lowConfidence}</p>{/if}
+		{#if error}<p class="text-sm text-error">{error}</p>{/if}
 		<h2 class="eyebrow">Tus primeras notas</h2>
 		{#each writtenFormats as format (format.id)}
 				{@const written = byId.get(format.id)}
@@ -85,6 +88,5 @@
 		<section class="box bg-line/40">{#if sent}<h3 class="section-title">{t.sentTitle}</h3><p class="section-intro">{t.sentBody}</p>{:else}<h3 class="section-title">{t.gateTitle}</h3><p class="section-intro">{t.gateBody}</p><div class="mt-4"><InlineForm type="email" bind:value={email} placeholder={t.gatePlaceholder} label={t.gateButton} busyLabel={t.gateUnlocking} busy={busy === 'unlocking'} inputmode="email" autocomplete="email" onsubmit={unlock} /></div>{/if}</section>
 		<h2 class="eyebrow">Las otras seis</h2>
 		{#each lockedFormats as format (format.id)}<article class="box-locked"><h3 class="box-title text-muted">{format.name}</h3><p class="muted mb-4">{format.bestFor}</p><p class="eyebrow opacity-70">{t.exampleLabel}</p><p class="body-text mt-1 whitespace-pre-wrap text-muted">{format.example}</p></article>{/each}
-		<button type="button" onclick={restart} class="link-quiet">{t.restart}</button>
 	</section>
 {/if}
