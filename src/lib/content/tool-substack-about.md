@@ -27,6 +27,6 @@ errorGeneric: Algo ha fallado por mi parte. Inténtalo otra vez.
 errorOffline: No se pudo conectar. Revisa tu conexión.
 ---
 
-# Reescribe el **“Acerca de”** de tu Substack.
+# Reescribe el <mark>“Acerca de”</mark> de tu Substack.
 
 **Pega la dirección de tu publicación.** Te digo si se entiende qué escribes, para quién y por qué merece un sitio en su correo. Después te propongo una versión mejor.
