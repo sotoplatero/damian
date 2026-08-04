@@ -24,6 +24,24 @@ means "no *new* errors", not zero.
 - **Internationalization**: Paraglide JS (inlang) — only `places-evaluator` still uses it
 - **TypeScript**: Strict mode enabled
 
+## Language
+
+**Code is written in English. Copy is written in Spanish.**
+
+- English: file and folder names, route segments, identifiers (types, functions,
+  variables, CSS classes) and **code comments**.
+- Spanish: everything a visitor reads — the values in `src/lib/content/*.md`, the bodies
+  of `src/lib/emails/*.md`, and the strings inside `src/lib/courses/*/course.ts`, which
+  is course content that happens to live in a `.ts` file.
+
+Older files (`rate-limit.ts`, `tools/list.ts`, `tools/markdown.ts`) still have Spanish
+comments from before this rule. They are not wrong, just old — translate one when you are
+already editing it for another reason, not as a separate sweep.
+
+A slug can be Spanish when it *is* content: `/course/el-dinero-no-desaparece` is the
+course's title, the same way a post slug would be. The route segment around it (`course`,
+`tool`) is English.
+
 ## Architecture
 
 ### Home Sales Page
