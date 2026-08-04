@@ -64,7 +64,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 			article.frase = candidate && verifyQuote(candidate, haystack) ? candidate : '';
 			if (candidate && !article.frase) console.warn('[tool/repurpose] cita descartada:', candidate);
 			if (!pieces.every((piece) => pieceUsesOnlySourceUrl(piece, page.finalUrl))) return json({ error: 'server_error' }, { status: 502 });
-			return json({ article, pieces, confidence: raw.confidence === 'baja' ? 'baja' : 'alta', site: new URL(page.finalUrl).hostname.replace(/^www\./, ''), url: page.finalUrl });
+			return json({ article, pieces, confidence: raw.confidence === 'baja' ? 'baja' : 'alta', title: page.title, site: new URL(page.finalUrl).hostname.replace(/^www\./, ''), url: page.finalUrl });
 		}
 
 		if (step === 'unlock') {

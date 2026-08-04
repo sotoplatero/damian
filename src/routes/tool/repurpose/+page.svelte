@@ -16,6 +16,7 @@
 	let article = $state<Record<string, string> | null>(null);
 	let finalUrl = $state('');
 	let site = $state('');
+	let articleTitle = $state('');
 	let lowConfidence = $state(false);
 	let pieces = $state<Piece[]>([]);
 	let sent = $state(false);
@@ -41,7 +42,7 @@
 	}
 	async function read() {
 		busy = 'reading'; error = '';
-		try { const data = await post({ step: 'extract', url }); article = data.article; pieces = data.pieces; finalUrl = data.url ?? ''; site = data.site ?? ''; lowConfidence = data.confidence === 'baja'; await tick(); document.getElementById('resultado')?.scrollIntoView({ behavior: 'smooth' }); }
+		try { const data = await post({ step: 'extract', url }); article = data.article; pieces = data.pieces; finalUrl = data.url ?? ''; site = data.site ?? ''; articleTitle = data.title ?? ''; lowConfidence = data.confidence === 'baja'; await tick(); document.getElementById('resultado')?.scrollIntoView({ behavior: 'smooth' }); }
 		catch (caught) { error = caught instanceof Error ? caught.message : t.errorOffline; } finally { busy = ''; }
 	}
 	async function unlock() {
@@ -50,7 +51,7 @@
 		catch (caught) { error = caught instanceof Error ? caught.message : t.errorOffline; } finally { busy = ''; }
 	}
 	async function copy(piece: Piece) { await navigator.clipboard.writeText(toPlainText(piece)); copiedId = piece.id; setTimeout(() => { if (copiedId === piece.id) copiedId = ''; }, 2000); }
-	function restart() { busy = ''; error = ''; url = ''; article = null; finalUrl = ''; site = ''; lowConfidence = false; pieces = []; sent = false; email = ''; copiedId = ''; }
+	function restart() { busy = ''; error = ''; url = ''; article = null; finalUrl = ''; site = ''; articleTitle = ''; lowConfidence = false; pieces = []; sent = false; email = ''; copiedId = ''; }
 </script>
 
 <PageMeta
@@ -75,7 +76,7 @@
 	<section id="resultado" class="space-y-6">
 		<button type="button" class="link-quiet" onclick={restart}>← {t.restart}</button>
 		<header class="rich-text">
-			<h1>{t.resultTitle.replace('{site}', site || 'tu artículo')}</h1>
+			<h1>{t.resultTitle.replace('{title}', articleTitle || 'tu artículo')}</h1>
 		</header>
 		{#if site}<p class="muted">{t.readLine.replace('{site}', site)}</p>{/if}
 		{#if lowConfidence}<p class="muted">{t.lowConfidence}</p>{/if}
