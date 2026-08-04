@@ -507,12 +507,16 @@ body { background: var(--color-paper); }
 	letter-spacing: -0.045em;
 }
 
-.prose h1 strong {
+.prose h1 strong,
+.prose h1 mark {
 	position: relative;
 	z-index: 0;
 	font-weight: inherit;
+	color: inherit;
+	background: transparent;
 }
-.prose h1 strong::after {
+.prose h1 strong::after,
+.prose h1 mark::after {
 	content: '';
 	position: absolute;
 	z-index: -1;
