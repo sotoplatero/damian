@@ -1,6 +1,6 @@
 ---
 urlPlaceholder: https://tublog.com/tu-articulo
-urlButton: Repartir mi artículo
+urlButton: Distribuir mi artículo
 urlWorking: Leyendo tu artículo...
 urlHint: El enlace de un artículo tuyo ya publicado.
 readLine: He leído {site}.
@@ -9,14 +9,14 @@ freeBadge: Gratis
 copyAction: Copiar
 copiedAction: Copiado
 restart: Probar con otro artículo
-exampleLabel: Un ejemplo de este formato (otro tema):
+exampleLabel: Un ejemplo de esta nota (otro tema):
 gateTitle: Las otras seis van por correo
-gateBody: Dime a dónde te las mando. Te llegan las nueve, y en qué orden publicarlas.
+gateBody: Dime a dónde te las mando. Te llegan las nueve y un archivo con el prompt para repetirlo por tu cuenta.
 gatePlaceholder: tu@email.com
 gateButton: Mándamelas
 gateUnlocking: Escribiendo y enviando...
 sentTitle: Van para tu correo
-sentBody: Las nueve, escritas y enviadas, con el orden al final. Si en un par de minutos no lo ves, mira en spam.
+sentBody: Las nueve notas van en el correo y el prompt manual, adjunto. Si en un par de minutos no lo ves, mira en spam.
 errorUnreadable: Esa página no me deja leerla. Prueba con otra, o pega el enlace del artículo en lugar de la portada.
 errorBlocked: Esa web me cierra la puerta cuando entro yo. Si el artículo está en un sitio con muro, prueba con otro.
 errorNotFound: Ahí no hay nada. Revisa el enlace.
@@ -26,11 +26,11 @@ errorInvalidUrl: Esa dirección no parece válida.
 errorInvalidEmail: Ese email no parece válido.
 errorDisposable: Eso es un buzón de usar y tirar. Dame uno de verdad.
 errorSendFailed: No he podido enviarte el correo. Inténtalo otra vez.
-errorRateLimit: Has repartido unos cuantos ya. Espera un rato y vuelve.
+errorRateLimit: Has distribuido unos cuantos ya. Espera un rato y vuelve.
 errorGeneric: Algo ha fallado por mi parte. Inténtalo otra vez.
 errorOffline: No se pudo conectar. Revisa tu conexión.
 ---
 
-# Reparte un artículo entre Substack, X y LinkedIn.
+# Distribuye tu artículo.
 
-**Pega el enlace de tu artículo.** Te lo reparto en nueve publicaciones para que no empieces de cero cada vez.
+**Pega el enlace.** Lo convierto en nueve notas breves, con distintas ideas, ángulos y extensiones, para seguir llevándole lectores.

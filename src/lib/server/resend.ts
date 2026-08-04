@@ -93,7 +93,9 @@ export async function sendSequenceEmail(to: string, index: number): Promise<bool
  * frameworks already formatted as markdown; it replaces `{{COPIES}}` in
  * `src/lib/emails/tool-7-frameworks.md`.
  */
-async function sendToolEmail(template: string, marker: string, to: string, markdown: string): Promise<void> {
+type TextAttachment = { filename: string; content: string };
+
+async function sendToolEmail(template: string, marker: string, to: string, markdown: string, attachment?: TextAttachment): Promise<void> {
 	const from = env.RESEND_FROM;
 	if (!from) throw new Error('RESEND_FROM no configurada');
 	const url = unsubscribeUrl(to);
@@ -104,6 +106,7 @@ async function sendToolEmail(template: string, marker: string, to: string, markd
 		to,
 		subject: rendered.subject,
 		html: rendered.html,
+		...(attachment ? { attachments: [{ filename: attachment.filename, content: Buffer.from(attachment.content, 'utf8') }] } : {}),
 		headers: {
 			'List-Unsubscribe': `<${url}>`,
 			'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
@@ -133,8 +136,11 @@ export async function sendNewsletterReportEmail(to: string, reportMarkdown: stri
 	await sendToolEmail(toolNewsletterTemplate, 'REPORT', to, reportMarkdown);
 }
 
-export async function sendToolPiecesEmail(to: string, piecesMarkdown: string): Promise<void> {
-	await sendToolEmail(toolRepurposeTemplate, 'PIECES', to, piecesMarkdown);
+export async function sendToolPiecesEmail(to: string, piecesMarkdown: string, manualPrompt: string): Promise<void> {
+	await sendToolEmail(toolRepurposeTemplate, 'PIECES', to, piecesMarkdown, {
+		filename: 'prompt-distribuye-tu-articulo.txt',
+		content: manualPrompt
+	});
 }
 
 export async function sendSubstackAboutEmail(to: string, reportMarkdown: string): Promise<void> {

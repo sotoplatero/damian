@@ -60,9 +60,9 @@ export const tools: Tool[] = [
 		capturesEmail: true
 	},
 	{
-		name: 'Reparte un artículo entre Substack, X y LinkedIn',
+		name: 'Distribuye tu artículo',
 		href: '/tool/repurpose',
-		blurb: 'Pega el enlace de tu artículo. Te lo reparto en nueve publicaciones.',
+		blurb: 'Convierte un artículo en nueve notas breves para seguir llevándole lectores.',
 		capturesEmail: true
 	}
 ];

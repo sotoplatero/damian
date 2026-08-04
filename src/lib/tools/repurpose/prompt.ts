@@ -1,63 +1,80 @@
-import { formats, freeFormats, type Format } from './formats';
-import { STYLE } from '$lib/tools/voice';
+import { formats, freeFormats, NOTE_MAX_CHARS, type NoteFormat } from './formats';
+import { REPURPOSE_STYLE } from './style';
 
-export type Article = { tema: string; tesis: string; publico: string; frase: string; prueba: string };
+export type ArticleAnalysis = {
+	tema: string;
+	tesis: string;
+	publico: string;
+	ideas: string[];
+	pruebas: string[];
+	escenas: string[];
+	frase: string;
+	voz: string;
+};
 
 function indent(text: string): string {
 	return text.split('\n').map((line) => `      ${line}`).join('\n');
 }
 
-function formatSpec(list: Format[]): string {
+export function formatSpec(list: NoteFormat[]): string {
 	return list.map((format) => [
-		`- id "${format.id}" — ${format.name} (${format.channel})`,
+		`- id "${format.id}" — ${format.name}`,
 		`   Para qué: ${format.bestFor}`,
-		`   Cómo: ${format.hint}`,
-		format.maxChars ? `   Tope: ${format.maxChars} caracteres, contando espacios.` : '',
-		`   Ejemplo de la forma (de OTRO tema; enseña el molde, no lo copies):`, indent(format.example)
-	].filter(Boolean).join('\n')).join('\n\n');
+		`   Criterio: ${format.hint}`,
+		'   Ejemplo de la forma (otro tema; no copies el asunto):',
+		indent(format.example)
+	].join('\n')).join('\n\n');
 }
 
-const ROLE = `Eres quien reparte en redes lo que este negocio publica. Coges un artículo ya escrito y lo conviertes en piezas nativas de Substack, X y LinkedIn. Escribes en corto y directo, como Isra Bravo: sin adornos, de tú a tú, sin emojis. Cada pieza tiene que sonar a la persona y no a una agencia.`;
-const OUTPUT = `Un objeto en "pieces" por cada id pedido, en el mismo orden. Cada "text" es la pieza entera, lista para copiar y pegar, sin títulos. Puedes usar saltos de línea, pero ningún markdown. Es el mismo artículo en todas y no repites frases. Solo la pieza con enlace lleva URL. No inventes cifras, clientes ni fechas: usa huecos como "[tu cifra]". Los ejemplos solo enseñan la forma. Solo JSON.`;
+const ROLE = `Distribuyes un artículo mediante notas breves que abren entradas distintas al texto original. No escribes para redes concretas. Cada nota aporta algo por sí misma y puede llevar a leer el artículo.`;
+const RULES = `Cada nota tiene como máximo ${NOTE_MAX_CHARS} caracteres, contando espacios, saltos y URL. Elige libremente su longitud y estructura: puede ser una frase o varios párrafos breves, pero nunca un artículo ni un resumen completo. No repitas una idea cambiando palabras. Puedes extraer implicaciones nuevas solo si se sostienen en el texto. Decide en cada nota si la URL ayuda, dónde ponerla y si necesita una transición; inclúyela en varias cuando encaje, sin imponer una cantidad. No inventes nada. Sin markdown, títulos, etiquetas de plataforma, emojis ni hashtags.`;
 
 export const extractPrompt = () => `${ROLE}
 
-Recibes el artículo entero. Ignora menús, pie y cabecera. Ordena de qué va, qué defiende, a quién sirve y su frase más fuerte, copiada LITERAL; y escribe ${freeFormats.map((f) => `"${f.id}"`).join(', ')}.
+Recibes el artículo completo. Ignora navegación, cabecera y pie. Analiza su contenido y su voz, y escribe ${freeFormats.map((format) => `"${format.id}"`).join(', ')}.
 
-${STYLE}
+${REPURPOSE_STYLE}
 
-## LOS FORMATOS QUE ESCRIBES AHORA
+## NOTAS QUE ESCRIBES AHORA
 ${formatSpec(freeFormats)}
 
 ## FORMATO DE SALIDA
-{"article":{"tema":"","tesis":"","publico":"","frase":"","prueba":""},"confidence":"alta | baja","pieces":[{"id":"","text":""}]}
+{"article":{"tema":"","tesis":"","publico":"","ideas":[""],"pruebas":[""],"escenas":[""],"frase":"","voz":""},"confidence":"alta | baja","pieces":[{"id":"","text":""}]}
 
-La frase se copia carácter a carácter, sin comillas, completa y con al menos quince caracteres. Si no existe, cadena vacía. La prueba solo contiene cifras, casos, nombres o fechas presentes. Confidence es baja si no parece un artículo.
+La frase se copia carácter a carácter, sin comillas, completa y con al menos quince caracteres. Si no existe, cadena vacía. Ideas, pruebas y escenas solo contienen material sustentado por el texto. Confidence es baja si no parece un artículo completo.
 
-${OUTPUT}`;
+${RULES}
+Devuelve solo JSON.`;
 
-export const writePrompt = (ids: string[]) => {
+export const writePrompt = (ids: readonly string[]) => {
 	const selected = formats.filter((format) => ids.includes(format.id));
 	return `${ROLE}
 
-Recibes un artículo ya ordenado y escribes ${selected.length} piezas para redes y el orden de publicación.
+Recibes un artículo ya analizado. Escribe las ${selected.length} notas restantes y una orientación breve para alternar ideas y extensiones, sin días ni calendario.
 
-${STYLE}
+${REPURPOSE_STYLE}
 
-## LOS FORMATOS
+## NOTAS QUE ESCRIBES AHORA
 ${formatSpec(selected)}
 
 ## FORMATO DE SALIDA
-{"pieces":[{"id":"","text":""}],"orden":["qué pieza va primero y por qué"]}
+{"pieces":[{"id":"","text":""}],"orden":["orientación breve"]}
 
-${OUTPUT}
-
-El orden lleva entre cuatro y seis líneas, nombra el formato y explica por qué va ahí. Sin días ni fechas. La pieza con enlace va pegada a la publicación del artículo.`;
+${RULES}
+La cita comentada debe contener la frase verificada si existe. Si no existe, parafrasea sin comillas. Devuelve solo JSON.`;
 };
 
-export function articleMessage(article: Article, sourceUrl: string): string {
-	const frase = article.frase.trim() ? `«${article.frase.trim()}» (verificada, puedes citarla)` : '(ninguna verificada: parafrasea y SIN comillas)';
-	const prueba = article.prueba.trim() || '(sin prueba real: usa huecos entre corchetes)';
-	const enlace = sourceUrl.trim() || '(no disponible: escribe sin enlace)';
-	return `Artículo sobre el que escribir:\n\n- De qué va: ${article.tema}\n- Qué defiende: ${article.tesis}\n- A quién le sirve: ${article.publico}\n- Su frase más fuerte: ${frase}\n- Pruebas reales disponibles: ${prueba}\n- Enlace al artículo (solo para la pieza con enlace): ${enlace}`;
+export function articleMessage(article: ArticleAnalysis, sourceUrl: string): string {
+	const lines = (items: string[]) => items.length ? items.map((item) => `  - ${item}`).join('\n') : '  - (ninguna)';
+	return `Artículo sobre el que escribir:
+
+- Tema: ${article.tema}
+- Tesis: ${article.tesis}
+- Público: ${article.publico}
+- Voz detectada: ${article.voz}
+- Ideas secundarias:\n${lines(article.ideas)}
+- Pruebas reales:\n${lines(article.pruebas)}
+- Escenas disponibles:\n${lines(article.escenas)}
+- Frase literal verificada: ${article.frase ? `«${article.frase}»` : '(ninguna: parafrasea sin comillas)'}
+- URL final: ${sourceUrl}`;
 }
