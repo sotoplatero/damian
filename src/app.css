@@ -509,6 +509,7 @@ body { background: var(--color-paper); }
 
 .prose h1 strong,
 .prose h1 mark {
+	display: inline-block;
 	position: relative;
 	z-index: 0;
 	font-weight: inherit;
