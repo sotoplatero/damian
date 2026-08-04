@@ -251,27 +251,6 @@
 						{/each}
 					</div>
 				</article>
-			{:else}
-				<!-- Bloqueado: se ve la estructura, nunca el texto. Los seis restantes
-				     no se generan hasta que entra el email, así que aquí no hay nada
-				     que descubrir mirando el HTML. -->
-				<article class="box-locked" aria-hidden="true">
-					<h3 class="box-title text-muted">{framework.name}</h3>
-					<p class="muted mb-4">{framework.bestFor}</p>
-					<div class="space-y-3">
-						{#each framework.steps as step (step.key)}
-							<div>
-								<p class="eyebrow opacity-60">
-									{step.label}
-								</p>
-								<div class="mt-1 space-y-1.5">
-									<div class="h-2.5 w-full rounded bg-line/60"></div>
-									<div class="h-2.5 w-4/5 rounded bg-line/60"></div>
-								</div>
-							</div>
-						{/each}
-					</div>
-				</article>
 			{/if}
 		{/each}
 

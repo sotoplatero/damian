@@ -7,7 +7,7 @@ import { isDisposable } from '$lib/server/email-validation';
 import { overLimit } from '$lib/server/rate-limit';
 import { normalizeQuoteText, unwrapQuotes, verifyQuote } from '$lib/tools/quotes';
 import { articleMessage, extractPrompt, writePrompt, type ArticleAnalysis } from '$lib/tools/repurpose/prompt';
-import { pieceContainsQuote, pieceUsesOnlySourceUrl, readExactPieces, readOrder, toMarkdown } from '$lib/tools/repurpose/format';
+import { pieceContainsQuote, pieceLinksToSource, pieceUsesOnlySourceUrl, readExactPieces, readOrder, toMarkdown } from '$lib/tools/repurpose/format';
 import { FREE_IDS, GATED_IDS } from '$lib/tools/repurpose/formats';
 import { buildManualPrompt } from '$lib/tools/repurpose/manual-prompt';
 
@@ -64,6 +64,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 			article.frase = candidate && verifyQuote(candidate, haystack) ? candidate : '';
 			if (candidate && !article.frase) console.warn('[tool/repurpose] cita descartada:', candidate);
 			if (!pieces.every((piece) => pieceUsesOnlySourceUrl(piece, page.finalUrl))) return json({ error: 'server_error' }, { status: 502 });
+			if (!pieces.some((piece) => pieceLinksToSource(piece, page.finalUrl))) return json({ error: 'server_error' }, { status: 502 });
 			return json({ article, pieces, confidence: raw.confidence === 'baja' ? 'baja' : 'alta', site: new URL(page.finalUrl).hostname.replace(/^www\./, ''), url: page.finalUrl });
 		}
 
@@ -81,6 +82,8 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 			const raw = await ask(writePrompt(GATED_IDS), articleMessage(article, sourceUrl), 5000);
 			const pieces = readExactPieces(raw, GATED_IDS);
 			if (!pieces || !pieces.every((piece) => pieceUsesOnlySourceUrl(piece, sourceUrl))) return json({ error: 'server_error' }, { status: 502 });
+			if (!pieceLinksToSource(pieces.find((piece) => piece.id === 'puerta-articulo')!, sourceUrl)) return json({ error: 'server_error' }, { status: 502 });
+			if (pieces.filter((piece) => pieceLinksToSource(piece, sourceUrl)).length < 2) return json({ error: 'server_error' }, { status: 502 });
 			const quoteNote = pieces.find((piece) => piece.id === 'cita-comentada');
 			if (article.frase && (!quoteNote || !pieceContainsQuote(quoteNote, article.frase))) return json({ error: 'server_error' }, { status: 502 });
 			const order = readOrder(raw);

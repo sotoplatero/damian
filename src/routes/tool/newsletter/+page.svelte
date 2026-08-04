@@ -313,27 +313,6 @@
 			</article>
 		{/if}
 
-		<!-- Lo que queda: se ve cuántos y cómo de gordos, no qué dicen. -->
-		{#if preview.locked.length}
-			<div class="box-locked">
-				<p class="eyebrow">{t.labelLocked.replace('{rest}', String(preview.locked.length))}</p>
-				<div class="mt-3 space-y-3">
-					{#each preview.locked as item, i (i)}
-						<div class="flex items-center gap-3">
-							<span class="chip {SEVERITY[item.severity].chip} shrink-0">
-								{SEVERITY[item.severity].label}
-							</span>
-							<p class="eyebrow shrink-0">{DIMENSIONS[item.dimension]}</p>
-							<!-- El ancho es su gravedad: se ve el tamaño de lo que falta, no el texto. -->
-							<div class="meter flex-1 opacity-40">
-								<span style="width: {SEVERITY[item.severity].width}%"></span>
-							</div>
-						</div>
-					{/each}
-				</div>
-			</div>
-		{/if}
-
 		<!-- El muro -->
 		<section class="box bg-line/40">
 			{#if sent}

@@ -23,7 +23,6 @@
 	let copiedId = $state('');
 	const byId = $derived(new Map(pieces.map((piece) => [piece.id, piece])));
 	const writtenFormats = $derived(formats.filter((format) => byId.has(format.id)));
-	const lockedFormats = $derived(formats.filter((format) => !byId.has(format.id)));
 
 	function errorFor(code: unknown, reason?: unknown): string {
 		if (code === 'unreadable') return reason === 'blocked' ? t.errorBlocked : reason === 'not_found' ? t.errorNotFound : reason === 'timeout' ? t.errorTimeout : reason === 'empty' ? t.errorEmpty : reason === 'invalid_url' ? t.errorInvalidUrl : t.errorUnreadable;
@@ -86,7 +85,5 @@
 				{#if written}<article class="box"><header class="mb-4 flex items-start justify-between gap-3"><div><h3 class="box-title">{format.name} {#if freeFormats.some((f) => f.id === format.id)}<span class="badge badge-sm badge-neutral">{t.freeBadge}</span>{/if}</h3><p class="muted">{format.bestFor}</p></div><button type="button" onclick={() => copy(written)} class="btn btn-ghost btn-xs">{copiedId === format.id ? t.copiedAction : t.copyAction}</button></header><p class="body-text whitespace-pre-wrap">{written.text}</p></article>{/if}
 		{/each}
 		<section class="box bg-line/40">{#if sent}<h3 class="section-title">{t.sentTitle}</h3><p class="section-intro">{t.sentBody}</p>{:else}<h3 class="section-title">{t.gateTitle}</h3><p class="section-intro">{t.gateBody}</p><div class="mt-4"><InlineForm type="email" bind:value={email} placeholder={t.gatePlaceholder} label={t.gateButton} busyLabel={t.gateUnlocking} busy={busy === 'unlocking'} inputmode="email" autocomplete="email" onsubmit={unlock} /></div>{/if}</section>
-		<h2 class="eyebrow">Las otras seis</h2>
-		{#each lockedFormats as format (format.id)}<article class="box-locked"><h3 class="box-title text-muted">{format.name}</h3><p class="muted mb-4">{format.bestFor}</p><p class="eyebrow opacity-70">{t.exampleLabel}</p><p class="body-text mt-1 whitespace-pre-wrap text-muted">{format.example}</p></article>{/each}
 	</section>
 {/if}

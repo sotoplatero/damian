@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { formats, freeFormats, gatedFormats, NOTE_MAX_CHARS } from './formats';
-import { pieceContainsQuote, pieceUsesOnlySourceUrl, readExactPieces, toMarkdown } from './format';
+import { pieceContainsQuote, pieceLinksToSource, pieceUsesOnlySourceUrl, readExactPieces, toMarkdown } from './format';
 
 describe('repurpose repertoire', () => {
 	it('defines nine unique platform-neutral notes split 3/6', () => {
@@ -48,6 +48,8 @@ it('checks quotations and source URLs', () => {
 	expect(pieceUsesOnlySourceUrl({ id: 'idea-central', text: 'Sin enlace.' }, source)).toBe(true);
 	expect(pieceUsesOnlySourceUrl({ id: 'puerta-articulo', text: `Léelo: ${source}` }, source)).toBe(true);
 	expect(pieceUsesOnlySourceUrl({ id: 'puerta-articulo', text: 'https://otro.example/' }, source)).toBe(false);
+	expect(pieceLinksToSource({ id: 'idea-central', text: 'Sin enlace.' }, source)).toBe(false);
+	expect(pieceLinksToSource({ id: 'puerta-articulo', text: `Léelo: ${source}` }, source)).toBe(true);
 });
 
 it('renders a flat email document', () => {

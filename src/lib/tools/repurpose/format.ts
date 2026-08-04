@@ -41,6 +41,18 @@ export function pieceUsesOnlySourceUrl(piece: Piece, sourceUrl: string): boolean
 	}
 }
 
+export function pieceLinksToSource(piece: Piece, sourceUrl: string): boolean {
+	if (!pieceUsesOnlySourceUrl(piece, sourceUrl)) return false;
+	try {
+		const expected = new URL(sourceUrl).toString();
+		return (piece.text.match(/https?:\/\/[^\s<>()]+/g) ?? []).some(
+			(match) => new URL(match.replace(/[.,;:!?]+$/, '')).toString() === expected
+		);
+	} catch {
+		return false;
+	}
+}
+
 export function readOrder(raw: unknown): string[] {
 	const list = (raw as { orden?: unknown })?.orden;
 	if (!Array.isArray(list)) return [];

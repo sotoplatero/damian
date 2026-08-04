@@ -17,7 +17,7 @@ ${formatSpec(formats)}
 - Entrega exactamente las nueve notas, bajo el nombre de su función.
 - Cada una tendrá como máximo ${NOTE_MAX_CHARS} caracteres, incluidos espacios, saltos y URL.
 - Varía longitudes, estructuras, ideas y ángulos. Ninguna puede convertirse en artículo.
-- Decide en cuáles ayuda incluir la URL, dónde colocarla y cómo introducirla. Inclúyela en varias cuando encaje, sin imponer una cantidad ni reservarla para una sola nota.
+- Incluye la URL en «Puerta al artículo» y en al menos otras dos notas. Decide cuáles, dónde colocarla y cómo introducirla según el contenido de cada una.
 - No repitas la misma idea con palabras distintas.
 - Puedes formular implicaciones nuevas si están sustentadas por el artículo.
 - No inventes datos, escenas, experiencias, resultados, citas ni opiniones.

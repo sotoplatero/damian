@@ -242,17 +242,6 @@
 
 					<p class="body-text whitespace-pre-wrap">{written.text}</p>
 				</article>
-			{:else}
-				<!-- Bloqueado: se ve el tipo y un ejemplo de la forma (otro tema), nunca
-				     el texto sobre TU tema. Los nueve tuyos no se generan hasta que entra
-				     el email, así que aquí no hay nada que descubrir mirando el HTML: el
-				     ejemplo es fijo y sale de types.ts. -->
-				<article class="box-locked">
-					<h3 class="box-title text-muted">{type.name}</h3>
-					<p class="muted mb-4">{type.bestFor}</p>
-					<p class="eyebrow opacity-70">{t.exampleLabel}</p>
-					<p class="body-text mt-1 whitespace-pre-wrap text-muted">{type.example}</p>
-				</article>
 			{/if}
 		{/each}
 

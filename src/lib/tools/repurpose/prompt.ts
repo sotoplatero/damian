@@ -43,6 +43,8 @@ ${formatSpec(freeFormats)}
 
 La frase se copia carácter a carácter, sin comillas, completa y con al menos quince caracteres. Si no existe, cadena vacía. Ideas, pruebas y escenas solo contienen material sustentado por el texto. Confidence es baja si no parece un artículo completo.
 
+Al menos UNA de las tres notas debe incluir la URL original. Elige cuál según su contenido.
+
 ${RULES}
 Devuelve solo JSON.`;
 
@@ -61,6 +63,7 @@ ${formatSpec(selected)}
 {"pieces":[{"id":"","text":""}],"orden":["orientación breve"]}
 
 ${RULES}
+"puerta-articulo" debe incluir la URL final. Incluye esa misma URL en al menos otra de las seis notas, elegida según su contenido.
 La cita comentada debe contener la frase verificada si existe. Si no existe, parafrasea sin comillas. Devuelve solo JSON.`;
 };
 
