@@ -1,75 +1,84 @@
 /**
- * Límites de uso, en un solo sitio.
+ * Usage limits, all in one place.
  *
  * ─────────────────────────────────────────────────────────────────────────
- * LO QUE ESTO ES Y LO QUE NO
+ * WHAT THIS IS AND WHAT IT ISN'T
  *
- * El contador vive en memoria del proceso. En serverless cada instancia tiene
- * el suyo, así que el límite real es el configurado MULTIPLICADO por el número
- * de instancias que la plataforma tenga calientes. Con el tráfico de este sitio
- * serán una o dos, así que frena el abuso de verdad; pero no es exacto y no hay
- * que venderlo como tal.
+ * The counter lives in the process's memory. On serverless each instance has its
+ * own, so the real limit is the configured one MULTIPLIED by however many
+ * instances the platform keeps warm. With this site's traffic that will be one
+ * or two, so it does stop real abuse; but it is not exact and must not be sold
+ * as if it were.
  *
- * Para un límite diario exacto hace falta un almacén compartido (Redis/KV). Ese
- * es el único cambio pendiente: la firma de `overLimit` no tendría que cambiar,
- * solo su interior.
+ * An exact daily limit needs a shared store (Redis/KV). That is the only change
+ * still pending: `overLimit`'s signature wouldn't have to change, only its
+ * insides.
  * ─────────────────────────────────────────────────────────────────────────
  *
- * POR QUÉ LA CLAVE NO ES SIEMPRE LA IP
+ * WHY THE KEY ISN'T ALWAYS THE IP
  *
- * Una IP no es una persona. En redes móviles miles de usuarios salen por unas
- * pocas IPs, y en una oficina todos comparten una. Un límite bajo por IP deja
- * fuera a compañeros de trabajo de quien lo gastó.
+ * An IP is not a person. On mobile networks thousands of users leave through a
+ * handful of IPs, and in an office everyone shares one. A low per-IP limit locks
+ * out the colleagues of whoever spent it.
  *
- * Por eso lo caro se limita por CORREO, que sí identifica a alguien, y lo
- * gratis por IP con margen holgado.
+ * That is why the expensive path is limited by EMAIL, which does identify
+ * someone, and the free one by IP with generous headroom.
  */
 
 type Hit = { at: number };
 
-/** Un cubo por nombre, para que un endpoint no se coma la cuota de otro. */
+/** One bucket per name, so one endpoint can't eat another's quota. */
 const buckets = new Map<string, Map<string, Hit[]>>();
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const HOUR_MS = 60 * 60 * 1000;
 
 /**
- * Los límites del sitio, juntos para poder leerlos de un vistazo.
+ * The site's limits, together so they can be read at a glance.
  *
- * `max` es por `windowMs` y por clave. El coste anotado es lo que evita cada uno
- * en el peor caso, que es la razón de que el número sea ese y no otro.
+ * `max` is per `windowMs` and per key. The noted cost is what each one prevents
+ * in the worst case, which is the reason the number is that one and not another.
  */
 export const LIMITS = {
-	/** Paso gratis de cualquier herramienta. Holgado: aquí casi no hay gasto. */
+	/** Any tool's free step. Generous: there is almost no spend here. */
 	toolPreview: { max: 15, windowMs: DAY_MS },
 
 	/**
-	 * Paso caro, el que corre tras dejar el correo. Tres al día por dirección da
-	 * de sobra para el sitio propio, el de un cliente y un reintento. Y obliga a
-	 * un atacante a conseguir un correo válido y no desechable cada tres usos.
+	 * The expensive step, the one that runs after the email is handed over. Three
+	 * a day per address is plenty for one's own site, a client's, and a retry. And
+	 * it forces an attacker to obtain a valid, non-disposable address every three
+	 * uses.
 	 */
 	toolDelivery: { max: 3, windowMs: DAY_MS },
 
-	/** Techo por IP en el paso caro, para que nadie encadene cien correos desde una. */
+	/** Per-IP ceiling on the expensive step, so nobody chains a hundred emails from one. */
 	toolDeliveryPerIp: { max: 10, windowMs: DAY_MS },
 
-	/** Google Places cuesta ~$0,086 por evaluación. Diez al día son ~$0,86 por IP. */
+	/** Google Places costs ~$0.086 per evaluation. Ten a day is ~$0.86 per IP. */
 	places: { max: 10, windowMs: DAY_MS },
 
-	/** El autocompletado se dispara al teclear. Generoso, pero con techo. */
+	/** Autocomplete fires on every keystroke. Generous, but capped. */
 	placesAutocomplete: { max: 60, windowMs: HOUR_MS },
 
-	/** El alta escribe en Resend y manda un correo. No debería repetirse mucho. */
-	subscribe: { max: 5, windowMs: DAY_MS }
+	/** Signing up writes to Resend and sends an email. It shouldn't repeat much. */
+	subscribe: { max: 5, windowMs: DAY_MS },
+
+	/**
+	 * The /author card. It costs no money — there is no model call and no email —
+	 * but each walk is up to 50 requests to someone else's server. This limit
+	 * exists to protect Substack, not the bill. Keyed by IP because there is no
+	 * email to ask for: it is the only tool with no gate.
+	 */
+	authorCard: { max: 20, windowMs: HOUR_MS }
 } as const;
 
 export type LimitName = keyof typeof LIMITS;
 
 /**
- * Cuenta un intento y dice si se ha pasado del límite.
+ * Counts an attempt and says whether the limit has been passed.
  *
- * Cuenta SIEMPRE, incluso cuando devuelve true: así quien insiste no se
- * recupera antes por seguir dándole.
+ * It counts ALWAYS, even when it returns true: that way whoever keeps pushing
+ * doesn't recover any sooner by carrying on.
  */
 export function overLimit(name: LimitName, key: string): boolean {
 	const { max, windowMs } = LIMITS[name];
@@ -85,7 +94,7 @@ export function overLimit(name: LimitName, key: string): boolean {
 	recent.push({ at: now });
 	bucket.set(key, recent);
 
-	// Poda perezosa: sin esto el Map crece mientras viva la instancia.
+	// Lazy pruning: without this the Map grows for as long as the instance lives.
 	if (bucket.size > 5_000) {
 		for (const [k, hits] of bucket) {
 			if (hits.every((hit) => now - hit.at >= windowMs)) bucket.delete(k);
@@ -95,7 +104,7 @@ export function overLimit(name: LimitName, key: string): boolean {
 	return recent.length > max;
 }
 
-/** Cuánto queda en la ventana, para poder decirlo en el mensaje de error. */
+/** How much is left in the window, so it can be said in the error message. */
 export function remaining(name: LimitName, key: string): number {
 	const { max, windowMs } = LIMITS[name];
 	const now = Date.now();

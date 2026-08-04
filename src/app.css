@@ -2,7 +2,7 @@
 @plugin '@tailwindcss/typography';
 @plugin 'daisyui';
 
-/* Una sola familia para texto e interfaz, autoalojada y estable entre sistemas. */
+/* One family for text and interface, self-hosted and stable across systems. */
 @font-face {
 	font-family: 'Public Sans';
 	src: url('/fonts/public-sans-400.woff2') format('woff2');
@@ -27,34 +27,34 @@
 
 
 /*
- * Tema del sitio.
+ * The site's theme.
  *
- * La paleta entera son un negro, dos grises y una línea. Si hay que cambiar un
- * tono se cambia aquí, no en cuarenta sitios. Tailwind genera solo las
- * utilidades: text-ink, text-soft, text-muted, border-line...
+ * The whole palette is one black, two greys and a line. If a shade needs
+ * changing it changes here, not in forty places. Tailwind generates the
+ * utilities on its own: text-ink, text-soft, text-muted, border-line...
  */
 @theme {
 	--font-sans: 'Public Sans', ui-sans-serif, system-ui, sans-serif;
 	--font-serif: 'Public Sans', ui-sans-serif, system-ui, sans-serif;
-	/* Sin descarga: la JetBrains que se cargaba antes no la usaba nada. */
+	/* Nothing downloaded: the JetBrains that used to load was used by nothing. */
 	--font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
 
-	--color-ink: #171717; /* texto principal */
-	--color-soft: #525252; /* texto secundario */
-	--color-muted: #737373; /* notas, pies, cosas que no piden atención */
-	--color-line: #e5e5e5; /* bordes y separadores */
+	--color-ink: #171717; /* main text */
+	--color-soft: #525252; /* secondary text */
+	--color-muted: #737373; /* notes, footnotes, things that don't ask for attention */
+	--color-line: #e5e5e5; /* borders and separators */
 
-	/* Azul de Substack. El alta se hace en su formulario embebido, así que el
-	   sitio usa su mismo acento para que no parezcan dos productos. */
+	/* Substack's blue. Signing up happens in their embedded form, so the site
+	   uses their own accent to stop the two looking like two products. */
 	--color-brand: #0076ff;
 	--color-paper: #f7f6f2;
 	--color-signal: #ff4d00;
 }
 
 /*
- * El sitio va forzado al tema light de DaisyUI (ver +layout.svelte). Su color
- * primary se sobrescribe aquí con el azul de la marca: así los botones y
- * enlaces lo cogen solos, sin repetir la clase en cada uno.
+ * The site is pinned to DaisyUI's light theme (see +layout.svelte). Its primary
+ * colour is overridden here with the brand blue: that way buttons and links pick
+ * it up on their own, without repeating the class on each one.
  */
 [data-theme='light'] {
 	--color-primary: #0076ff;
@@ -62,17 +62,22 @@
 }
 
 /*
- * Vocabulario del sitio. Con estas clases se pinta todo: la home y los tools
- * usan las mismas. Antes de añadir una nueva, comprobar si alguna ya sirve.
+ * The site's vocabulary. Everything is painted with these classes: the home page
+ * and the tools use the same ones. Before adding a new one, check whether an
+ * existing one already does the job.
  *
- * SOLO HAY DOS TAMAÑOS DE LETRA:
- *   cuerpo  1.25rem  (el de la carta, prose-xl) -> .body-text y todo lo legible
- *   nota     0.875rem                           -> .muted, pies y avisos
- * La jerarquía la hace el color (ink > soft > muted), no el tamaño. Si te ves
- * escribiendo text-base o text-lg en el markup, es que falta una clase aquí.
+ * THERE ARE ONLY TWO FONT SIZES:
+ *   body  1.25rem  (the letter's own, prose-xl) -> .body-text and anything read
+ *   note  0.875rem                             -> .muted, footnotes, warnings
+ * Hierarchy comes from colour (ink > soft > muted), not from size. If you catch
+ * yourself writing text-base or text-lg in the markup, a class is missing here.
+ *
+ * The one deliberate exception is `.figure`, at the bottom: a Wrapped card lives
+ * on the number being seen before its label. It is a class here rather than a
+ * utility in the markup precisely because of the rule above.
  */
 @layer components {
-	/* Separación entre bloques grandes. Una sola medida en todo el sitio. */
+	/* Spacing between large blocks. One single measure across the whole site. */
 	.section {
 		@apply mt-20;
 	}
@@ -83,34 +88,34 @@
 		@apply mt-2 text-xl leading-relaxed text-soft;
 	}
 
-	/* Cuerpo de texto fuera de .prose: mismo tamaño que la carta. */
+	/* Body text outside .prose: the same size as the letter. */
 	.body-text {
 		@apply text-xl leading-relaxed;
 	}
 
-	/* Texto que no pide atención: pies, notas, avisos. */
+	/* Text that doesn't ask for attention: footnotes, notes, warnings. */
 	.muted {
 		@apply text-sm text-muted;
 	}
 
-	/* Enlace discreto: volver al home, empezar de nuevo, probar otra web. */
+	/* A quiet link: back home, start again, try another site. */
 	.link-quiet {
 		@apply text-sm text-muted underline underline-offset-4 transition-colors hover:text-ink;
 	}
 
-	/* Caja con borde: la unidad visual del sitio. Una herramienta, un texto
-	   generado, un bloque de contenido. */
+	/* A bordered box: the site's visual unit. A tool, a generated text, a block
+	   of content. */
 	.box {
 		@apply rounded-lg border border-line p-5;
 		background: color-mix(in srgb, white 82%, transparent);
 		box-shadow: 0 1px 0 rgba(23, 23, 23, 0.04), 0 12px 35px rgba(23, 23, 23, 0.025);
 	}
-	/* Lo que está ahí pero todavía no se puede leer. */
+	/* What is there but can't be read yet. */
 	.box-locked {
 		@apply rounded-lg border border-dashed border-line p-5;
 		background: repeating-linear-gradient(-45deg, transparent, transparent 8px, rgba(23,23,23,.018) 8px, rgba(23,23,23,.018) 9px);
 	}
-	/* Caja que además es enlace: el borde se marca al pasar por encima. */
+	/* A box that is also a link: the border asserts itself on hover. */
 	.box-link {
 		@apply relative grid rounded-lg border border-line p-5 transition-all;
 		grid-template-columns: 2rem minmax(0, 1fr) auto;
@@ -125,28 +130,28 @@
 		box-shadow: 0 14px 40px rgba(23,23,23,.07);
 	}
 
-	/* Título y cuerpo dentro de una caja. */
+	/* Title and body inside a box. */
 	.box-title {
 		@apply text-xl font-bold;
 	}
-	/* Subtítulo de una tarjeta. Cortado a dos líneas: si el texto se va, la
-	   tarjeta crece y el listado deja de leerse de un vistazo. */
+	/* A card's subtitle. Clamped to two lines: if the text runs on, the card
+	   grows and the list stops being readable at a glance. */
 	.box-text {
 		@apply col-start-2 mt-2 line-clamp-2 text-xl leading-relaxed text-soft;
 	}
 
-	/* El layout de herramientas se ocupa del centrado vertical. */
+	/* The tool layout takes care of vertical centring. */
 	.screen-center {
 		@apply flex flex-col;
 	}
 
-	/* Etiqueta pequeña en versales encima de un bloque de texto. */
+	/* A small uppercase label above a block of text. */
 	.eyebrow {
 		@apply text-xs font-semibold tracking-wide text-muted uppercase;
 	}
 
-	/* Barra: sirve para una nota y para un hallazgo tapado. El relleno lo pone
-	   un hijo con su propio ancho, así que la barra no sabe qué mide. */
+	/* A bar: serves both a score and a locked finding. The fill is a child with
+	   its own width, so the bar knows nothing about what it measures. */
 	.meter {
 		@apply h-1.5 overflow-hidden rounded-full bg-line;
 	}
@@ -154,9 +159,50 @@
 		@apply block h-full rounded-full bg-ink;
 	}
 
-	/* Etiqueta de gravedad de un hallazgo. El color lo decide quien la pinta. */
+	/* A finding's severity label. Its colour is decided by whoever paints it. */
 	.chip {
 		@apply inline-block rounded px-1.5 py-0.5 text-xs font-semibold tracking-wide uppercase;
+	}
+
+	/*
+	 * The big numbers on the /author cards.
+	 *
+	 * The site has two font sizes and hierarchy comes from colour. A Wrapped is
+	 * the deliberate exception: it lives on the number being read before its
+	 * label. It enters as a class and not as a loose `text-6xl` because that is
+	 * exactly what the rule at the top of this layer says — if another size is
+	 * needed, a class is missing here.
+	 */
+	.figure {
+		@apply leading-none font-bold tracking-tight text-ink;
+		font-size: 3.5rem;
+	}
+	@media (width >= 48rem) {
+		.figure {
+			font-size: 4.5rem;
+		}
+	}
+	/* The label under a `.figure`. It is the site's note size, with no size of its own. */
+	.figure-note {
+		@apply text-sm text-muted;
+	}
+
+	/*
+	 * The week heatmap: one row per year, 53 cells.
+	 *
+	 * The cell knows nothing about what it measures, same idea as `.meter`. The
+	 * year is painted outside the grid.
+	 */
+	.heat {
+		@apply grid gap-[2px];
+		grid-template-columns: repeat(53, minmax(0, 1fr));
+	}
+	.heat-cell {
+		@apply rounded-[2px] bg-line;
+		aspect-ratio: 1;
+	}
+	.heat-on {
+		@apply bg-ink;
 	}
 }
 
@@ -256,7 +302,7 @@ body { background: var(--color-paper); }
 	.box-link { grid-template-columns: 1.7rem minmax(0, 1fr) auto; }
 }
 
-/* Texto e interfaz comparten la misma familia. */
+/* Text and interface share the same family. */
 .prose,
 .body-text,
 .section-intro,
@@ -265,20 +311,20 @@ body { background: var(--color-paper); }
 }
 
 /*
- * El titular, a tamaño fluido.
+ * The headline, at a fluid size.
  *
- * prose-xl deja el h1 en 3,5rem fijos. A 320px de ancho una palabra larga
- * ("herramienta") mide más que la columna, no parte, y saca scroll horizontal a
- * TODA la página: el desbordamiento del h1 empuja el <main>.
+ * prose-xl leaves the h1 at a fixed 3.5rem. At 320px wide a long word
+ * ("herramienta") measures more than the column, doesn't break, and gives the
+ * WHOLE page a horizontal scrollbar: the h1's overflow pushes <main>.
  *
- * El mínimo del clamp lo marca la palabra más larga del titular: en una fuente
- * de palo seco en negrita ocupa unas 6 veces el tamaño de letra, así que en la
- * columna de 288px que queda a 320px de ancho caben unos 47px. 2,75rem (44px)
- * entra con margen. Y `overflow-wrap: break-word` de abajo es la red por si
- * algún día escribes una palabra más larga.
+ * The clamp's minimum is set by the longest word in the headline: in a bold
+ * sans-serif it takes about 6 times the font size, so the 288px column left at
+ * 320px wide fits about 47px. 2.75rem (44px) fits with room to spare. And the
+ * `overflow-wrap: break-word` below is the safety net for the day you write a
+ * longer word.
  *
- * `.prose h1` gana al plugin de tipografía, que usa :where() y no tiene
- * especificidad.
+ * `.prose h1` beats the typography plugin, which uses :where() and therefore has
+ * no specificity.
  */
 .prose h1 {
 	margin-bottom: 0;
@@ -288,11 +334,11 @@ body { background: var(--color-paper); }
 }
 
 /*
- * El iframe de Substack.
+ * Substack's iframe.
  *
- * Safari en iOS estira los iframes al ancho de su contenido e IGNORA el
- * atributo `width`, así que hay que forzarlo por CSS. Y como su contenido es de
- * otro dominio y no se puede medir, el contenedor recorta por si acaso.
+ * Safari on iOS stretches iframes to their content's width and IGNORES the
+ * `width` attribute, so it has to be forced in CSS. And since its content is on
+ * another domain and cannot be measured, the container clips just in case.
  */
 iframe {
 	display: block;
@@ -300,12 +346,12 @@ iframe {
 }
 
 /*
- * Que ninguna línea pueda salirse de su columna.
+ * No line may escape its column.
  *
- * `anywhere` y no `break-word`, y la diferencia importa: los dos parten
- * palabras largas, pero solo `anywhere` cuenta para el tamaño mínimo
- * intrínseco del elemento. Con `break-word`, una palabra larga puede seguir
- * ensanchando su contenedor (y con él la página); con `anywhere` no puede.
+ * `anywhere` and not `break-word`, and the difference matters: both break long
+ * words, but only `anywhere` counts towards the element's intrinsic minimum
+ * size. With `break-word` a long word can still widen its container (and the
+ * page with it); with `anywhere` it cannot.
  */
 .prose,
 .prose *,
@@ -318,8 +364,8 @@ iframe {
 	overflow-wrap: anywhere;
 }
 
-/* La foto familiar dentro de la carta: esquinas suaves y aire alrededor,
-   con el pie pegado debajo. */
+/* The family photo inside the letter: soft corners and air around it, with the
+   caption tucked underneath. */
 .prose img {
 	border-radius: 0.5rem;
 	margin-block: 2rem 0.75rem;

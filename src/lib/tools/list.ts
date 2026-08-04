@@ -1,36 +1,46 @@
 /**
- * Las herramientas que se enseñan en la home, debajo del formulario.
+ * The tools shown on the home page, below the form.
  *
- * Esta lista va a crecer. Para añadir una, basta con meter un objeto aquí:
- * la home la pinta sola, en el orden en que estén. Lo primero de la lista es
- * lo primero que se ve, así que arriba va lo que más te interese mover.
+ * This list is going to grow. To add one, dropping an object in here is enough:
+ * the home page paints it on its own, in whatever order they sit. The first item
+ * is the first thing seen, so put whatever you most want to move at the top.
  *
- * QUITAR UNA DE LA HOME NO LA APAGA. Todo lo que hay en `src/routes/tool/*`
- * sigue siendo accesible por URL; esta lista solo decide qué se enseña. Sirve
- * para trabajar en una sin que la vea quien entra.
+ * TAKING ONE OFF THE HOME PAGE DOES NOT TURN IT OFF. Everything under
+ * `src/routes/tool/*` stays reachable by URL; this list only decides what gets
+ * shown. It exists so you can work on one without visitors seeing it.
  *
- * Fuera de la lista a propósito, y por qué:
+ * Deliberately off the list, and why:
  *
- *   - `places-evaluator` — usa Paraglide y DaisyUI, así que todavía no encaja
- *     con el resto. Para sacarlo a la home hay que migrarlo al tema del sitio.
- *   - `newsletter` — funciona, pero el informe todavía no aporta lo que debería.
- *     Se está reescribiendo la parte de juicio y la referencia contra la que se
- *     mide es una auditoría escrita a mano que NO está en el repo (nombra una
- *     publicación real y esto es público; pídesela a Damian). Vuelve a la home
- *     cuando el informe pase el filtro de ese documento: que quien lo lea cambie
- *     algo.
+ *   - `places-evaluator` — uses Paraglide and DaisyUI, so it doesn't fit with the
+ *     rest yet. Getting it onto the home page means migrating it to the site theme.
+ *   - `newsletter` — it works, but the report still doesn't deliver what it
+ *     should. The judgement half is being rewritten and the reference it is
+ *     measured against is a hand-written audit that is NOT in this repo (it names
+ *     a real publication and this repo is public; ask Damian for it). It comes
+ *     back to the home page when the report passes that document's test: that
+ *     whoever reads it changes something.
  */
 export type Tool = {
-	/** Lo que se lee en el enlace. Que diga qué hace, no cómo se llama por dentro. */
+	/** What the link reads as. It should say what it does, not what it's called inside. */
 	name: string;
 	href: string;
-	/** Una frase corta: se corta a dos líneas en pantalla. Qué se lleva quien entre. */
+	/** One short sentence: it clamps to two lines on screen. What the visitor walks away with. */
 	blurb: string;
-	/** Marca las que piden email, para que sepas de un vistazo cuáles captan. */
+	/**
+	 * Marks the ones that ask for an email, so you can see at a glance which ones
+	 * capture. `/author` is the first one without it, on purpose: the card is a
+	 * gift meant to open a conversation with another author, and a form in front of
+	 * it would turn it into lead capture.
+	 */
 	capturesEmail?: boolean;
 };
 
 export const tools: Tool[] = [
+	{
+		name: 'El Wrapped de tu Substack',
+		href: '/author',
+		blurb: 'Pega la dirección de un newsletter. Sale la tarjeta de toda su historia.'
+	},
 	{
 		name: 'Reescribe el “Acerca de” de tu Substack',
 		href: '/tool/substack-about',
