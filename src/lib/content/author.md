@@ -32,7 +32,11 @@ labelWords: palabras
 labelNovels: ≈ {n} novelas
 labelLikes: likes
 labelConversation: comentarios
-labelFrequency: al mes
+labelRestacks: restacks
+labelFrequency: posts al mes
+labelBestPost: Su post más exitoso
+labelRecent: Lo último que ha publicado
+labelViewOnSubstack: Ver en Substack
 labelMostLiked: Más gustado
 labelMostCommented: Más comentado
 labelLongest: Más largo

@@ -29,6 +29,8 @@ const PUB: PubInfo = {
 	language: 'es',
 	subscriberCount: 7000,
 	logoUrl: null,
+	tagline: 'Una publicación de prueba',
+	brandColor: null,
 	paymentsEnabled: true
 };
 

@@ -12,6 +12,8 @@ const PUB: PubInfo = {
 	language: 'es',
 	subscriberCount: null,
 	logoUrl: null,
+	tagline: '',
+	brandColor: null,
 	paymentsEnabled: true
 };
 

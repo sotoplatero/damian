@@ -26,6 +26,8 @@ function post(over: Partial<ArchivePost> & { date: string }): ArchivePost {
 		reactions: 10,
 		comments: 2,
 		childComments: 1,
+		restacks: 1,
+		coverImage: '',
 		sectionName: '',
 		...over
 	};

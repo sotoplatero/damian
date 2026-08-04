@@ -205,6 +205,156 @@
 	}
 
 	/*
+	 * ── /author profile ──────────────────────────────────────────────────
+	 *
+	 * A profile page, not a report: banner, avatar, name, tagline, a band of
+	 * headline numbers, then posts with their real cover art. The cover art is
+	 * what stops the page reading as a spreadsheet, so the image slots have
+	 * fixed aspect ratios and a placeholder tint — a publication with no art
+	 * must still look composed rather than broken.
+	 */
+	.profile {
+		/* Pulls the banner up under the site header, which the page shell pads. */
+		@apply mt-8;
+	}
+	/*
+	 * The banner, tinted by `--tint` (the publication's own accent colour, set
+	 * inline by the page).
+	 *
+	 * Deliberately NOT the publication's cover photo: measured, that URL 403s —
+	 * it sits on Substack's private bucketeer bucket — and it is a 512x512 square
+	 * rather than a banner. A wash never arrives broken.
+	 */
+	.profile-banner {
+		@apply relative h-32 overflow-hidden rounded-xl border border-line sm:h-44;
+		background:
+			radial-gradient(115% 150% at 10% 0%, color-mix(in srgb, var(--tint) 34%, transparent), transparent 62%),
+			radial-gradient(95% 130% at 92% 8%, color-mix(in srgb, var(--color-ink) 12%, transparent), transparent 60%),
+			var(--color-paper);
+	}
+	/* A hairline of the accent along the bottom, so the wash reads as chosen. */
+	.profile-banner::after {
+		content: '';
+		@apply absolute inset-x-0 bottom-0 h-1;
+		background: var(--tint);
+		opacity: 0.55;
+	}
+	/*
+	 * The avatar overlaps the banner: the move that reads as "profile".
+	 *
+	 * `relative z-10` is load-bearing, not decoration. The banner is
+	 * `position: relative` (it needs it for its accent hairline), and a
+	 * positioned element paints above a static sibling — so without this the
+	 * banner covered the top half of the avatar and it looked cropped.
+	 */
+	.profile-head {
+		@apply relative z-10 -mt-12 flex flex-col sm:-mt-14;
+	}
+	.profile-avatar {
+		@apply h-24 w-24 shrink-0 rounded-2xl border-4 object-cover sm:h-28 sm:w-28;
+		border-color: var(--color-paper);
+		background: var(--color-paper);
+		box-shadow: 0 10px 30px rgba(23, 23, 23, 0.14);
+	}
+	.profile-name {
+		font-size: clamp(2rem, 5.5vw, 3.25rem);
+		@apply leading-none font-bold tracking-tight text-ink;
+	}
+	.profile-tagline {
+		@apply text-xl leading-snug text-soft;
+		font-family: var(--font-serif);
+	}
+	/* The outbound link to the real publication. Quiet until hovered. */
+	.profile-link {
+		@apply ml-auto inline-flex shrink-0 items-center gap-1.5 rounded-full border border-line px-4 py-2 text-sm font-semibold text-soft transition-colors;
+	}
+	.profile-link:hover {
+		border-color: var(--color-ink);
+		color: var(--color-ink);
+	}
+
+	/*
+	 * The headline numbers. One band split by hairlines, no boxes: boxes made
+	 * every figure weigh the same and the page read as a grid of cells.
+	 *
+	 * Three columns and not six. Measured: the site's content column is 632px, so
+	 * six columns give each figure 105px and "348.637" collides with its
+	 * neighbour. Three wrap onto two rows and stay legible.
+	 */
+	.profile-stats {
+		@apply mt-10 grid grid-cols-2 gap-y-7 rounded-xl border border-line py-7 sm:grid-cols-3;
+		background: color-mix(in srgb, white 70%, transparent);
+	}
+	.stat-cell {
+		@apply flex min-w-0 flex-col gap-1 px-5;
+	}
+	/* Hairline between columns only, never before the first of a row. */
+	.stat-cell:not(:nth-child(2n + 1)) {
+		box-shadow: inset 1px 0 0 var(--color-line);
+	}
+	@media (width >= 40rem) {
+		.stat-cell:not(:nth-child(2n + 1)) {
+			box-shadow: none;
+		}
+		.stat-cell:not(:nth-child(3n + 1)) {
+			box-shadow: inset 1px 0 0 var(--color-line);
+		}
+	}
+	.stat-value {
+		@apply text-3xl leading-none font-bold tracking-tight text-ink tabular-nums sm:text-4xl;
+	}
+
+	/* The word count gets its own band: it is the figure no author has ever
+	   seen summed, and it deserves more room than a sixth of a row. */
+	.profile-words {
+		@apply mt-4 flex flex-wrap items-baseline gap-x-4 gap-y-1 rounded-xl px-5 py-6;
+		background: color-mix(in srgb, var(--color-brand) 8%, transparent);
+	}
+
+	/* Their best post: art on the left, everything else on the right. */
+	.post-hero {
+		@apply grid gap-6 rounded-xl border border-line p-5 transition-all sm:grid-cols-[minmax(0,14rem)_minmax(0,1fr)];
+		background: color-mix(in srgb, white 82%, transparent);
+	}
+	.post-hero:hover {
+		border-color: var(--color-ink);
+		transform: translateY(-2px);
+	}
+	.post-hero img {
+		@apply aspect-[4/3] w-full rounded-lg object-cover sm:aspect-square;
+	}
+	.post-hero-title {
+		font-size: clamp(1.4rem, 2.6vw, 2rem);
+		@apply leading-tight font-bold tracking-tight text-ink;
+	}
+
+	/* The latest-posts strip. */
+	.post-grid {
+		@apply grid grid-cols-2 gap-5 lg:grid-cols-4;
+	}
+	.post-card {
+		@apply flex flex-col gap-2.5;
+	}
+	.post-thumb {
+		@apply aspect-[3/2] overflow-hidden rounded-lg border border-line;
+		background: color-mix(in srgb, var(--color-ink) 5%, transparent);
+	}
+	.post-thumb img {
+		@apply h-full w-full object-cover transition-transform;
+	}
+	.post-card:hover .post-thumb img {
+		transform: scale(1.04);
+	}
+	.post-card-title {
+		@apply line-clamp-2 leading-snug font-semibold text-ink;
+	}
+
+	/* A soft fact chip. Lower contrast than `.chip`, which shouts severity. */
+	.chip-soft {
+		@apply inline-block rounded-full border border-line px-3 py-1 text-sm text-soft;
+	}
+
+	/*
 	 * The week heatmap: one row per year, 53 cells.
 	 *
 	 * The cell knows nothing about what it measures, same idea as `.meter`. The

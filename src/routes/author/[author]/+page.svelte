@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Flame, FileText, PenLine, Heart, MessageCircle, Calendar, Trophy, Clock } from 'lucide-svelte';
+	import { ArrowUpRight, Heart, MessageCircle, Repeat2, CalendarDays } from 'lucide-svelte';
 	import PageMeta from '$lib/components/PageMeta.svelte';
 	import Heatmap from '$lib/components/author/Heatmap.svelte';
 	import Bars from '$lib/components/author/Bars.svelte';
@@ -8,15 +8,16 @@
 	import type { PageData } from './$types';
 
 	/**
-	 * The card.
+	 * The author profile.
 	 *
-	 * Everything arrives already computed from the server load, so there is no
-	 * client-side fetching here at all.
+	 * Built as a profile page and not as a report: banner, avatar, name, tagline,
+	 * a row of headline numbers, then their best post and their latest ones with
+	 * real cover art. The images are what stop it looking unfinished — a page of
+	 * numbers on cards reads as a spreadsheet no matter how it's styled.
 	 *
-	 * This page is a profile the author can show off, not a report: short
-	 * labels, an icon and a colour per stat, and a hero-sized name up top. No
-	 * slot is ever left empty — several metrics are conditional and simply are
-	 * not painted when there is no figure.
+	 * Everything arrives already computed from the server load; there is no
+	 * client-side fetching. Conditional metrics simply aren't painted when there
+	 * is no figure — never an "N/A", never a zero, never an empty slot.
 	 */
 	let { data }: { data: PageData } = $props();
 
@@ -31,6 +32,8 @@
 	];
 	const monthName = (iso: string) => `${MONTHS[Number(iso.slice(5, 7)) - 1]} de ${iso.slice(0, 4)}`;
 	const dateName = (iso: string) => `${Number(iso.slice(8, 10))} de ${monthName(iso)}`;
+	const shortDate = (iso: string) =>
+		`${Number(iso.slice(8, 10))} ${MONTHS[Number(iso.slice(5, 7)) - 1].slice(0, 3)} ${iso.slice(0, 4)}`;
 
 	const card = $derived(data.card);
 
@@ -63,73 +66,31 @@
 	});
 
 	/**
-	 * The headline stat row: icon, colour and figure together, so the template
-	 * doesn't repeat the same five-line block once per metric. Colour rotates
-	 * between the theme's ink/brand/signal so the row isn't a wall of black.
+	 * The headline number row. Four at most: past that they stop being headlines.
+	 * Each one is dropped rather than shown as a zero — a profile with "0
+	 * restacks" on it is worse than one that doesn't mention restacks.
 	 */
 	const stats = $derived.by(() => {
 		if (!card) return [];
-		const m = card.metrics;
-		const rows: { icon: typeof Flame; color: string; value: string; label: string; note?: string }[] = [
-			{ icon: FileText, color: 'var(--color-ink)', value: es(m.totalPosts), label: t.labelPosts }
-		];
-		if (m.longestStreak >= 5) {
-			rows.push({
-				icon: Flame,
-				color: 'var(--color-signal)',
-				value: es(m.longestStreak),
-				label: m.streakIsRecord ? t.labelStreakLive : t.labelStreak
-			});
-		}
-		if (m.aggregates.words > 0) {
-			rows.push({
-				icon: PenLine,
-				color: 'var(--color-brand)',
-				value: es(m.aggregates.words),
-				label: t.labelWords,
-				note: m.aggregates.novels ? fill('labelNovels', m.aggregates.novels) : undefined
-			});
-		}
-		if (m.aggregates.reactions > 0) {
-			rows.push({
-				icon: Heart,
-				color: 'var(--color-signal)',
-				value: es(m.aggregates.reactions),
-				label: t.labelLikes
-			});
-		}
-		if (m.aggregates.conversation > 0) {
-			rows.push({
-				icon: MessageCircle,
-				color: 'var(--color-brand)',
-				value: es(m.aggregates.conversation),
-				label: t.labelConversation
-			});
-		}
-		// Frequency: the most recent year's pace, posts divided by active months —
-		// fair even mid-year, and it's the "how often do they show up" figure the
-		// author never sees Substack surface on its own.
-		const recentYear = m.years.at(-1);
-		if (recentYear && recentYear.perMonth > 0) {
-			rows.push({
-				icon: Calendar,
-				color: 'var(--color-ink)',
-				value: recentYear.perMonth.toLocaleString('es-ES'),
-				label: t.labelFrequency
-			});
-		}
-		return rows;
+		const a = card.metrics.aggregates;
+		const pace = card.metrics.years.at(-1)?.perMonth ?? 0;
+		return [
+			{ icon: Heart, value: a.reactions, label: t.labelLikes },
+			{ icon: MessageCircle, value: a.conversation, label: t.labelConversation },
+			{ icon: Repeat2, value: a.restacks, label: t.labelRestacks },
+			{ icon: CalendarDays, value: pace, label: t.labelFrequency }
+		].filter((s) => s.value > 0);
 	});
 
-	const ceilings = $derived(
-		card
-			? [
-					{ icon: Heart, color: 'var(--color-signal)', label: t.labelMostLiked, top: card.metrics.mostLiked, value: card.metrics.mostLiked?.post.reactions },
-					{ icon: MessageCircle, color: 'var(--color-brand)', label: t.labelMostCommented, top: card.metrics.mostCommented, value: card.metrics.mostCommented?.post.comments },
-					{ icon: Trophy, color: 'var(--color-ink)', label: t.labelLongest, top: card.metrics.longestPost, value: card.metrics.longestPost?.post.words }
-				].filter((row) => row.top)
-			: []
+	/** Their single best post, by likes. The profile's centrepiece. */
+	const best = $derived(card?.metrics.mostLiked ?? null);
+
+	/** The latest posts, minus the one already shown as the best. */
+	const recent = $derived(
+		card ? card.metrics.recent.filter((p) => p.slug !== best?.post.slug).slice(0, 4) : []
 	);
+
+	const postUrl = (slug: string) => `${card?.metrics.pub.origin}/p/${slug}`;
 </script>
 
 <PageMeta
@@ -140,32 +101,58 @@
 	image={card ? `/author/${data.slug}/card.png` : undefined}
 />
 
-<section class="section">
-	{#if !card}
+{#if !card}
+	<section class="section">
 		<div class="screen-center gap-4">
 			<p class="body-text">{errorText}</p>
 			<a class="link-quiet" href="/author">{t.restart}</a>
 		</div>
-	{:else}
-		<!-- Hero: the name reads like a profile, not a report heading -->
-		<header class="flex flex-wrap items-center gap-5">
-			{#if card.metrics.pub.logoUrl}
-				<img
-					src={card.metrics.pub.logoUrl}
-					alt=""
-					class="h-20 w-20 shrink-0 rounded-full border-2 object-cover sm:h-24 sm:w-24"
-					style="border-color: var(--color-signal); box-shadow: 0 8px 24px color-mix(in srgb, var(--color-signal) 25%, transparent)"
-				/>
-			{/if}
-			<div class="flex flex-col gap-1">
-				<h1 class="author-hero">{card.metrics.pub.name}</h1>
-				<p class="body-text text-soft">
+	</section>
+{:else}
+	<article class="profile">
+		<!-- Banner tinted with the publication's own accent colour. Deliberately
+		     not their cover photo: that URL 403s (private bucket) and is square. -->
+		<div
+			class="profile-banner"
+			style={card.metrics.pub.brandColor
+				? `--tint: ${card.metrics.pub.brandColor}`
+				: '--tint: var(--color-signal)'}
+		></div>
+
+		<!--
+			The avatar sits alone on the banner and the name goes underneath at full
+			width — the X/GitHub profile shape. Putting the name beside the avatar was
+			tried and dropped: at this column width (632px measured) the avatar and the
+			outbound link left so little room that "The Honest Broker" wrapped onto two
+			lines.
+		-->
+		<header class="profile-head">
+			<div class="flex items-end justify-between gap-4">
+				{#if card.metrics.pub.logoUrl}
+					<img class="profile-avatar" src={card.metrics.pub.logoUrl} alt="" />
+				{/if}
+				<a
+					class="profile-link"
+					href={card.metrics.pub.origin}
+					target="_blank"
+					rel="noopener noreferrer"
+				>
+					{t.labelViewOnSubstack}
+					<ArrowUpRight size={15} />
+				</a>
+			</div>
+
+			<div class="mt-4 flex flex-col gap-2">
+				<h1 class="profile-name">{card.metrics.pub.name}</h1>
+				{#if card.metrics.pub.tagline}
+					<p class="profile-tagline">{card.metrics.pub.tagline}</p>
+				{/if}
+				<p class="muted">
 					{card.metrics.pub.authorName}
 					{#if card.metrics.pub.createdAt}
 						· {t.labelSince} {monthName(card.metrics.pub.createdAt.slice(0, 10))}
 					{/if}
-					<!-- Only if the publication shows it on its own homepage. If it doesn't,
-					     nothing is said: no number, no vague label, no gap. -->
+					<!-- Only when the publication shows it on its own homepage. -->
 					{#if card.metrics.pub.subscriberCount}
 						· {es(card.metrics.pub.subscriberCount)} {t.labelSubscribers}
 					{/if}
@@ -174,76 +161,136 @@
 		</header>
 
 		{#if card.source === 'feed'}
-			<p class="box-locked mt-6">{fill('noteFeed', es(card.metrics.totalPosts))}</p>
+			<p class="box-locked mt-8">{fill('noteFeed', es(card.metrics.totalPosts))}</p>
 		{/if}
 		{#if card.truncated}
-			<p class="box-locked mt-6">{fill('noteTruncated', es(card.metrics.totalPosts))}</p>
+			<p class="box-locked mt-8">{fill('noteTruncated', es(card.metrics.totalPosts))}</p>
 		{/if}
 
-		<!-- The spine: icon + colour + big number, one glance each -->
-		<div class="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3">
+		<!-- The headline numbers: one band, dividers, no boxes -->
+		<div class="profile-stats">
+			<div class="stat-cell">
+				<p class="stat-value">{es(card.metrics.totalPosts)}</p>
+				<p class="figure-note">{t.labelPosts}</p>
+			</div>
+			<div class="stat-cell">
+				<p class="stat-value" style="color: var(--color-signal)">
+					{es(card.metrics.longestStreak)}
+				</p>
+				<p class="figure-note">
+					{card.metrics.streakIsRecord ? t.labelStreakLive : t.labelStreak}
+				</p>
+			</div>
 			{#each stats as stat (stat.label)}
-				<div
-					class="box flex min-w-0 flex-col gap-3"
-					style="box-shadow: 0 10px 28px color-mix(in srgb, {stat.color} 16%, transparent), 0 1px 0 rgba(23,23,23,.04)"
-				>
-					<span class="stat-icon" style="background: color-mix(in srgb, {stat.color} 14%, transparent)">
-						<stat.icon size={20} color={stat.color} strokeWidth={2.25} />
-					</span>
-					<div class="min-w-0">
-						<p class="figure text-2xl sm:text-3xl lg:text-4xl" style="color: {stat.color}">
-							{stat.value}
-						</p>
-						<p class="figure-note">{stat.label}</p>
-					</div>
-					{#if stat.note}<p class="muted">{stat.note}</p>{/if}
+				<div class="stat-cell">
+					<p class="stat-value">{es(stat.value)}</p>
+					<p class="figure-note flex items-center gap-1.5">
+						<stat.icon size={13} />
+						{stat.label}
+					</p>
 				</div>
 			{/each}
 		</div>
 
-		{#if card.lines.streak}<p class="body-text mt-6">{card.lines.streak}</p>{/if}
-
-		<!-- The ceilings: their three best posts, one glance each -->
-		{#if ceilings.length}
-			<div class="mt-10 grid gap-4 sm:grid-cols-3">
-				{#each ceilings as row (row.label)}
-					<div class="box flex flex-col gap-2">
-						<span class="flex items-center gap-2 figure-note">
-							<row.icon size={16} color={row.color} strokeWidth={2.25} />
-							{row.label}
-						</span>
-						<p class="body-text line-clamp-2">«{row.top!.post.title}»</p>
-						<p class="muted">
-							{es(row.value ?? 0) +
-								(row.top!.showDate ? ` · ${dateName(row.top!.post.date.slice(0, 10))}` : '')}
-						</p>
-					</div>
-				{/each}
+		{#if card.metrics.aggregates.words > 0}
+			<!-- The one figure nobody ever sees summed, given its own band -->
+			<div class="profile-words">
+				<p class="stat-value">{es(card.metrics.aggregates.words)}</p>
+				<p class="figure-note">
+					{t.labelWords}{#if card.metrics.aggregates.novels}
+						· {fill('labelNovels', card.metrics.aggregates.novels)}{/if}
+				</p>
 			</div>
-			{#if card.lines.likes}<p class="body-text mt-4">{card.lines.likes}</p>{/if}
 		{/if}
 
-		<!-- The heatmap -->
+		{#if card.lines.streak}<p class="body-text mt-8">{card.lines.streak}</p>{/if}
+
+		<!-- Their best post: the centrepiece, with its cover art -->
+		{#if best}
+			<section class="mt-14">
+				<h2 class="eyebrow mb-4">{t.labelBestPost}</h2>
+				<a class="post-hero" href={postUrl(best.post.slug)} target="_blank" rel="noopener noreferrer">
+					{#if best.post.coverImage}
+						<img src={best.post.coverImage} alt="" />
+					{/if}
+					<div class="flex flex-col gap-3">
+						<p class="post-hero-title">{best.post.title}</p>
+						{#if best.post.subtitle}
+							<p class="body-text line-clamp-2 text-soft">{best.post.subtitle}</p>
+						{/if}
+						<p class="muted flex flex-wrap items-center gap-4">
+							<span class="flex items-center gap-1.5">
+								<Heart size={14} style="color: var(--color-signal)" />
+								{es(best.post.reactions)}
+							</span>
+							{#if best.post.comments > 0}
+								<span class="flex items-center gap-1.5">
+									<MessageCircle size={14} />
+									{es(best.post.comments)}
+								</span>
+							{/if}
+							{#if best.post.restacks > 0}
+								<span class="flex items-center gap-1.5">
+									<Repeat2 size={14} />
+									{es(best.post.restacks)}
+								</span>
+							{/if}
+							{#if best.showDate}
+								<span>{dateName(best.post.date.slice(0, 10))}</span>
+							{/if}
+						</p>
+					</div>
+				</a>
+			</section>
+		{/if}
+
+		<!-- Latest posts, with art -->
+		{#if recent.length}
+			<section class="mt-14">
+				<h2 class="eyebrow mb-4">{t.labelRecent}</h2>
+				<div class="post-grid">
+					{#each recent as post (post.slug)}
+						<a class="post-card" href={postUrl(post.slug)} target="_blank" rel="noopener noreferrer">
+							<div class="post-thumb">
+								{#if post.coverImage}
+									<img src={post.coverImage} alt="" />
+								{/if}
+							</div>
+							<p class="post-card-title">{post.title}</p>
+							<p class="muted flex items-center gap-3">
+								<span class="flex items-center gap-1">
+									<Heart size={12} />
+									{es(post.reactions)}
+								</span>
+								<span>{shortDate(post.date.slice(0, 10))}</span>
+							</p>
+						</a>
+					{/each}
+				</div>
+			</section>
+		{/if}
+
+		<!-- Constancy -->
 		{#if card.metrics.heatmap.length}
-			<div class="mt-12">
-				<p class="figure-note mb-3">{t.labelHeatmap}</p>
+			<section class="mt-14">
+				<h2 class="eyebrow mb-4">{t.labelHeatmap}</h2>
 				<Heatmap rows={card.metrics.heatmap} />
-			</div>
+			</section>
 		{/if}
 
 		<!-- Their words -->
 		{#if card.metrics.words.length}
-			<div class="mt-12">
-				<p class="figure-note mb-3">{t.labelWordsTop}</p>
+			<section class="mt-14">
+				<h2 class="eyebrow mb-4">{t.labelWordsTop}</h2>
 				<Bars items={card.metrics.words.map((w) => ({ label: w.word, value: w.posts }))} />
-				{#if card.lines.words}<p class="body-text mt-3">{card.lines.words}</p>{/if}
-			</div>
+				{#if card.lines.words}<p class="body-text mt-4">{card.lines.words}</p>{/if}
+			</section>
 		{/if}
 
 		<!-- Posts per year. The year in progress is labelled or the short bar lies. -->
 		{#if card.metrics.years.length > 1}
-			<div class="mt-12">
-				<p class="figure-note mb-3">{t.labelYears}</p>
+			<section class="mt-14">
+				<h2 class="eyebrow mb-4">{t.labelYears}</h2>
 				<Bars
 					items={card.metrics.years.map((y) => ({
 						label: String(y.year),
@@ -251,37 +298,29 @@
 						note: y.inProgress ? `· ${t.labelInProgress}` : ''
 					}))}
 				/>
-				{#if card.lines.cadence}<p class="body-text mt-3">{card.lines.cadence}</p>{/if}
-			</div>
+				{#if card.lines.cadence}<p class="body-text mt-4">{card.lines.cadence}</p>{/if}
+			</section>
 		{/if}
 
-		<!-- The conditional ones: no figure, no slot -->
-		<div class="mt-10 flex flex-wrap gap-4">
+		<!-- Habits, as chips: short facts that don't deserve a heading each -->
+		<div class="mt-12 flex flex-wrap gap-3">
 			{#if card.metrics.bestMonth}
-				<span class="chip bg-line text-ink normal-case">
-					{monthName(`${card.metrics.bestMonth.month}-01`)}: {es(card.metrics.bestMonth.posts)} posts
+				<span class="chip-soft">
+					{monthName(`${card.metrics.bestMonth.month}-01`)} · {es(card.metrics.bestMonth.posts)} posts
 				</span>
 			{/if}
 			{#if card.metrics.day}
-				<span class="chip bg-line text-ink normal-case">
-					<Calendar size={13} class="mr-1 inline-block" />
-					{DAYS[card.metrics.day.weekday]}
-				</span>
+				<span class="chip-soft">{DAYS[card.metrics.day.weekday]}</span>
 			{/if}
 			{#if card.metrics.split}
-				<span class="chip bg-line text-ink normal-case">
-					{es(card.metrics.split.free)} {t.labelFree} / {es(card.metrics.split.paid)} {t.labelPaid}
+				<span class="chip-soft">
+					{es(card.metrics.split.free)} {t.labelFree} · {es(card.metrics.split.paid)} {t.labelPaid}
 				</span>
 			{/if}
 		</div>
 
 		<div class="mt-6 flex flex-col gap-2">
-			{#if card.lines.hour}
-				<p class="body-text flex items-center gap-2">
-					<Clock size={16} class="text-muted" />
-					{card.lines.hour}
-				</p>
-			{/if}
+			{#if card.lines.hour}<p class="body-text">{card.lines.hour}</p>{/if}
 			{#if signature}<p class="body-text">{signature}</p>{/if}
 			<p class="muted">{fill('labelHeadlineLength', card.metrics.headlines.averageLength)}</p>
 		</div>
@@ -303,5 +342,5 @@
 			{/if}
 			<a class="link-quiet" href="/">{t.signature}</a>
 		</footer>
-	{/if}
-</section>
+	</article>
+{/if}

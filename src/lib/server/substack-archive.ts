@@ -1,12 +1,10 @@
 /**
  * A post as `/api/v1/archive` returns it, already reduced to what's used.
  *
- * The nine fields are MEASURED as present in 868/868, 128/128 and 167/167
+ * The counted fields are MEASURED as present in 868/868, 128/128 and 167/167
  * posts of three real publications, so they are not optional. The ones that
- * can be missing (`subtitle`, `sectionName`) carry their empty value.
- *
- * DO NOT add `restacks`: the field exists in the response and arrives as an
- * empty array in 868 of 868 posts. It was checked; it's dead.
+ * can be missing (`subtitle`, `sectionName`, `coverImage`) carry their empty
+ * value.
  */
 export type ArchivePost = {
 	title: string;
@@ -23,6 +21,22 @@ export type ArchivePost = {
 	comments: number;
 	/** Replies inside threads. Adds up separately from `comments`. */
 	childComments: number;
+	/**
+	 * How many times the post was restacked.
+	 *
+	 * **This is a NUMBER, not an array.** An earlier pass read it with
+	 * `Array.isArray(p.restacks) ? p.restacks.length : 0`, got 0 on every post,
+	 * and concluded the field was dead. It isn't: measured 33 on a single Honest
+	 * Broker post. The array-shaped siblings (`restacked_post_id`,
+	 * `restacked_pub_name`) are what describe a post that IS a restack of someone
+	 * else's — different thing entirely.
+	 */
+	restacks: number;
+	/**
+	 * The post's cover image URL, empty when it has none. Measured present in
+	 * 1062 of 1330 posts, so a card built on it must tolerate the gap.
+	 */
+	coverImage: string;
 	sectionName: string;
 };
 
@@ -93,6 +107,20 @@ export type PubInfo = {
 	 */
 	subscriberCount: number | null;
 	logoUrl: string | null;
+	/** The publication's own one-line pitch. Substack calls it `hero_text`. */
+	tagline: string;
+	/**
+	 * The publication's accent colour, used to tint the profile banner.
+	 *
+	 * This is here INSTEAD of `cover_photo_url`, which was tried and dropped:
+	 * measured, that URL **403s** — it lives on Substack's private bucketeer
+	 * bucket and cannot be linked from outside — and it is a 512x512 square, not
+	 * a banner shape. A tinted wash never breaks and still makes each profile
+	 * look like its own publication.
+	 *
+	 * `#FF6719` is Substack's factory orange, so it means "never chose one".
+	 */
+	brandColor: string | null;
 	paymentsEnabled: boolean;
 };
 
@@ -162,6 +190,8 @@ function readArchivePost(raw: unknown): ArchivePost | null {
 		reactions: n(p.reaction_count),
 		comments: n(p.comment_count),
 		childComments: n(p.child_comment_count),
+		restacks: n(p.restacks),
+		coverImage: text(p.cover_image),
 		sectionName: text(p.section_name)
 	};
 }
@@ -220,6 +250,8 @@ export async function readPubInfo(slug: string): Promise<PubInfo> {
 			// Only if it's rendered on the homepage. See `shownSubscriberCount`.
 			subscriberCount: shownSubscriberCount(html, pub.freeSubscriberCount),
 			logoUrl: text(pub.logo_url) || null,
+			tagline: decode(text(pub.hero_text)).trim(),
+			brandColor: text(pub.theme_var_background_pop) || null,
 			paymentsEnabled: text(pub.payments_state) === 'enabled'
 		};
 	}
@@ -326,6 +358,11 @@ export async function readFeed(origin: string): Promise<ArchivePost[]> {
 			reactions: 0,
 			comments: 0,
 			childComments: 0,
+			restacks: 0,
+			// The feed does carry an <enclosure> image, but it is the publication's
+			// logo on every item, not the post's own cover. Using it would put the
+			// same picture on every card and look like a bug.
+			coverImage: '',
 			sectionName: ''
 		});
 	}
