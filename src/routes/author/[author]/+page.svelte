@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { Flame, FileText, PenLine, Heart, MessageCircle, Calendar, Trophy, Clock } from 'lucide-svelte';
 	import PageMeta from '$lib/components/PageMeta.svelte';
 	import Heatmap from '$lib/components/author/Heatmap.svelte';
 	import Bars from '$lib/components/author/Bars.svelte';
@@ -12,10 +13,10 @@
 	 * Everything arrives already computed from the server load, so there is no
 	 * client-side fetching here at all.
 	 *
-	 * No slot is ever left empty: several metrics are conditional and simply are
-	 * not painted when there is no figure. Never an "N/A", never a zero, never an
-	 * empty box. The honest caveats sit next to the figures they qualify rather
-	 * than hidden in a footer — they are part of the figure.
+	 * This page is a profile the author can show off, not a report: short
+	 * labels, an icon and a colour per stat, and a hero-sized name up top. No
+	 * slot is ever left empty — several metrics are conditional and simply are
+	 * not painted when there is no figure.
 	 */
 	let { data }: { data: PageData } = $props();
 
@@ -61,12 +62,71 @@
 		return fill(key, Math.round(sig.share * 10));
 	});
 
+	/**
+	 * The headline stat row: icon, colour and figure together, so the template
+	 * doesn't repeat the same five-line block once per metric. Colour rotates
+	 * between the theme's ink/brand/signal so the row isn't a wall of black.
+	 */
+	const stats = $derived.by(() => {
+		if (!card) return [];
+		const m = card.metrics;
+		const rows: { icon: typeof Flame; color: string; value: string; label: string; note?: string }[] = [
+			{ icon: FileText, color: 'var(--color-ink)', value: es(m.totalPosts), label: t.labelPosts }
+		];
+		if (m.longestStreak >= 5) {
+			rows.push({
+				icon: Flame,
+				color: 'var(--color-signal)',
+				value: es(m.longestStreak),
+				label: m.streakIsRecord ? t.labelStreakLive : t.labelStreak
+			});
+		}
+		if (m.aggregates.words > 0) {
+			rows.push({
+				icon: PenLine,
+				color: 'var(--color-brand)',
+				value: es(m.aggregates.words),
+				label: t.labelWords,
+				note: m.aggregates.novels ? fill('labelNovels', m.aggregates.novels) : undefined
+			});
+		}
+		if (m.aggregates.reactions > 0) {
+			rows.push({
+				icon: Heart,
+				color: 'var(--color-signal)',
+				value: es(m.aggregates.reactions),
+				label: t.labelLikes
+			});
+		}
+		if (m.aggregates.conversation > 0) {
+			rows.push({
+				icon: MessageCircle,
+				color: 'var(--color-brand)',
+				value: es(m.aggregates.conversation),
+				label: t.labelConversation
+			});
+		}
+		// Frequency: the most recent year's pace, posts divided by active months —
+		// fair even mid-year, and it's the "how often do they show up" figure the
+		// author never sees Substack surface on its own.
+		const recentYear = m.years.at(-1);
+		if (recentYear && recentYear.perMonth > 0) {
+			rows.push({
+				icon: Calendar,
+				color: 'var(--color-ink)',
+				value: recentYear.perMonth.toLocaleString('es-ES'),
+				label: t.labelFrequency
+			});
+		}
+		return rows;
+	});
+
 	const ceilings = $derived(
 		card
 			? [
-					{ label: t.labelMostLiked, top: card.metrics.mostLiked, value: card.metrics.mostLiked?.post.reactions },
-					{ label: t.labelMostCommented, top: card.metrics.mostCommented, value: card.metrics.mostCommented?.post.comments },
-					{ label: t.labelLongest, top: card.metrics.longestPost, value: card.metrics.longestPost?.post.words }
+					{ icon: Heart, color: 'var(--color-signal)', label: t.labelMostLiked, top: card.metrics.mostLiked, value: card.metrics.mostLiked?.post.reactions },
+					{ icon: MessageCircle, color: 'var(--color-brand)', label: t.labelMostCommented, top: card.metrics.mostCommented, value: card.metrics.mostCommented?.post.comments },
+					{ icon: Trophy, color: 'var(--color-ink)', label: t.labelLongest, top: card.metrics.longestPost, value: card.metrics.longestPost?.post.words }
 				].filter((row) => row.top)
 			: []
 	);
@@ -87,19 +147,30 @@
 			<a class="link-quiet" href="/author">{t.restart}</a>
 		</div>
 	{:else}
-		<header class="flex flex-col gap-2">
-			<h1 class="box-title">{card.metrics.pub.name}</h1>
-			<p class="muted">
-				{card.metrics.pub.authorName}
-				{#if card.metrics.pub.createdAt}
-					· {t.labelSince} {monthName(card.metrics.pub.createdAt.slice(0, 10))}
-				{/if}
-				<!-- Only if the publication shows it on its own homepage. If it doesn't,
-				     nothing is said: no number, no vague label, no gap. -->
-				{#if card.metrics.pub.subscriberCount}
-					· {es(card.metrics.pub.subscriberCount)} {t.labelSubscribers}
-				{/if}
-			</p>
+		<!-- Hero: the name reads like a profile, not a report heading -->
+		<header class="flex flex-wrap items-center gap-5">
+			{#if card.metrics.pub.logoUrl}
+				<img
+					src={card.metrics.pub.logoUrl}
+					alt=""
+					class="h-20 w-20 shrink-0 rounded-full border-2 object-cover sm:h-24 sm:w-24"
+					style="border-color: var(--color-signal); box-shadow: 0 8px 24px color-mix(in srgb, var(--color-signal) 25%, transparent)"
+				/>
+			{/if}
+			<div class="flex flex-col gap-1">
+				<h1 class="author-hero">{card.metrics.pub.name}</h1>
+				<p class="body-text text-soft">
+					{card.metrics.pub.authorName}
+					{#if card.metrics.pub.createdAt}
+						· {t.labelSince} {monthName(card.metrics.pub.createdAt.slice(0, 10))}
+					{/if}
+					<!-- Only if the publication shows it on its own homepage. If it doesn't,
+					     nothing is said: no number, no vague label, no gap. -->
+					{#if card.metrics.pub.subscriberCount}
+						· {es(card.metrics.pub.subscriberCount)} {t.labelSubscribers}
+					{/if}
+				</p>
+			</div>
 		</header>
 
 		{#if card.source === 'feed'}
@@ -109,56 +180,47 @@
 			<p class="box-locked mt-6">{fill('noteTruncated', es(card.metrics.totalPosts))}</p>
 		{/if}
 
-		<!-- The spine: what always exists -->
-		<div class="mt-10 grid gap-10 sm:grid-cols-2">
-			<div>
-				<p class="figure">{es(card.metrics.totalPosts)}</p>
-				<p class="figure-note">{t.labelPosts}</p>
-			</div>
-			<div>
-				<p class="figure">{es(card.metrics.longestStreak)}</p>
-				<p class="figure-note">
-					{card.metrics.streakIsRecord ? t.labelStreakLive : t.labelStreak}
-				</p>
-				{#if card.lines.streak}<p class="body-text mt-2">{card.lines.streak}</p>{/if}
-			</div>
-			{#if card.metrics.aggregates.words > 0}
-				<div>
-					<p class="figure">{es(card.metrics.aggregates.words)}</p>
-					<p class="figure-note">{t.labelWords}</p>
-					{#if card.metrics.aggregates.novels}
-						<p class="body-text mt-2">{fill('labelNovels', card.metrics.aggregates.novels)}</p>
-					{/if}
+		<!-- The spine: icon + colour + big number, one glance each -->
+		<div class="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3">
+			{#each stats as stat (stat.label)}
+				<div
+					class="box flex min-w-0 flex-col gap-3"
+					style="box-shadow: 0 10px 28px color-mix(in srgb, {stat.color} 16%, transparent), 0 1px 0 rgba(23,23,23,.04)"
+				>
+					<span class="stat-icon" style="background: color-mix(in srgb, {stat.color} 14%, transparent)">
+						<stat.icon size={20} color={stat.color} strokeWidth={2.25} />
+					</span>
+					<div class="min-w-0">
+						<p class="figure text-2xl sm:text-3xl lg:text-4xl" style="color: {stat.color}">
+							{stat.value}
+						</p>
+						<p class="figure-note">{stat.label}</p>
+					</div>
+					{#if stat.note}<p class="muted">{stat.note}</p>{/if}
 				</div>
-			{/if}
-			{#if card.metrics.aggregates.reactions > 0}
-				<div>
-					<p class="figure">{es(card.metrics.aggregates.reactions)}</p>
-					<p class="figure-note">{t.labelLikes}</p>
-				</div>
-			{/if}
-			{#if card.metrics.aggregates.conversation > 0}
-				<div>
-					<p class="figure">{es(card.metrics.aggregates.conversation)}</p>
-					<p class="figure-note">{t.labelConversation}</p>
-				</div>
-			{/if}
+			{/each}
 		</div>
 
-		<!-- The ceilings -->
+		{#if card.lines.streak}<p class="body-text mt-6">{card.lines.streak}</p>{/if}
+
+		<!-- The ceilings: their three best posts, one glance each -->
 		{#if ceilings.length}
-			<div class="mt-12 flex flex-col gap-6">
+			<div class="mt-10 grid gap-4 sm:grid-cols-3">
 				{#each ceilings as row (row.label)}
-					<div class="box">
-						<p class="figure-note">{row.label}</p>
-						<p class="body-text">«{row.top!.post.title}»</p>
+					<div class="box flex flex-col gap-2">
+						<span class="flex items-center gap-2 figure-note">
+							<row.icon size={16} color={row.color} strokeWidth={2.25} />
+							{row.label}
+						</span>
+						<p class="body-text line-clamp-2">«{row.top!.post.title}»</p>
 						<p class="muted">
-							{es(row.value ?? 0)}{#if row.top!.showDate} · {dateName(row.top!.post.date.slice(0, 10))}{/if}
+							{es(row.value ?? 0) +
+								(row.top!.showDate ? ` · ${dateName(row.top!.post.date.slice(0, 10))}` : '')}
 						</p>
 					</div>
 				{/each}
-				{#if card.lines.likes}<p class="body-text">{card.lines.likes}</p>{/if}
 			</div>
+			{#if card.lines.likes}<p class="body-text mt-4">{card.lines.likes}</p>{/if}
 		{/if}
 
 		<!-- The heatmap -->
@@ -194,32 +256,38 @@
 		{/if}
 
 		<!-- The conditional ones: no figure, no slot -->
-		<div class="mt-12 flex flex-col gap-4">
+		<div class="mt-10 flex flex-wrap gap-4">
 			{#if card.metrics.bestMonth}
-				<p class="body-text">
-					{t.labelBestMonth}: {monthName(`${card.metrics.bestMonth.month}-01`)},
-					{es(card.metrics.bestMonth.posts)} posts.
-				</p>
+				<span class="chip bg-line text-ink normal-case">
+					{monthName(`${card.metrics.bestMonth.month}-01`)}: {es(card.metrics.bestMonth.posts)} posts
+				</span>
 			{/if}
 			{#if card.metrics.day}
-				<p class="body-text">
-					{t.labelDay}: {DAYS[card.metrics.day.weekday]}, {Math.round(card.metrics.day.share * 100)}%
-					de sus posts.
-				</p>
+				<span class="chip bg-line text-ink normal-case">
+					<Calendar size={13} class="mr-1 inline-block" />
+					{DAYS[card.metrics.day.weekday]}
+				</span>
 			{/if}
-			{#if card.lines.hour}<p class="body-text">{card.lines.hour}</p>{/if}
-			{#if signature}<p class="body-text">{signature}</p>{/if}
 			{#if card.metrics.split}
-				<p class="body-text">
-					{t.labelSplit}: {es(card.metrics.split.free)} {t.labelFree} y
-					{es(card.metrics.split.paid)} {t.labelPaid}.
+				<span class="chip bg-line text-ink normal-case">
+					{es(card.metrics.split.free)} {t.labelFree} / {es(card.metrics.split.paid)} {t.labelPaid}
+				</span>
+			{/if}
+		</div>
+
+		<div class="mt-6 flex flex-col gap-2">
+			{#if card.lines.hour}
+				<p class="body-text flex items-center gap-2">
+					<Clock size={16} class="text-muted" />
+					{card.lines.hour}
 				</p>
 			{/if}
+			{#if signature}<p class="body-text">{signature}</p>{/if}
 			<p class="muted">{fill('labelHeadlineLength', card.metrics.headlines.averageLength)}</p>
 		</div>
 
 		<!-- Caveats sit with the figures they qualify, not hidden in a footer -->
-		<div class="mt-10 flex flex-col gap-2">
+		<div class="mt-8 flex flex-col gap-2">
 			{#if card.metrics.day || card.metrics.hour}<p class="muted">{t.noteUtc}</p>{/if}
 			{#if card.importedCount > 0}
 				<p class="muted">{fill('noteImported', es(card.importedCount))}</p>
@@ -229,8 +297,8 @@
 		<footer class="mt-12 flex flex-wrap items-center gap-6">
 			<!-- No download in the degraded state: half a card is not a gift. -->
 			{#if card.source === 'archive'}
-				<a class="box-link" href="/author/{data.slug}/card.png" download="{data.slug}.png">
-					<span class="box-title">{t.download}</span>
+				<a class="btn btn-primary" href="/author/{data.slug}/card.png" download="{data.slug}.png">
+					{t.download}
 				</a>
 			{/if}
 			<a class="link-quiet" href="/">{t.signature}</a>

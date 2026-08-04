@@ -188,6 +188,23 @@
 	}
 
 	/*
+	 * The /author hero name. Same deliberate exception as `.figure`: this page
+	 * is a profile people show off, so the name has to read like one — bigger
+	 * than the rest of the site's headings, fluid so a long publication name
+	 * never breaks the layout.
+	 */
+	.author-hero {
+		font-size: clamp(2.5rem, 7vw, 4.5rem);
+		@apply leading-none font-bold tracking-tight text-ink;
+	}
+
+	/* A small coloured circle behind a stat's icon. The colour is set inline per
+	   stat, same idea as `.chip`: this only supplies the shape. */
+	.stat-icon {
+		@apply flex h-11 w-11 shrink-0 items-center justify-center rounded-full;
+	}
+
+	/*
 	 * The week heatmap: one row per year, 53 cells.
 	 *
 	 * The cell knows nothing about what it measures, same idea as `.meter`. The

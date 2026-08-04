@@ -23,28 +23,31 @@ download: Descargar la tarjeta
 restart: Probar con otra
 
 # --- Etiquetas de las cifras ---
-labelPosts: posts publicados
-labelStreak: semanas seguidas
-labelStreakLive: semanas seguidas, y sigue
-labelWords: palabras escritas
-labelNovels: ≈ {n} novelas, a 80.000 palabras cada una
-labelLikes: likes en todo su archivo
-labelConversation: comentarios y respuestas
-labelMostLiked: Su post más gustado
-labelMostCommented: El que más conversación levantó
-labelLongest: El más largo que ha escrito
-labelBestMonth: Su mes más prolífico
-labelWordsTop: Las palabras de sus titulares
-labelYears: Posts por año
-labelHeatmap: Cada semana que ha publicado
+# Cortas a propósito: van al lado de un icono y un número grande, no de una
+# frase. El contexto lo da el icono, no el texto.
+labelPosts: posts
+labelStreak: semanas de racha
+labelStreakLive: semanas, y sigue activa
+labelWords: palabras
+labelNovels: ≈ {n} novelas
+labelLikes: likes
+labelConversation: comentarios
+labelFrequency: al mes
+labelMostLiked: Más gustado
+labelMostCommented: Más comentado
+labelLongest: Más largo
+labelBestMonth: Su mejor mes
+labelWordsTop: Sus palabras
+labelYears: Por año
+labelHeatmap: Constancia
 labelDay: Su día
-labelSplit: Gratis y de pago
+labelSplit: Gratis / pago
 labelSubscribers: suscriptores
-labelHeadlineLength: Sus titulares miden {n} caracteres de media.
+labelHeadlineLength: Titulares de {n} caracteres de media.
 labelSince: desde
 labelInProgress: en curso
 labelFree: gratis
-labelPaid: de pago
+labelPaid: pago
 
 # --- Tics del titular ---
 signatureQuestion: {n} de cada 10 de sus titulares son una pregunta.
