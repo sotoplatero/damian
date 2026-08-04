@@ -10,9 +10,29 @@ import { articleMessage, extractPrompt, writePrompt, type ArticleAnalysis } from
 import { ensureSourceLinks, pieceContainsQuote, pieceLinksToSource, pieceUsesOnlySourceUrl, readExactPieces, readOrder, toMarkdown } from '$lib/tools/repurpose/format';
 import { FREE_IDS, GATED_IDS } from '$lib/tools/repurpose/formats';
 import { buildManualPrompt } from '$lib/tools/repurpose/manual-prompt';
+import { cacheAudit, readAudit } from '$lib/server/audit-cache';
+import type { Piece } from '$lib/tools/repurpose/format';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MODEL = 'gpt-5.4-mini';
+
+type PreviewPayload = {
+	article: ArticleAnalysis;
+	pieces: Piece[];
+	confidence: 'alta' | 'baja';
+	site: string;
+	url: string;
+};
+type DeliveryPayload = { pieces: Piece[]; order: string[]; quote: string };
+
+function cacheKey(kind: 'preview' | 'delivery', input: unknown): string | null {
+	const source = readSourceUrl(input);
+	if (!source) return null;
+	const url = new URL(source);
+	url.hash = '';
+	url.hostname = url.hostname.toLowerCase();
+	return `repurpose:${kind}:${url.toString()}`;
+}
 
 async function ask(system: string, user: string, maxTokens: number): Promise<Record<string, unknown>> {
 	const data = await askJson({ model: MODEL, instructions: system, input: user, maxOutputTokens: maxTokens, tag: 'tool/repurpose' });
@@ -49,6 +69,9 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 
 	try {
 		if (step === 'extract') {
+			const requestedKey = cacheKey('preview', body.url);
+			const cached = requestedKey ? readAudit<PreviewPayload>(requestedKey) : null;
+			if (cached) return json(cached);
 			let page;
 			try { page = await scrape(typeof body.url === 'string' ? body.url : ''); }
 			catch (error) {
@@ -65,7 +88,11 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 			if (candidate && !article.frase) console.warn('[tool/repurpose] cita descartada:', candidate);
 			if (!pieces.every((piece) => pieceUsesOnlySourceUrl(piece, page.finalUrl))) return json({ error: 'server_error' }, { status: 502 });
 			if (!pieces.some((piece) => pieceLinksToSource(piece, page.finalUrl))) return json({ error: 'server_error' }, { status: 502 });
-			return json({ article, pieces, confidence: raw.confidence === 'baja' ? 'baja' : 'alta', site: new URL(page.finalUrl).hostname.replace(/^www\./, ''), url: page.finalUrl });
+			const payload: PreviewPayload = { article, pieces, confidence: raw.confidence === 'baja' ? 'baja' : 'alta', site: new URL(page.finalUrl).hostname.replace(/^www\./, ''), url: page.finalUrl };
+			if (requestedKey) cacheAudit(requestedKey, payload);
+			const finalKey = cacheKey('preview', page.finalUrl);
+			if (finalKey && finalKey !== requestedKey) cacheAudit(finalKey, payload);
+			return json(payload);
 		}
 
 		if (step === 'unlock') {
@@ -79,9 +106,12 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 			const free = readExactPieces({ pieces: body.free }, FREE_IDS);
 			if (!sourceUrl || !free || !free.every((piece) => pieceUsesOnlySourceUrl(piece, sourceUrl))) return json({ error: 'incomplete_article' }, { status: 400 });
 			try { await subscribe(email); } catch (error) { console.error('[tool/repurpose] subscribe failed:', error); return json({ error: 'server_error' }, { status: 500 }); }
+			const deliveryKey = cacheKey('delivery', sourceUrl);
+			const cached = deliveryKey ? readAudit<DeliveryPayload>(deliveryKey) : null;
 			let raw: Record<string, unknown> | null = null;
-			let pieces = null;
-			for (let attempt = 1; attempt <= 2; attempt += 1) {
+			let pieces: Piece[] | null = cached?.quote === article.frase ? cached.pieces : null;
+			let order = cached?.quote === article.frase ? cached.order : [];
+			for (let attempt = 1; !pieces && attempt <= 2; attempt += 1) {
 				const correction = attempt === 2
 					? '\n\nCORRECCIÓN OBLIGATORIA: devuelve exactamente los seis ids pedidos, todos por debajo de 700 caracteres. "puerta-articulo" y al menos otra nota deben contener la URL final exacta.'
 					: '';
@@ -105,11 +135,12 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 				}
 				break;
 			}
-			if (!raw || !pieces) return json({ error: 'server_error' }, { status: 502 });
+			if (!pieces) return json({ error: 'server_error' }, { status: 502 });
 			const quoteNote = pieces.find((piece) => piece.id === 'cita-comentada');
 			if (article.frase && (!quoteNote || !pieceContainsQuote(quoteNote, article.frase))) return json({ error: 'server_error' }, { status: 502 });
-			const order = readOrder(raw);
+			if (raw) order = readOrder(raw);
 			if (!order.length) console.warn('[tool/repurpose] el modelo no devolvió el orden');
+			if (deliveryKey && !cached) cacheAudit<DeliveryPayload>(deliveryKey, { pieces, order, quote: article.frase });
 			try { await sendToolPiecesEmail(email, toMarkdown([...free, ...pieces], order), buildManualPrompt()); }
 			catch (error) { console.error('[tool/repurpose] delivery failed:', error); return json({ error: 'send_failed' }, { status: 502 }); }
 			return json({ ok: true });

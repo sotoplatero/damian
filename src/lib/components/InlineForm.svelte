@@ -61,6 +61,7 @@
 		disabled={busy || (requireValue && !value.trim())}
 		class="btn btn-primary btn-lg shrink-0"
 	>
-		{busy ? busyLabel : label}
+		{#if busy}<span class="loading loading-spinner loading-sm" aria-hidden="true"></span>{/if}
+		<span>{busy ? busyLabel : label}</span>
 	</button>
 </form>

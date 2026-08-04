@@ -1,6 +1,6 @@
 ---
 urlPlaceholder: https://tublog.com/tu-articulo
-urlButton: Distribuir mi artículo
+urlButton: Enviar
 urlWorking: Leyendo tu artículo...
 urlHint: El enlace de un artículo tuyo ya publicado.
 readLine: He leído {site}.
@@ -14,7 +14,7 @@ exampleLabel: Un ejemplo de esta nota (otro tema):
 gateTitle: Las otras seis van por correo
 gateBody: Dime a dónde te las mando. Te llegan las nueve y un archivo con el prompt para repetirlo por tu cuenta.
 gatePlaceholder: tu@email.com
-gateButton: Mándamelas
+gateButton: Enviar
 gateUnlocking: Escribiendo y enviando...
 sentTitle: Van para tu correo
 sentBody: Las nueve notas van en el correo y el prompt manual, adjunto. Si en un par de minutos no lo ves, mira en spam.
@@ -32,6 +32,6 @@ errorGeneric: Algo ha fallado por mi parte. Inténtalo otra vez.
 errorOffline: No se pudo conectar. Revisa tu conexión.
 ---
 
-# Distribuye tu artículo.
+# Distribuye tu **artículo**.
 
 **Pega el enlace.** Lo convierto en nueve notas breves, con distintas ideas, ángulos y extensiones, para seguir llevándole lectores.

@@ -80,7 +80,7 @@ toolsIntro: Las que uso yo para trabajar. Me las hago para facilitarme la vida y
 # ─────────────────────────────────────────────────────────────
 ---
 
-# La herramienta que necesitas no existe.
+# La herramienta que necesitas **no existe.**
 
 Cada semana construyo una para mi trabajo y te cuento cómo crear tu propia caja de herramientas en internet.
 

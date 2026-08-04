@@ -1,6 +1,6 @@
 ---
 urlPlaceholder: tunewsletter.substack.com
-urlButton: Revisar mi Acerca de
+urlButton: Enviar
 urlScanning: Leyendo tu página...
 readLine: He leído el Acerca de de {site}.
 labelTopic: De qué parece que va
@@ -13,7 +13,7 @@ labelPromise: Una promesa mejor
 gateTitle: La auditoría completa y el Acerca de reescrito
 gateBody: Te mando los otros cuatro hallazgos y una versión entera lista para editar. Sin inventarme cifras, experiencia ni testimonios.
 gatePlaceholder: tu@email.com
-gateButton: Mándamelo
+gateButton: Enviar
 gateUnlocking: Preparando el correo...
 sentTitle: Va para tu correo
 sentBody: El diagnóstico y la versión completa ya están enviados. Si no aparecen en unos minutos, mira en spam.
@@ -27,6 +27,6 @@ errorGeneric: Algo ha fallado por mi parte. Inténtalo otra vez.
 errorOffline: No se pudo conectar. Revisa tu conexión.
 ---
 
-# Reescribe el “Acerca de” de tu Substack.
+# Reescribe el **“Acerca de”** de tu Substack.
 
 **Pega la dirección de tu publicación.** Te digo si se entiende qué escribes, para quién y por qué merece un sitio en su correo. Después te propongo una versión mejor.

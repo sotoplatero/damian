@@ -37,9 +37,10 @@ export type Tool = {
 
 export const tools: Tool[] = [
 	{
-		name: 'El Wrapped de tu Substack',
-		href: '/author',
-		blurb: 'Pega la dirección de un newsletter. Sale la tarjeta de toda su historia.'
+		name: 'Distribuye tu artículo',
+		href: '/tool/repurpose',
+		blurb: 'Convierte un artículo en nueve notas breves para seguir llevándole lectores.',
+		capturesEmail: true
 	},
 	{
 		name: 'Reescribe el “Acerca de” de tu Substack',
@@ -48,21 +49,9 @@ export const tools: Tool[] = [
 		capturesEmail: true
 	},
 	{
-		name: 'Reescribe tu oferta con 7 fórmulas de venta',
-		href: '/tool/7-frameworks',
-		blurb: 'Pega tu web. Te doy siete versiones listas para usar.',
-		capturesEmail: true
-	},
-	{
 		name: 'Saca 10 posts distintos de una sola idea',
 		href: '/tool/10-post-types',
 		blurb: 'Escribe el tema. Te doy diez posts listos para publicar.',
-		capturesEmail: true
-	},
-	{
-		name: 'Distribuye tu artículo',
-		href: '/tool/repurpose',
-		blurb: 'Convierte un artículo en nueve notas breves para seguir llevándole lectores.',
 		capturesEmail: true
 	}
 ];

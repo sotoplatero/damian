@@ -6,7 +6,7 @@
 # 2000 caracteres) están en el .svelte y en el +server.ts; si cambian, cambian
 # los tres sitios.
 ideaPlaceholder: Escribe tu idea. Por ejemplo: llevo seis años montando cocinas industriales y la mayoría de los restaurantes que cierran lo hacen por cómo tienen puesta la cocina, no por la comida.
-ideaButton: Escribir mis posts
+ideaButton: Enviar
 ideaWorking: Escribiendo...
 ideaHint: Cuéntame de qué va y para quién. Un par de frases bastan.
 ideaShortcut: O pulsa Ctrl+Enter.
@@ -24,7 +24,7 @@ exampleLabel: Un ejemplo de este tipo (otro tema):
 gateTitle: Los otros nueve van por correo
 gateBody: Dime a dónde te los mando. Te llegan los diez escritos, listos para copiar y pegar.
 gatePlaceholder: tu@email.com
-gateButton: Mándamelos
+gateButton: Enviar
 gateUnlocking: Escribiendo y enviando...
 # Confirmación tras enviar el correo. Los nueve no se enseñan aquí: solo van al correo.
 sentTitle: Van para tu correo
@@ -41,6 +41,6 @@ errorGeneric: Algo ha fallado por mi parte. Inténtalo otra vez.
 errorOffline: No se pudo conectar. Revisa tu conexión.
 ---
 
-# Saca 10 posts distintos de una sola idea.
+# Saca 10 posts **distintos** de una sola idea.
 
 **Escribe el tema.** Te doy diez posts listos para publicar. Así no vuelves a mirar el cursor sin saber qué decir.

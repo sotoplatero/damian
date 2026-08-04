@@ -33,7 +33,7 @@
 				<span class="site-symbol" aria-hidden="true">♦</span>
 				<span>DAMIAN / OBJETO BRILLANTE</span>
 			</a>
-			<span class="site-status"><span class="site-symbol" aria-hidden="true">⚒︎</span> EN CONSTRUCCIÓN</span>
+			<span class="site-status"><span class="site-build" aria-hidden="true">🛠️</span> CONSTRUYENDO</span>
 		</header>
 		{@render children?.()}
 	</div>
