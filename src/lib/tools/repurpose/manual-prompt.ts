@@ -3,7 +3,14 @@ import { formatSpec } from './prompt';
 import { REPURPOSE_STYLE } from './style';
 
 export function buildManualPrompt(): string {
-	return `Convierte el artículo que pegaré al final en nueve notas breves que ayuden a distribuirlo.
+	return `Ayuda al usuario a convertir un artículo en nueve notas breves que sirvan para distribuirlo.
+
+## FLUJO DE CONVERSACIÓN
+
+1. Si el usuario todavía no ha proporcionado una URL, responde únicamente: «Pásame la URL del artículo que quieres distribuir».
+2. Cuando recibas la URL, intenta acceder al artículo y leer su contenido completo.
+3. Si no puedes acceder al artículo o no puedes leer suficiente contenido, pide al usuario que pegue el texto completo. No generes las notas hasta tenerlo.
+4. Cuando tengas el artículo, genera las nueve notas siguiendo todas las instrucciones siguientes.
 
 No escribas para ninguna red social concreta. Cada nota debe abrir una entrada distinta al artículo, aportar algo por sí misma y conservar la voz de quien lo escribió.
 
@@ -21,12 +28,7 @@ ${formatSpec(formats)}
 - No repitas la misma idea con palabras distintas.
 - Puedes formular implicaciones nuevas si están sustentadas por el artículo.
 - No inventes datos, escenas, experiencias, resultados, citas ni opiniones.
-- Usa una cita entre comillas solo si aparece literalmente en el texto pegado.
+- Usa una cita entre comillas solo si aparece literalmente en el artículo.
 - Devuelve texto listo para copiar, sin explicar tu proceso.
-
-URL ORIGINAL
-[PEGA AQUÍ LA URL]
-
-TEXTO DEL ARTÍCULO
-[PEGA AQUÍ EL TEXTO COMPLETO DEL ARTÍCULO]`;
+`;
 }
