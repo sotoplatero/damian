@@ -30,6 +30,8 @@ export type AuthorCard = {
 	truncated: boolean;
 	/** Their own posts with an unusable date. It gets said, not hidden. */
 	importedCount: number;
+	/** The author's follower count from their public profile; null when unreadable. */
+	followers: number | null;
 };
 
 const CACHE_MS = 12 * 60 * 60 * 1000;

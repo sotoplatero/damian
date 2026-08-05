@@ -106,7 +106,19 @@ export type PubInfo = {
 	 * vague label, no "not available".
 	 */
 	subscriberCount: number | null;
+	/**
+	 * The subscriber magnitude Substack itself publishes («7.7K+»), shown only
+	 * when the author allows it. `hide_subscriber_count` is the explicit
+	 * setting — it started coming through in 2026, after `subscriberCount`'s
+	 * rendered-text heuristic was built. When the key is present it is the
+	 * author's word and it wins; when absent, the old heuristic decides.
+	 */
+	subscriberMagnitude: string | null;
 	logoUrl: string | null;
+	/** The author's own photo, distinct from the publication logo. */
+	authorPhotoUrl: string | null;
+	/** The author's profile handle, for `readFollowers`. */
+	authorHandle: string | null;
 	/** The publication's own one-line pitch. Substack calls it `hero_text`. */
 	tagline: string;
 	/**
@@ -159,6 +171,15 @@ function visibleText(html: string): string {
  * found, so the negative branch is not verified against reality — this is a
  * direct check rather than an inference, but that gap is worth knowing.
  */
+/** See `PubInfo.subscriberMagnitude`: the author's setting first, the heuristic as fallback. */
+function subscriberMagnitude(pub: Record<string, unknown>, html: string): string | null {
+	const magnitude = text(pub.freeSubscriberCountOrderOfMagnitude) || null;
+	if (!magnitude) return null;
+	if (pub.hide_subscriber_count === true) return null;
+	if (pub.hide_subscriber_count === false) return magnitude;
+	return shownSubscriberCount(html, pub.freeSubscriberCount) !== null ? magnitude : null;
+}
+
 function shownSubscriberCount(html: string, raw: unknown): number | null {
 	const parsed = count(raw);
 	if (parsed === null) return null;
@@ -208,6 +229,27 @@ function readArchivePost(raw: unknown): ArchivePost | null {
  * measured, bare `honest-broker.com` returns 404 and only
  * `www.honest-broker.com` answers.
  */
+/**
+ * The author's follower count, from their public profile
+ * (substack.com/@handle). Person-level and always public — there is no hide
+ * setting to respect, unlike subscribers. Any failure returns null: a card
+ * must never fail over a nicety.
+ */
+export async function readFollowers(handle: string): Promise<number | null> {
+	try {
+		const url = new URL(
+			`https://substack.com/api/v1/user/${encodeURIComponent(handle)}/public_profile`
+		);
+		const response = await get(url, 'application/json');
+		const profile = JSON.parse(await readBody(response)) as { followerCount?: unknown };
+		return typeof profile.followerCount === 'number' && Number.isFinite(profile.followerCount)
+			? profile.followerCount
+			: null;
+	} catch {
+		return null;
+	}
+}
+
 export async function readPubInfo(slug: string): Promise<PubInfo> {
 	const candidates = originsForSlug(slug);
 	if (!candidates.length) throw new UnreadableError('invalid_url');
@@ -249,7 +291,10 @@ export async function readPubInfo(slug: string): Promise<PubInfo> {
 			language: text(pub.language) || 'es',
 			// Only if it's rendered on the homepage. See `shownSubscriberCount`.
 			subscriberCount: shownSubscriberCount(html, pub.freeSubscriberCount),
+			subscriberMagnitude: subscriberMagnitude(pub, html),
 			logoUrl: text(pub.logo_url) || null,
+			authorPhotoUrl: text(pub.author_photo_url) || null,
+			authorHandle: text(pub.author_handle) || null,
 			tagline: decode(text(pub.hero_text)).trim(),
 			brandColor: text(pub.theme_var_background_pop) || null,
 			paymentsEnabled: text(pub.payments_state) === 'enabled'

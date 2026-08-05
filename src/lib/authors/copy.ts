@@ -1,20 +1,17 @@
 /**
- * The strings of /author and /author/[author], shared by both pages. They used
- * to live in src/lib/content/author.md; strings in one module turned out
- * simpler than frontmatter parsing.
+ * The strings of /author and /author/[author], shared by both pages.
  *
  * THIS CARD REACHES SOMEONE WHO DID NOT ASK FOR IT. It flatters or it locates,
  * it never corrects. If a line reads as an audit, it is badly written: for
  * auditing there is /tool/newsletter.
  *
- * That is why there is NO key here for the longest gap without publishing. It
- * was dropped on purpose: it is the one figure that reads as a reproach, and
- * the one imported archives corrupt most (measured: 182 weeks of false
- * silence on one publication and 56 on another, both invented by imported
- * dates).
- *
- * Subscribers only show if the publication displays them on its homepage. If
- * it doesn't, nothing is said: no number, no vague label, no empty slot.
+ * The page is deliberately the FRAME of the downloadable image, not a report:
+ * what the visitor sees is card.png itself, so page and download can never
+ * disagree. That is why there are no stat labels left in here — every figure
+ * lives inside the image (chosen in $lib/authors/card.ts). The only figure
+ * dropped on purpose is the longest gap without publishing: it is the one that
+ * reads as a reproach, and the one imported archives corrupt most (measured:
+ * 182 weeks of false silence on one publication, invented by imported dates).
  */
 export const copy = {
 	title: 'El Wrapped de tu Substack',
@@ -22,56 +19,27 @@ export const copy = {
 		'Pega la dirección de un newsletter de Substack y sal con la tarjeta de su historia.',
 	urlPlaceholder: 'tunewsletter.substack.com',
 	urlButton: 'Ver la tarjeta',
-	reading: 'Leyendo su archivo',
-	download: 'Descargar la tarjeta',
 	restart: 'Probar con otra',
 
-	/*
-	 * Figure labels. Short on purpose: they sit next to an icon and a big
-	 * number, not next to a sentence. The icon gives the context, not the text.
-	 */
-	labelPosts: 'posts',
-	labelStreak: 'semanas de racha',
-	labelStreakLive: 'semanas, y sigue activa',
-	labelWords: 'palabras',
-	labelNovels: '≈ {n} novelas',
-	labelLikes: 'likes',
-	labelConversation: 'comentarios',
-	labelRestacks: 'restacks',
-	labelFrequency: 'posts al mes',
-	labelBestPost: 'Su post más exitoso',
-	labelRecent: 'Lo último que ha publicado',
+	/* The poster and its actions. */
+	cardAlt: 'La tarjeta de {name}: su historia en Substack, en números',
+	download: 'Descargar la tarjeta',
+	copyLink: 'Copiar enlace',
+	copiedLink: 'Copiado',
 	labelViewOnSubstack: 'Ver en Substack',
-	labelMostLiked: 'Más gustado',
-	labelMostCommented: 'Más comentado',
-	labelLongest: 'Más largo',
-	labelBestMonth: 'Su mejor mes',
-	labelWordsTop: 'Sus palabras',
-	labelYears: 'Por año',
-	labelHeatmap: 'Constancia',
-	labelDay: 'Su día',
-	labelSplit: 'Gratis / pago',
-	labelSubscribers: 'suscriptores',
-	labelHeadlineLength: 'Titulares de {n} caracteres de media.',
-	labelSince: 'desde',
-	labelInProgress: 'en curso',
-	labelFree: 'gratis',
-	labelPaid: 'pago',
 
-	/* Headline tics. */
-	signatureQuestion: '{n} de cada 10 de sus titulares son una pregunta.',
-	signatureNumber: '{n} de cada 10 de sus titulares llevan un número.',
-	signatureColon: '{n} de cada 10 de sus titulares llevan dos puntos.',
+	/* The contagion loop: whoever receives the gift makes the next one. */
+	makeYoursTitle: '¿Tú también escribes en Substack?',
+	makeYoursBody: 'Pega tu dirección y llévate la tuya. Gratis, y sin dejar tu correo.',
 
-	/* Honest notices. Shown when due, never hidden in a footnote: they are part
-	   of the data. */
-	noteUtc: 'Las horas y los días se calculan en UTC.',
+	/* Honest notices. Shown when due, never hidden: they are part of the data. */
+	noteUtc: 'Las horas y los días de la tarjeta se calculan en UTC.',
 	noteImported:
 		'Tiene {n} posts más de un archivo importado, con fechas que no se pueden usar para medir tiempo.',
 	noteTruncated:
-		'Su archivo es más largo de lo que se ha podido leer de una vez. Esto sale de los primeros {n} posts.',
+		'Su archivo es más largo de lo que se ha podido leer de una vez. La tarjeta sale de los primeros {n} posts.',
 	noteFeed:
-		'Substack no ha dejado leer su archivo completo. Esto sale de sus últimos {n} posts, y por eso faltan los likes, los comentarios y el reparto entre gratis y pago.',
+		'Substack no ha dejado leer su archivo completo. La tarjeta sale de sus últimos {n} posts, y por eso faltan los likes y los comentarios.',
 
 	/* Signature. */
 	signature: 'Hecho por Damian Soto',

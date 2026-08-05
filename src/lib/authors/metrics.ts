@@ -395,6 +395,38 @@ export function recentPosts(posts: ArchivePost[], limit = 6): ArchivePost[] {
 	return [...posts].sort((a, b) => (a.date < b.date ? 1 : -1)).slice(0, limit);
 }
 
+export type MonthEngagement = { month: string; likes: number; comments: number; restacks: number };
+
+/**
+ * Reactions by publish month: the card's chart. The last `months` CLOSED
+ * calendar months, oldest first, zeros kept — a publication that started six
+ * months ago shows its take-off, not a shorter chart. The month in progress is
+ * excluded: it always looks like a collapse. The card sums the three series
+ * into one «interacciones» figure per month.
+ *
+ * Engagement accrues to the month the post was PUBLISHED, which is the only
+ * date the archive has. Imported posts fall outside the window on their own.
+ */
+export function monthlyEngagement(posts: ArchivePost[], now: Date, months = 12): MonthEngagement[] {
+	const buckets = new Map<string, MonthEngagement>();
+	const keys: string[] = [];
+	for (let i = months; i >= 1; i--) {
+		const key = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, 1))
+			.toISOString()
+			.slice(0, 7);
+		keys.push(key);
+		buckets.set(key, { month: key, likes: 0, comments: 0, restacks: 0 });
+	}
+	for (const p of posts) {
+		const bucket = buckets.get(p.date.slice(0, 7));
+		if (!bucket) continue;
+		bucket.likes += p.reactions;
+		bucket.comments += p.comments + p.childComments;
+		bucket.restacks += p.restacks;
+	}
+	return keys.map((key) => buckets.get(key)!);
+}
+
 export type HeatmapRow = { year: number; weeks: boolean[] };
 
 /** One row per year, 53 cells, true where at least one post landed. */
@@ -435,6 +467,7 @@ export type Metrics = {
 	hour: TopHour | null;
 	split: FreePaid | null;
 	aggregates: Aggregates;
+	engagement: MonthEngagement[];
 	heatmap: HeatmapRow[];
 	/** Newest first, for the profile's post strip. */
 	recent: ArchivePost[];
@@ -474,6 +507,7 @@ export function computeMetrics(posts: ArchivePost[], pub: PubInfo, now: Date): M
 		hour: topHour(dated),
 		split: freePaid(dated),
 		aggregates: aggregates(dated),
+		engagement: monthlyEngagement(dated, now),
 		heatmap: heatmapRows(dated),
 		recent: recentPosts(dated)
 	};

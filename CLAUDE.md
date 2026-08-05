@@ -231,10 +231,19 @@ twice. Post bodies need one extra request each: `body_html` comes back empty fro
 and `/api/v1/posts/by-slug/` 302s to the page. Bodies are fetched in **both** steps — if only
 the paid step had them, screen and email would disagree.
 
-**`/author` — the Substack Wrapped.** Paste a newsletter's address, get a shareable card of
-its whole public history plus a 1200×630 PNG. **No email gate**, the only tool without one:
+**`/author` — the Substack Wrapped.** Paste a newsletter's address, get the downloadable
+1080×1080 card of its whole public history. **No email gate**, the only tool without one:
 the card is a gift meant to open a conversation with another author, and a form in front of
 it would turn it into lead capture.
+
+**The page is the FRAME of the image, not a report** (redesigned August 2026 after the
+first version buried the download under a parallel HTML profile). What the visitor sees IS
+`card.png` staged as a poster (`.poster` in app.css), so page and download can never
+disagree. Under it, exactly two things: the download button and the contagion loop («¿Tú
+también escribes en Substack?» + inline form) — the recipient of the gift makes the next
+one. Honest notices (UTC, imported posts, truncated/feed) stay visible under the poster.
+The old profile page (banner, stat bands, best post, post grid, word bars, Heatmap/Bars
+components, their CSS vocabulary) was deleted; git history has it.
 
 Its shape, and why:
 
@@ -255,13 +264,27 @@ Its shape, and why:
   needs ≥50% in a three-hour window, the free/paid split needs both sides present.
 - `src/lib/authors/lines.ts` holds the flattering sentences, chosen by threshold. **If a figure
   isn't good enough to flatter, there is no sentence** and the number stands alone — a
-  consolation prize reads as condescension on a card nobody asked for.
-- **The subscriber count is only shown if the publication renders it on its homepage.** The
-  payload carries it either way and the visibility setting never comes through as a key, so
-  the rendered text is the only proof its author wants it seen.
+  consolation prize reads as condescension on a card nobody asked for. Since the redesign the
+  sentences only appear on the landscape `og.png`; the square card speaks in figures and chips
+  (`heroFor`/`chipsFor` apply the same no-consolation rule).
+- **The subscriber count is only shown if its author allows it.** The payload carries it
+  either way; since 2026 the explicit `hide_subscriber_count` setting DOES come through and
+  it wins when present (`subscriberMagnitude` in `substack-archive.ts`, shown as Substack's
+  own «7.7K+» said in Spanish). When the key is absent, the old rendered-text heuristic
+  decides. The author's `followerCount` is different: person-level, always public on their
+  profile (`readFollowers`), no setting to respect. The profile also carries a
+  `subscriberCount` — it is the AUTHOR's aggregate across publications, never this
+  publication's; using it on the card would lie.
 - `src/lib/server/author-card.ts` builds the card; `author-cache.ts` holds it in memory and is
-  **shared by the page and the PNG**. Without that sharing, viewing a card and downloading it
+  **shared by the page and both PNGs**. Without that sharing, viewing a card and downloading it
   would walk someone else's archive twice — 58 requests instead of 29.
+- **There are two images, on purpose** (`src/lib/authors/card.ts`): `card.png` is the
+  1080×1080 square the download button serves — a poster, not a report: ONE hero figure
+  chosen by rule (`heroFor`, mirroring `lines.ts` thresholds), earned chips only
+  (`chipsFor`, no consolation chips), and the heatmap painted in the publication's own
+  `brandColor` with its avatar on top. `og.png` is the 1200×630 landscape, only for link
+  previews. The PNG font subset has no `≈` or `✦` glyphs — equivalences are written out
+  («unas 2,4 novelas») and the star is drawn as SVG, same path as the header mark.
 - **There is no progress stream.** The load does the whole walk server-side (~24 s for the
   deepest archive measured) and `s-maxage=86400` means the CDN serves it afterwards without
   waking the function. Damian always sees a card before sharing it, so the link is warm by the
@@ -269,7 +292,9 @@ Its shape, and why:
 - **Deliberately not on the card:** the longest gap without publishing. It is the one figure
   that reads as a reproach, and the one imported dates corrupt most — a first pass reported
   182 weeks of silence for one publication and 56 for another, both invented by imported
-  dates. Also dead: `restacks` (empty in 868 of 868 posts) and `postTags` (too sparse).
+  dates. Also dead: `postTags` (too sparse). `restacks` are NOT dead — an early pass read
+  the field as an array, got 0 everywhere and wrongly wrote them off; it is a number (see
+  the comment on `ArchivePost.restacks`) and the card shows it when it is earned.
 
 ### OpenAI
 

@@ -77,10 +77,6 @@
  *   note  0.875rem                             -> .muted, footnotes, warnings
  * Hierarchy comes from colour (ink > soft > muted), not from size. If you catch
  * yourself writing text-base or text-lg in the markup, a class is missing here.
- *
- * The one deliberate exception is `.figure`, at the bottom: a Wrapped card lives
- * on the number being seen before its label. It is a class here rather than a
- * utility in the markup precisely because of the rule above.
  */
 @layer components {
 	/* Spacing between large blocks. One single measure across the whole site. */
@@ -115,11 +111,6 @@
 		@apply rounded-lg border border-line p-5;
 		background: color-mix(in srgb, white 82%, transparent);
 		box-shadow: 0 1px 0 rgba(23, 23, 23, 0.04), 0 12px 35px rgba(23, 23, 23, 0.025);
-	}
-	/* What is there but can't be read yet. */
-	.box-locked {
-		@apply rounded-lg border border-dashed border-line p-5;
-		background: repeating-linear-gradient(-45deg, transparent, transparent 8px, rgba(23,23,23,.018) 8px, rgba(23,23,23,.018) 9px);
 	}
 	/* A box that is also a link: the border asserts itself on hover. */
 	.box-link {
@@ -171,211 +162,15 @@
 	}
 
 	/*
-	 * The big numbers on the /author cards.
-	 *
-	 * The site has two font sizes and hierarchy comes from colour. A Wrapped is
-	 * the deliberate exception: it lives on the number being read before its
-	 * label. It enters as a class and not as a loose `text-6xl` because that is
-	 * exactly what the rule at the top of this layer says — if another size is
-	 * needed, a class is missing here.
+	 * /author: the downloadable card, staged as the poster it is. The page
+	 * shows the PNG itself — the figures live inside the image — so this only
+	 * frames it. The old HTML profile vocabulary (banner, stat bands, post
+	 * grids, heatmap) was deleted with the page that used it; git has it.
 	 */
-	.figure {
-		@apply leading-none font-bold tracking-tight text-ink;
-		font-size: 3.5rem;
-	}
-	@media (width >= 48rem) {
-		.figure {
-			font-size: 4.5rem;
-		}
-	}
-	/* The label under a `.figure`. It is the site's note size, with no size of its own. */
-	.figure-note {
-		@apply text-sm text-muted;
-	}
-
-	/*
-	 * The /author hero name. Same deliberate exception as `.figure`: this page
-	 * is a profile people show off, so the name has to read like one — bigger
-	 * than the rest of the site's headings, fluid so a long publication name
-	 * never breaks the layout.
-	 */
-	.author-hero {
-		font-size: clamp(2.5rem, 7vw, 4.5rem);
-		@apply leading-none font-bold tracking-tight text-ink;
-	}
-
-	/* A small coloured circle behind a stat's icon. The colour is set inline per
-	   stat, same idea as `.chip`: this only supplies the shape. */
-	.stat-icon {
-		@apply flex h-11 w-11 shrink-0 items-center justify-center rounded-full;
-	}
-
-	/*
-	 * ── /author profile ──────────────────────────────────────────────────
-	 *
-	 * A profile page, not a report: banner, avatar, name, tagline, a band of
-	 * headline numbers, then posts with their real cover art. The cover art is
-	 * what stops the page reading as a spreadsheet, so the image slots have
-	 * fixed aspect ratios and a placeholder tint — a publication with no art
-	 * must still look composed rather than broken.
-	 */
-	.profile {
-		/* Pulls the banner up under the site header, which the page shell pads. */
-		@apply mt-8;
-	}
-	/*
-	 * The banner, tinted by `--tint` (the publication's own accent colour, set
-	 * inline by the page).
-	 *
-	 * Deliberately NOT the publication's cover photo: measured, that URL 403s —
-	 * it sits on Substack's private bucketeer bucket — and it is a 512x512 square
-	 * rather than a banner. A wash never arrives broken.
-	 */
-	.profile-banner {
-		@apply relative h-32 overflow-hidden rounded-xl border border-line sm:h-44;
-		background:
-			radial-gradient(115% 150% at 10% 0%, color-mix(in srgb, var(--tint) 34%, transparent), transparent 62%),
-			radial-gradient(95% 130% at 92% 8%, color-mix(in srgb, var(--color-ink) 12%, transparent), transparent 60%),
-			var(--color-paper);
-	}
-	/* A hairline of the accent along the bottom, so the wash reads as chosen. */
-	.profile-banner::after {
-		content: '';
-		@apply absolute inset-x-0 bottom-0 h-1;
-		background: var(--tint);
-		opacity: 0.55;
-	}
-	/*
-	 * The avatar overlaps the banner: the move that reads as "profile".
-	 *
-	 * `relative z-10` is load-bearing, not decoration. The banner is
-	 * `position: relative` (it needs it for its accent hairline), and a
-	 * positioned element paints above a static sibling — so without this the
-	 * banner covered the top half of the avatar and it looked cropped.
-	 */
-	.profile-head {
-		@apply relative z-10 -mt-12 flex flex-col sm:-mt-14;
-	}
-	.profile-avatar {
-		@apply h-24 w-24 shrink-0 rounded-2xl border-4 object-cover sm:h-28 sm:w-28;
-		border-color: var(--color-paper);
-		background: var(--color-paper);
-		box-shadow: 0 10px 30px rgba(23, 23, 23, 0.14);
-	}
-	.profile-name {
-		font-size: clamp(2rem, 5.5vw, 3.25rem);
-		@apply leading-none font-bold tracking-tight text-ink;
-	}
-	.profile-tagline {
-		@apply text-xl leading-snug text-soft;
-		font-family: var(--font-serif);
-	}
-	/* The outbound link to the real publication. Quiet until hovered. */
-	.profile-link {
-		@apply ml-auto inline-flex shrink-0 items-center gap-1.5 rounded-full border border-line px-4 py-2 text-sm font-semibold text-soft transition-colors;
-	}
-	.profile-link:hover {
-		border-color: var(--color-ink);
-		color: var(--color-ink);
-	}
-
-	/*
-	 * The headline numbers. One band split by hairlines, no boxes: boxes made
-	 * every figure weigh the same and the page read as a grid of cells.
-	 *
-	 * Three columns and not six. Measured: the site's content column is 632px, so
-	 * six columns give each figure 105px and "348.637" collides with its
-	 * neighbour. Three wrap onto two rows and stay legible.
-	 */
-	.profile-stats {
-		@apply mt-10 grid grid-cols-2 gap-y-7 rounded-xl border border-line py-7 sm:grid-cols-3;
-		background: color-mix(in srgb, white 70%, transparent);
-	}
-	.stat-cell {
-		@apply flex min-w-0 flex-col gap-1 px-5;
-	}
-	/* Hairline between columns only, never before the first of a row. */
-	.stat-cell:not(:nth-child(2n + 1)) {
-		box-shadow: inset 1px 0 0 var(--color-line);
-	}
-	@media (width >= 40rem) {
-		.stat-cell:not(:nth-child(2n + 1)) {
-			box-shadow: none;
-		}
-		.stat-cell:not(:nth-child(3n + 1)) {
-			box-shadow: inset 1px 0 0 var(--color-line);
-		}
-	}
-	.stat-value {
-		@apply text-3xl leading-none font-bold tracking-tight text-ink tabular-nums sm:text-4xl;
-	}
-
-	/* The word count gets its own band: it is the figure no author has ever
-	   seen summed, and it deserves more room than a sixth of a row. */
-	.profile-words {
-		@apply mt-4 flex flex-wrap items-baseline gap-x-4 gap-y-1 rounded-xl px-5 py-6;
-		background: color-mix(in srgb, var(--color-brand) 8%, transparent);
-	}
-
-	/* Their best post: art on the left, everything else on the right. */
-	.post-hero {
-		@apply grid gap-6 rounded-xl border border-line p-5 transition-all sm:grid-cols-[minmax(0,14rem)_minmax(0,1fr)];
-		background: color-mix(in srgb, white 82%, transparent);
-	}
-	.post-hero:hover {
-		border-color: var(--color-ink);
-		transform: translateY(-2px);
-	}
-	.post-hero img {
-		@apply aspect-[4/3] w-full rounded-lg object-cover sm:aspect-square;
-	}
-	.post-hero-title {
-		font-size: clamp(1.4rem, 2.6vw, 2rem);
-		@apply leading-tight font-bold tracking-tight text-ink;
-	}
-
-	/* The latest-posts strip. */
-	.post-grid {
-		@apply grid grid-cols-2 gap-5 lg:grid-cols-4;
-	}
-	.post-card {
-		@apply flex flex-col gap-2.5;
-	}
-	.post-thumb {
-		@apply aspect-[3/2] overflow-hidden rounded-lg border border-line;
-		background: color-mix(in srgb, var(--color-ink) 5%, transparent);
-	}
-	.post-thumb img {
-		@apply h-full w-full object-cover transition-transform;
-	}
-	.post-card:hover .post-thumb img {
-		transform: scale(1.04);
-	}
-	.post-card-title {
-		@apply line-clamp-2 leading-snug font-semibold text-ink;
-	}
-
-	/* A soft fact chip. Lower contrast than `.chip`, which shouts severity. */
-	.chip-soft {
-		@apply inline-block rounded-full border border-line px-3 py-1 text-sm text-soft;
-	}
-
-	/*
-	 * The week heatmap: one row per year, 53 cells.
-	 *
-	 * The cell knows nothing about what it measures, same idea as `.meter`. The
-	 * year is painted outside the grid.
-	 */
-	.heat {
-		@apply grid gap-[2px];
-		grid-template-columns: repeat(53, minmax(0, 1fr));
-	}
-	.heat-cell {
-		@apply rounded-[2px] bg-line;
-		aspect-ratio: 1;
-	}
-	.heat-on {
-		@apply bg-ink;
+	.poster {
+		@apply mt-2 w-full rounded-2xl border border-line;
+		height: auto;
+		box-shadow: 0 24px 70px rgba(23, 23, 23, 0.16);
 	}
 }
 
