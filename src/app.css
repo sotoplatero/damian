@@ -52,13 +52,19 @@
 }
 
 /*
- * The site is pinned to DaisyUI's light theme (see +layout.svelte). Its primary
- * colour is overridden here with the brand blue: that way buttons and links pick
- * it up on their own, without repeating the class on each one.
+ * The site is pinned to DaisyUI's light theme (see +layout.svelte), customised
+ * here into the site's own theme: the palette above mapped onto DaisyUI's
+ * semantic slots. Components keep DaisyUI's structure (`badge`, `btn`,
+ * `text-error`...) and pick the site's colours up on their own — no
+ * site-specific utility classes needed in the markup.
  */
 [data-theme='light'] {
 	--color-primary: #0076ff;
 	--color-primary-content: #ffffff;
+	--color-neutral: #171717;
+	--color-neutral-content: #ffffff;
+	--color-error: #ff4d00;
+	--color-error-content: #ffffff;
 }
 
 /*
@@ -411,7 +417,13 @@ body { background: var(--color-paper); }
 }
 
 .site-mark { display: inline-flex; align-items: center; gap: .6rem; }
-.site-symbol { font-family: ui-monospace, monospace; font-size: .9rem; font-weight: 400; line-height: 1; color: currentColor; }
+/* The mark is an inline SVG (see +layout.svelte): a true square whose star is
+   drawn around the exact centre of its viewBox, so rotation has no wobble. */
+.site-symbol { display: inline-flex; width: .9rem; height: .9rem; color: currentColor; transition: color 220ms ease; transform-origin: 50% 50%; }
+.site-symbol svg { display: block; width: 100%; height: 100%; }
+/* A small reward for hovering the mark: the star lights up. The spin lives in
+   the reduced-motion block below; the colour change works for everyone. */
+.site-mark:hover .site-symbol { color: var(--color-signal); }
 .site-mark .site-symbol { color: var(--color-ink); }
 .site-status { display: inline-flex; align-items: center; gap: .45rem; color: var(--color-muted); font-weight: 600; }
 .site-status .site-symbol { font-size: .78rem; }
@@ -419,6 +431,35 @@ body { background: var(--color-paper); }
 
 .tool-shell { display: flex; flex: 1; flex-direction: column; }
 .tool-stage { width: 100%; margin-block: auto; }
+
+/* The colophon line at the bottom: same small-caps voice as the header. */
+.site-footer {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	margin-top: clamp(4rem, 10vw, 6rem);
+	padding-top: 1.25rem;
+	border-top: 1px solid var(--color-line);
+	font-size: .68rem;
+	font-weight: 700;
+	letter-spacing: .11em;
+	color: var(--color-muted);
+}
+.site-footer a { color: inherit; text-decoration: none; transition: color 180ms ease; }
+.site-footer a:hover { color: var(--color-ink); }
+/* The ⌘K hint: a real key, quietly drawn. */
+.key-hint {
+	cursor: pointer;
+	border: 1px solid var(--color-line);
+	border-radius: .35rem;
+	padding: .15rem .45rem;
+	font: inherit;
+	color: inherit;
+	background: transparent;
+	transition: color 180ms ease, border-color 180ms ease;
+}
+.key-hint:hover { color: var(--color-ink); border-color: var(--color-ink); }
 
 .prose h1 { text-wrap: balance; }
 .prose > p:first-of-type {
@@ -431,6 +472,22 @@ body { background: var(--color-paper); }
 	color: var(--color-soft);
 }
 .prose a, .link { text-decoration-color: color-mix(in srgb, var(--color-brand) 55%, transparent); text-underline-offset: .22em; }
+
+/*
+ * The lead treatment above styles the first paragraph after the headline. The
+ * home letter is split in two by the tools section, so its second half starts
+ * with a plain story paragraph that must NOT read as a lead: `prose-quiet`
+ * puts that first paragraph back to the prose's own body style.
+ */
+.prose-quiet > p:first-of-type {
+	max-width: none;
+	margin-top: 1.2em;
+	font-size: 1.25rem;
+	font-weight: 400;
+	line-height: 1.8;
+	letter-spacing: 0;
+	color: var(--tw-prose-body);
+}
 
 .tool-index { grid-column: 1; padding-top: .35rem; font-size: .68rem; font-weight: 700; letter-spacing: .1em; color: var(--color-muted); }
 .tool-arrow { grid-column: 3; font-size: 1rem; color: var(--color-muted); transition: transform 220ms ease, color 220ms ease; }
@@ -452,16 +509,27 @@ body { background: var(--color-paper); }
 
 @media (prefers-reduced-motion: no-preference) {
 	.site-header, .greeting, .prose, .embed-shell, .section { animation: reveal .6s both; }
-	.site-mark .site-symbol { animation: diamond-pulse 2.8s ease-in-out infinite; }
+	.site-mark .site-symbol { animation: mark-pulse 2.8s ease-in-out infinite; }
+	/*
+	 * The spin is a TRANSITION, not a looping animation: half a turn in, half a
+	 * turn back out, both eased — so there is never a snap, whenever the cursor
+	 * leaves. The star's four-point symmetry makes the return read as another
+	 * spin rather than a rewind. Opacity pulse and rotation coexist because the
+	 * pulse no longer touches transform.
+	 */
+	.site-mark .site-symbol { transition: color 220ms ease, transform 700ms cubic-bezier(0.34, 1.2, 0.4, 1); }
+	.site-mark:hover .site-symbol { transform: rotate(180deg); }
 	.site-build { animation: building 1.35s ease-in-out infinite; }
 	.greeting { animation-delay: .06s; }
 	.prose { animation-delay: .12s; }
 	.embed-shell { animation-delay: .2s; }
 	.section { animation-delay: .28s; }
 	@keyframes reveal { from { opacity: 0; transform: translateY(9px); } to { opacity: 1; transform: none; } }
-	@keyframes diamond-pulse {
-		0%, 100% { opacity: .58; transform: scale(.88); }
-		50% { opacity: 1; transform: scale(1.08); }
+	/* Opacity only: a scale here snapped to 1 the instant the hover spin took
+	   over the transform, and the handoff read as a jump. */
+	@keyframes mark-pulse {
+		0%, 100% { opacity: .58; }
+		50% { opacity: 1; }
 	}
 	@keyframes building {
 		0%, 100% { transform: rotate(-10deg) translateY(0); }

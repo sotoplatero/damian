@@ -1,14 +1,12 @@
 import { tools } from '$lib/tools/list';
-import homeRaw from '$lib/content/home.md?raw';
 
 /**
  * What the card seen when sharing each page says.
  *
  * It lives here rather than inside the route that draws the image so the texts
- * keep coming from where they always come from: the tools in
- * `src/lib/tools/list.ts` and the home page's `home.md` frontmatter. That way a
- * new tool gets a card on its own and the home copy is edited in the same place
- * as the rest.
+ * keep coming from where they come from: the tools speak through
+ * `src/lib/tools/list.ts`, and the home card's own lines are right below. A new
+ * tool gets a card on its own.
  */
 
 export type Card = {
@@ -18,19 +16,13 @@ export type Card = {
 	tag: string;
 };
 
-/** Reads a value from home.md's frontmatter, the same way the page does. */
-function fromHome(key: string): string {
-	const frontmatter = homeRaw.match(/^---\r?\n([\s\S]*?)\r?\n---/);
-	if (!frontmatter) return '';
-	for (const line of frontmatter[1].split('\n')) {
-		const trimmed = line.trim();
-		if (!trimmed || trimmed.startsWith('#')) continue;
-		const separator = trimmed.indexOf(':');
-		if (separator === -1) continue;
-		if (trimmed.slice(0, separator).trim() === key) return trimmed.slice(separator + 1).trim();
-	}
-	return '';
-}
+/** The home card. The title goes big; the tag sits next to the domain. */
+const HOME_CARD: Card = {
+	title: 'Objeto Brillante',
+	subtitle:
+		'Un email a la semana con algo que he hecho con IA en un negocio real y que funciona. Sin cursos ni tutoriales.',
+	tag: 'un email a la semana'
+};
 
 /**
  * A path reduced to its card slug.
@@ -46,13 +38,7 @@ function toSlug(path: string): string {
 
 /** `home` for the front page; for a tool, its slug. Null when there isn't one. */
 export function cardFor(slug: string): Card | null {
-	if (slug === 'home') {
-		return {
-			title: fromHome('ogTitle'),
-			subtitle: fromHome('ogDescription'),
-			tag: fromHome('ogTag')
-		};
-	}
+	if (slug === 'home') return HOME_CARD;
 
 	const tool = tools.find((t) => toSlug(t.href) === slug);
 	if (!tool) return null;
