@@ -1,8 +1,7 @@
 <script lang="ts">
-	import { marked } from 'marked';
 	import PageMeta from '$lib/components/PageMeta.svelte';
 	import { tick } from 'svelte';
-	import raw from '$lib/content/tool-newsletter.md?raw';
+	import { copy as t } from '$lib/tools/newsletter/copy';
 	import type { Measurements } from '$lib/tools/newsletter/checks';
 	import {
 		DIMENSIONS,
@@ -12,7 +11,6 @@
 		type Severity,
 		type Tally
 	} from '$lib/tools/newsletter/rules';
-	import { parseCopy } from '$lib/content';
 	import InlineForm from '$lib/components/InlineForm.svelte';
 
 	/**
@@ -28,13 +26,11 @@
 	 * y cómo de gordos, no qué dicen. Del servidor solo bajan gravedad, dimensión e
 	 * impacto, así que no hay ni un hallazgo que sacar del HTML.
 	 *
-	 * El orden y las etiquetas de aquí son los del correo: `report.ts` lee las
-	 * mismas claves de `tool-newsletter.md`. Antes esta pantalla y el correo
-	 * llamaban de forma distinta a los mismos bloques y parecían dos informes.
+	 * El orden y las etiquetas de aquí son los del correo: `report.ts` importa el
+	 * mismo objeto de `$lib/tools/newsletter/copy.ts`. Antes esta pantalla y el
+	 * correo llamaban de forma distinta a los mismos bloques y parecían dos
+	 * informes.
 	 */
-
-	const { t, body } = parseCopy(raw);
-	const intro = marked.parse(body) as string;
 
 	type Preview = {
 		site: string;
@@ -160,7 +156,18 @@
 />
 
 {#snippet introBlock()}
-	<article class="prose prose-xl prose-neutral max-w-none">{@html intro}</article>
+	<article class="prose prose-xl prose-neutral max-w-none">
+		<h1>Auditoría de tu newsletter.</h1>
+		<p>
+			<strong>Pega la dirección de tu Substack.</strong> Leo tus últimos números enteros y te digo
+			qué está mal, con qué gravedad y cómo se arregla. El primer hallazgo, con su arreglo
+			escrito, en pantalla.
+		</p>
+		<p>
+			Cada cosa que señalo va con la cita de dónde lo he visto. Si no puedo citarlo, no te lo
+			cuento. No te pido acceso a tus estadísticas.
+		</p>
+	</article>
 {/snippet}
 
 {#if !preview}

@@ -3,8 +3,7 @@
 	import PageMeta from '$lib/components/PageMeta.svelte';
 	import Heatmap from '$lib/components/author/Heatmap.svelte';
 	import Bars from '$lib/components/author/Bars.svelte';
-	import { parseCopy } from '$lib/content';
-	import raw from '$lib/content/author.md?raw';
+	import { copy } from '$lib/authors/copy';
 	import type { PageData } from './$types';
 
 	/**
@@ -21,7 +20,8 @@
 	 */
 	let { data }: { data: PageData } = $props();
 
-	const { t } = parseCopy(raw);
+	/* Widened to a string map: `fill` looks labels up by dynamic key. */
+	const t: Record<string, string> = copy;
 	const es = (n: number) => n.toLocaleString('es-ES');
 	const fill = (key: string, n: number | string) => (t[key] ?? '').replace('{n}', String(n));
 

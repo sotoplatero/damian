@@ -1,8 +1,6 @@
 <script lang="ts">
-	import { marked } from 'marked';
 	import PageMeta from '$lib/components/PageMeta.svelte';
-	import { parseCopy } from '$lib/content';
-	import raw from '$lib/content/author.md?raw';
+	import { copy as t } from '$lib/authors/copy';
 	import type { PageData } from './$types';
 
 	/**
@@ -14,16 +12,22 @@
 	 * URL of its own.
 	 */
 	let { data }: { data: PageData } = $props();
-
-	const { t, body } = parseCopy(raw);
-	const intro = marked.parse(body) as string;
 </script>
 
 <PageMeta title={t.title} description={t.description} />
 
 <section class="section">
 	<h1 class="box-title">{t.title}</h1>
-	<div class="body-text mt-4">{@html intro}</div>
+	<div class="body-text mt-4">
+		<p>
+			Pega la dirección de un newsletter de Substack y sale la tarjeta de todo lo que ha
+			publicado: cuántas semanas seguidas lleva, cuántas palabras ha escrito y qué post le
+			funcionó mejor.
+		</p>
+		<p class="mt-4">
+			Solo lee lo que Substack ya enseña en público. No hace falta entrar en ninguna cuenta.
+		</p>
+	</div>
 
 	<form method="GET" action="/author" class="mt-8 flex flex-wrap items-center gap-3">
 		<input
