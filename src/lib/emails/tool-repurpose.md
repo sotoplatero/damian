@@ -1,5 +1,7 @@
 ---
 subject: Nueve notas para distribuir tu artículo
+# El preheader es la línea que la bandeja enseña después del asunto.
+preheader: Las nueve notas y el prompt para repetirlo por tu cuenta.
 ---
 
 Aquí tienes las nueve notas. Distintas ideas, ángulos y tamaños para que el artículo siga encontrando lectores.

@@ -1,15 +1,53 @@
 <script lang="ts">
-	import { marked } from 'marked';
-	import { tick } from 'svelte';
 	import PageMeta from '$lib/components/PageMeta.svelte';
 	import InlineForm from '$lib/components/InlineForm.svelte';
-	import raw from '$lib/content/tool-repurpose.md?raw';
-	import { parseCopy } from '$lib/content';
+	import ResultCard from '$lib/components/ResultCard.svelte';
+	import GateBox from '$lib/components/GateBox.svelte';
 	import { formats, freeFormats } from '$lib/tools/repurpose/formats';
+	import { postTool, revealResult } from '$lib/tools/client';
 	import { toPlainText, type Piece } from '$lib/tools/repurpose/format';
 
-	const { t, body } = parseCopy(raw);
-	const intro = marked.parse(body) as string;
+	/* The page's copy. The gate names what's missing: urgency comes from seeing
+	   the list, not from adjectives. */
+	const t = {
+		urlPlaceholder: 'https://tublog.com/tu-articulo',
+		urlButton: 'Enviar',
+		urlWorking: 'Leyendo tu artículo...',
+		urlHint: 'El enlace de un artículo tuyo ya publicado.',
+		readLine: 'He leído {site}.',
+		resultTitle: 'Nueve notas para distribuir tu artículo',
+		lowConfidence:
+			'Eso no parece un artículo entero, así que he supuesto bastante. Prueba con el enlace del artículo, no con la portada.',
+		freeBadge: 'Gratis',
+		copyAction: 'Copiar',
+		copiedAction: 'Copiado',
+		restart: 'Probar con otro artículo',
+		gateTitle: 'Te quedan las seis con más recorrido',
+		gateBody:
+			'El detalle revelador, la historia, la consecuencia, la pregunta, la cita comentada y la puerta que lleva lectores al artículo. Dime a dónde te las mando y te llegan las nueve, más el prompt para repetirlo por tu cuenta.',
+		gatePlaceholder: 'tu@email.com',
+		gateButton: 'Enviar',
+		gateUnlocking: 'Escribiendo y enviando...',
+		sentTitle: 'Van para tu correo',
+		sentBody:
+			'Las nueve notas van en el correo y el prompt manual, adjunto. Si en un par de minutos no lo ves, mira en spam.',
+		errorUnreadable:
+			'Esa página no me deja leerla. Prueba con otra, o pega el enlace del artículo en lugar de la portada.',
+		errorBlocked:
+			'Esa web me cierra la puerta cuando entro yo. Si el artículo está en un sitio con muro, prueba con otro.',
+		errorNotFound: 'Ahí no hay nada. Revisa el enlace.',
+		errorTimeout: 'Esa página ha tardado demasiado. Inténtalo otra vez.',
+		errorEmpty:
+			'He entrado, pero no he encontrado texto que leer. Pega el enlace del artículo, no el de la portada.',
+		errorInvalidUrl: 'Esa dirección no parece válida.',
+		errorInvalidEmail: 'Ese email no parece válido.',
+		errorDisposable: 'Eso es un buzón de usar y tirar. Dame uno de verdad.',
+		errorSendFailed: 'No he podido enviarte el correo. Inténtalo otra vez.',
+		errorRateLimit: 'Has distribuido unos cuantos ya. Espera un rato y vuelve.',
+		errorGeneric: 'Algo ha fallado por mi parte. Inténtalo otra vez.',
+		errorOffline: 'No se pudo conectar. Revisa tu conexión.'
+	};
+
 	let busy = $state<'' | 'reading' | 'unlocking'>('');
 	let error = $state('');
 	let url = $state('');
@@ -20,36 +58,58 @@
 	let pieces = $state<Piece[]>([]);
 	let sent = $state(false);
 	let email = $state('');
-	let copiedId = $state('');
+
 	const byId = $derived(new Map(pieces.map((piece) => [piece.id, piece])));
 	const writtenFormats = $derived(formats.filter((format) => byId.has(format.id)));
 
-	function errorFor(code: unknown, reason?: unknown): string {
-		if (code === 'unreadable') return reason === 'blocked' ? t.errorBlocked : reason === 'not_found' ? t.errorNotFound : reason === 'timeout' ? t.errorTimeout : reason === 'empty' ? t.errorEmpty : reason === 'invalid_url' ? t.errorInvalidUrl : t.errorUnreadable;
-		if (code === 'invalid_email') return t.errorInvalidEmail;
-		if (code === 'disposable') return t.errorDisposable;
-		if (code === 'send_failed') return t.errorSendFailed;
-		if (code === 'rate_limit') return t.errorRateLimit;
-		return t.errorGeneric;
-	}
-	async function post(payload: Record<string, unknown>) {
-		const response = await fetch('/tool/repurpose', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-		const data = await response.json().catch(() => ({}));
-		if (!response.ok) throw new Error(errorFor(data?.error, data?.reason));
-		return data;
-	}
 	async function read() {
-		busy = 'reading'; error = '';
-		try { const data = await post({ step: 'extract', url }); article = data.article; pieces = data.pieces; finalUrl = data.url ?? ''; site = data.site ?? ''; lowConfidence = data.confidence === 'baja'; await tick(); document.getElementById('resultado')?.scrollIntoView({ behavior: 'smooth' }); }
-		catch (caught) { error = caught instanceof Error ? caught.message : t.errorOffline; } finally { busy = ''; }
+		busy = 'reading';
+		error = '';
+		try {
+			const data = await postTool('/tool/repurpose', { step: 'extract', url }, t);
+			article = data.article as Record<string, string>;
+			pieces = data.pieces as Piece[];
+			finalUrl = (data.url as string) ?? '';
+			site = (data.site as string) ?? '';
+			lowConfidence = data.confidence === 'baja';
+			await revealResult();
+		} catch (caught) {
+			error = caught instanceof Error ? caught.message : t.errorOffline;
+		} finally {
+			busy = '';
+		}
 	}
+
+	/**
+	 * The other six pieces are written server-side and only ever sent by email.
+	 * The email is the only place they exist, which is why the address is worth
+	 * something.
+	 */
 	async function unlock() {
-		busy = 'unlocking'; error = '';
-		try { await post({ step: 'unlock', article, url: finalUrl, email, free: pieces }); sent = true; }
-		catch (caught) { error = caught instanceof Error ? caught.message : t.errorOffline; } finally { busy = ''; }
+		busy = 'unlocking';
+		error = '';
+		try {
+			await postTool('/tool/repurpose', { step: 'unlock', article, url: finalUrl, email, free: pieces }, t);
+			sent = true;
+		} catch (caught) {
+			error = caught instanceof Error ? caught.message : t.errorOffline;
+		} finally {
+			busy = '';
+		}
 	}
-	async function copy(piece: Piece) { await navigator.clipboard.writeText(toPlainText(piece)); copiedId = piece.id; setTimeout(() => { if (copiedId === piece.id) copiedId = ''; }, 2000); }
-	function restart() { busy = ''; error = ''; url = ''; article = null; finalUrl = ''; site = ''; lowConfidence = false; pieces = []; sent = false; email = ''; copiedId = ''; }
+
+	function restart() {
+		busy = '';
+		error = '';
+		url = '';
+		article = null;
+		finalUrl = '';
+		site = '';
+		lowConfidence = false;
+		pieces = [];
+		sent = false;
+		email = '';
+	}
 </script>
 
 <PageMeta
@@ -57,16 +117,27 @@
 	description="Convierte un artículo en nueve notas breves, con distintas ideas, ángulos y extensiones, para seguir llevándole lectores."
 />
 
-{#snippet intro_()}
-	<article class="prose prose-xl prose-neutral max-w-none">{@html intro}</article>
-{/snippet}
-
 {#if !pieces.length}
 	<section class="screen-center">
-		{@render intro_()}
+		<article class="prose prose-xl prose-neutral max-w-none">
+			<h1>Distribuye tu <strong>artículo</strong>.</h1>
+			<p>
+				<strong>Pega el enlace.</strong> Lo convierto en nueve notas breves, con distintas ideas,
+				ángulos y extensiones, para seguir llevándole lectores.
+			</p>
+		</article>
 		{#if error}<p class="mt-6 text-sm text-error">{error}</p>{/if}
 		<div class="mt-8">
-			<InlineForm bind:value={url} placeholder={t.urlPlaceholder} label={t.urlButton} busyLabel={t.urlWorking} busy={busy === 'reading'} inputmode="url" autocomplete="url" onsubmit={read} />
+			<InlineForm
+				bind:value={url}
+				placeholder={t.urlPlaceholder}
+				label={t.urlButton}
+				busyLabel={t.urlWorking}
+				busy={busy === 'reading'}
+				inputmode="url"
+				autocomplete="url"
+				onsubmit={read}
+			/>
 			<p class="muted mt-2">{t.urlHint}</p>
 		</div>
 	</section>
@@ -79,11 +150,35 @@
 		{#if site}<p class="muted">{t.readLine.replace('{site}', site)}</p>{/if}
 		{#if lowConfidence}<p class="muted">{t.lowConfidence}</p>{/if}
 		{#if error}<p class="text-sm text-error">{error}</p>{/if}
-		<h2 class="eyebrow">Tus primeras notas</h2>
+
 		{#each writtenFormats as format (format.id)}
-				{@const written = byId.get(format.id)}
-				{#if written}<article class="box"><header class="mb-4 flex items-start justify-between gap-3"><div><h3 class="box-title">{format.name} {#if freeFormats.some((f) => f.id === format.id)}<span class="badge badge-sm badge-neutral">{t.freeBadge}</span>{/if}</h3><p class="muted">{format.bestFor}</p></div><button type="button" onclick={() => copy(written)} class="btn btn-ghost btn-xs">{copiedId === format.id ? t.copiedAction : t.copyAction}</button></header><p class="body-text whitespace-pre-wrap">{written.text}</p></article>{/if}
+			{@const written = byId.get(format.id)}
+			{#if written}
+				<ResultCard
+					title={format.name}
+					badge={freeFormats.some((f) => f.id === format.id) ? t.freeBadge : ''}
+					note={format.bestFor}
+					copyText={toPlainText(written)}
+					copyLabel={t.copyAction}
+					copiedLabel={t.copiedAction}
+				>
+					<p class="body-text whitespace-pre-wrap">{written.text}</p>
+				</ResultCard>
+			{/if}
 		{/each}
-		<section class="box bg-line/40">{#if sent}<h3 class="section-title">{t.sentTitle}</h3><p class="section-intro">{t.sentBody}</p>{:else}<h3 class="section-title">{t.gateTitle}</h3><p class="section-intro">{t.gateBody}</p><div class="mt-4"><InlineForm type="email" bind:value={email} placeholder={t.gatePlaceholder} label={t.gateButton} busyLabel={t.gateUnlocking} busy={busy === 'unlocking'} inputmode="email" autocomplete="email" onsubmit={unlock} /></div>{/if}</section>
+
+		<GateBox
+			{sent}
+			bind:email
+			busy={busy === 'unlocking'}
+			gateTitle={t.gateTitle}
+			gateBody={t.gateBody}
+			sentTitle={t.sentTitle}
+			sentBody={t.sentBody}
+			placeholder={t.gatePlaceholder}
+			label={t.gateButton}
+			busyLabel={t.gateUnlocking}
+			onsubmit={unlock}
+		/>
 	</section>
 {/if}

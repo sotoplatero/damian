@@ -9,6 +9,8 @@
 # número de hallazgos, y porque la leyenda tiene que ir ANTES de la primera
 # etiqueta que explica, no al final del correo como estaba.
 subject: La auditoría de tu newsletter
+# El preheader es la línea que la bandeja enseña después del asunto.
+preheader: La auditoría completa, hallazgo a hallazgo, con su arreglo.
 ---
 
 {{REPORT}}
