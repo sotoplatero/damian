@@ -107,11 +107,14 @@ export type PubInfo = {
 	 */
 	subscriberCount: number | null;
 	/**
-	 * The subscriber magnitude Substack itself publishes («7.7K+»), shown only
-	 * when the author allows it. `hide_subscriber_count` is the explicit
-	 * setting — it started coming through in 2026, after `subscriberCount`'s
-	 * rendered-text heuristic was built. When the key is present it is the
-	 * author's word and it wins; when absent, the old heuristic decides.
+	 * The subscriber magnitude Substack itself publishes («7.7K+», or a plain
+	 * «81» for small lists), shown only when the author allows it.
+	 * `hide_subscriber_count` is the explicit setting — it started coming
+	 * through in 2026, after `subscriberCount`'s rendered-text heuristic was
+	 * built, and it lives in `root.siteConfigs`, NOT in `root.pub` (measured on
+	 * sotoplatero and kloshletter: absent from `pub` on both). When the key is
+	 * present it is the author's word and it wins; when absent, the old
+	 * heuristic decides.
 	 */
 	subscriberMagnitude: string | null;
 	logoUrl: string | null;
@@ -172,11 +175,19 @@ function visibleText(html: string): string {
  * direct check rather than an inference, but that gap is worth knowing.
  */
 /** See `PubInfo.subscriberMagnitude`: the author's setting first, the heuristic as fallback. */
-function subscriberMagnitude(pub: Record<string, unknown>, html: string): string | null {
+function subscriberMagnitude(
+	root: Record<string, unknown>,
+	pub: Record<string, unknown>,
+	html: string
+): string | null {
 	const magnitude = text(pub.freeSubscriberCountOrderOfMagnitude) || null;
 	if (!magnitude) return null;
-	if (pub.hide_subscriber_count === true) return null;
-	if (pub.hide_subscriber_count === false) return magnitude;
+	// The setting lives in siteConfigs; pub is checked second in case Substack
+	// ever moves it there.
+	const configs = root.siteConfigs as Record<string, unknown> | undefined;
+	const hide = configs?.hide_subscriber_count ?? pub.hide_subscriber_count;
+	if (hide === true) return null;
+	if (hide === false) return magnitude;
 	return shownSubscriberCount(html, pub.freeSubscriberCount) !== null ? magnitude : null;
 }
 
@@ -291,7 +302,7 @@ export async function readPubInfo(slug: string): Promise<PubInfo> {
 			language: text(pub.language) || 'es',
 			// Only if it's rendered on the homepage. See `shownSubscriberCount`.
 			subscriberCount: shownSubscriberCount(html, pub.freeSubscriberCount),
-			subscriberMagnitude: subscriberMagnitude(pub, html),
+			subscriberMagnitude: subscriberMagnitude(root, pub, html),
 			logoUrl: text(pub.logo_url) || null,
 			authorPhotoUrl: text(pub.author_photo_url) || null,
 			authorHandle: text(pub.author_handle) || null,
