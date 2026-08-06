@@ -47,8 +47,11 @@ export const GET: RequestHandler = async ({ params, url }) => {
 			height: POSTCARD_HEIGHT,
 			fonts: POSTCARD_FONTS,
 			headers: {
-				// Someone's archive changes at most daily.
-				'cache-control': 'public, max-age=3600, s-maxage=86400'
+				// `max-age=0`: the BROWSER always revalidates, so a redesign shows on
+				// the next reload (a `max-age=3600` once pinned stale squares for an
+				// hour). The CDN still absorbs the cost with `s-maxage` — and Vercel
+				// purges its edge cache on every deploy anyway.
+				'cache-control': 'public, max-age=0, s-maxage=86400'
 			}
 		}
 	);

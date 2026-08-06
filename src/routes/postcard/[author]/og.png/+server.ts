@@ -34,8 +34,8 @@ export const GET: RequestHandler = async ({ params, url }) => {
 			height: OG_HEIGHT,
 			fonts: POSTCARD_FONTS,
 			headers: {
-				// Someone's archive changes at most daily.
-				'cache-control': 'public, max-age=3600, s-maxage=86400'
+				// Same policy as the variant PNGs: browsers revalidate, the CDN caches.
+				'cache-control': 'public, max-age=0, s-maxage=86400'
 			}
 		}
 	);
