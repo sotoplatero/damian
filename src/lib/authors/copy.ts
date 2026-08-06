@@ -19,6 +19,10 @@ export const copy = {
 		'Pega la dirección de un newsletter de Substack y llévate cuatro postales con su historia, listas para compartir.',
 	urlPlaceholder: 'tunewsletter.substack.com',
 	urlButton: 'Ver las postales',
+	/* The note under the field, the same slot every other tool uses. It carries
+	   what used to be a second paragraph of the intro: true, worth saying, and
+	   not worth the weight of body text. */
+	urlHint: 'Solo lee lo que Substack ya enseña en público. No hace falta entrar en ninguna cuenta.',
 	restart: 'Probar con otra',
 
 	/* The slider and its actions. */

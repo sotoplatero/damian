@@ -10,18 +10,29 @@ import type { Metrics } from './metrics';
  * adapt to the publication's brandColor — every postcard also advertises the
  * tool, and the fixed identity is what makes them recognisable in a feed.
  *
- * THE CANVAS IS LANDSCAPE 1456×1048 (14:10), Substack's native full-bleed post
- * ratio: squares pasted into a post land narrower than the column and need a
- * manual «Set full width»; this ratio lands full-width as-is.
+ * THE CANVAS IS PORTRAIT 1080×1350 (4:5). See POSTCARD_WIDTH for the measured
+ * reason — it is the one ratio that Substack Notes, LinkedIn and X all agree on.
  *
- * THE TYPE SCALE (design units; output multiplies by 1.348):
- *   micro 17 · months 17/500 · labels 20/500 · body 21 · mono eyebrows 15 —
- *   the smallest text lands at ~23 final px, the legibility floor for an
- *   image read in a feed. Stat and month labels share ONE voice across the
- *   four variants (size, weight and contrast), whatever the ground. Values:
- *   stack 56 / secondary 62 / leads 78 / cartel giant 300 (stepping down for
- *   long magnitudes). Serif displays 64–84. Letter-spacing keeps its em ratio
- *   (−0.04em on values) at every size.
+ * THE TYPE SCALE (design units; output is 1:1 with them now).
+ *
+ * It was raised across the board with the ratio change, and NOT because the old
+ * sizes were too small: a note is width-limited on a phone either way, so 310 CSS
+ * px is what both ratios get and the type reads at the same size. The scale grew
+ * because a portrait canvas has 573 more design px of height, and spending them
+ * on air instead of on type would have bought presence in the scroll without
+ * buying legibility.
+ *
+ *   months 21 · labels 24/500 · mono eyebrows 19-20 · body 26-29 — the smallest
+ *   text is ~1.8% of the canvas width, up from 1.4%. Stat and month labels share
+ *   ONE voice across the four variants (size, weight and contrast), whatever the
+ *   ground. Values: stack 74-78 / secondary 80 / leads 98 / cartel giant 400
+ *   (stepping down for long magnitudes). Serif displays 88-132. Letter-spacing
+ *   keeps its em ratio (−0.04em on values) at every size.
+ *
+ * The bar charts do NOT scale with the canvas: a column is drawn at the
+ * `maxHeight` handed to `barColumn` and sits on the baseline, so growing the
+ * canvas leaves it floating unless that number is raised by hand. Each variant
+ * carries its own, measured against the block it actually gets.
  *
  * Same satori caveats as before (learned the hard way, see git history):
  * subset of CSS, explicit `display: flex`, fonts as TTF from
@@ -40,6 +51,17 @@ const PAPER_INK = '#171412';
 const PAPER_MUTED = '#8a8178';
 
 /*
+ * biolink's light ground. Deliberately COOLER and cleaner than gema's warm
+ * `PAPER`: two light variants out of four would read as the same postcard twice
+ * if they shared a ground. Gema is a printed paper catalogue with hard rules;
+ * biolink is a bright screen with soft cards. The layouts differ (centred vs
+ * grid), but the ground is what tells them apart at feed size.
+ */
+const LIGHT = '#fcfbf9';
+const LIGHT_LINE = 'rgba(23,20,18,.13)';
+const LIGHT_MUTED = '#7d746b';
+
+/*
  * The one label voice, shared by the four variants: same size, same weight,
  * per-ground contrast. Months use the same weight one step smaller.
  */
@@ -52,17 +74,49 @@ const MONTH_ON_DARK = 'rgba(245,241,234,.65)';
 const LABEL_ON_PAPER = '#6f665c';
 
 /**
- * The published size: 1456×1048 (14:10). 1456 is Substack's retina 2× of its
- * 728px post column; 1048 keeps the ratio that gets the full-width treatment
- * without the editor's manual toggle.
+ * The published size: 1080×1350 (4:5), PORTRAIT. It used to be landscape
+ * 1456×1048 (14:10), picked so a postcard pasted into a POST landed full-width
+ * without the editor's manual toggle. That was the wrong target: these are
+ * shared in Notes, and taken to LinkedIn and X. All three are mobile feeds.
+ *
+ * Measured from Substack's own `reader2` CSS (August 2026), a single-image note
+ * renders into a CONTAIN box — the CDN asks for `c_limit` with no `h_`, so a
+ * note image is never cropped, only fitted:
+ *
+ *     .imageGrid.size-1 .imageBubble {
+ *       aspect-ratio: <source>; max-width: var(--max-width);
+ *       max-height: var(--single-image-max-height);
+ *     }
+ *     desktop feed 520×420 · permalink 568×420
+ *     @media (max-width: 600px) → (100vw − 80px) × 400
+ *
+ * THE 400px HEIGHT CAP IS THE WHOLE STORY. Landscape can't reach it: 14:10 on a
+ * 390px phone painted 310×223, using 56% of the height available to it. 4:5
+ * paints 310×388 — 97%, and +74% of vertical presence in the scroll for free.
+ *
+ * Why 4:5 exactly, and not taller: past ~3:4 you are already against the 400px
+ * cap, so extra height buys nothing and only costs width (2:3 renders 267px
+ * wide — narrower than 4:5 and not one pixel taller). And 4:5 is the tallest
+ * LinkedIn and X display without cropping. Three platforms, one ratio.
+ *
+ * The cost, accepted deliberately: Substack's DESKTOP note box is landscape, so
+ * 4:5 fills 59-65% there, and a postcard dropped into a post at full width gets
+ * cropped to 1:1. 1:1 is the best compromise if that ever becomes the priority
+ * (it never drops below 70% anywhere) — but it wastes ~20% of the feed height on
+ * LinkedIn and X, and four of the five measured contexts are mobile.
+ *
+ * 1080×1350 is also exactly what LinkedIn and X document for portrait, and it
+ * covers every render: the biggest a note is ever shown is 336 CSS px wide at
+ * DPR 3 ≈ 1008.
  */
-export const POSTCARD_WIDTH = 1456;
-export const POSTCARD_HEIGHT = 1048;
+export const POSTCARD_WIDTH = 1080;
+export const POSTCARD_HEIGHT = 1350;
 
 /**
- * The design's own coordinate space. The handoff speaks in a 1080-wide canvas,
- * so the trees keep that width and the height follows the published ratio;
- * everything is multiplied by SCALE on the way out.
+ * The design's own coordinate space. The handoff speaks in a 1080-wide canvas
+ * and the trees still do, so SCALE is currently 1 and the walk below is an
+ * identity. It stays because the published size must be able to move again
+ * without touching a single number inside the four trees.
  */
 const DESIGN_WIDTH = 1080;
 const SCALE = POSTCARD_WIDTH / DESIGN_WIDTH;
@@ -306,7 +360,7 @@ function barColumn(bar: PostcardBar, maxHeight: number, dim: string, label?: Nod
 	);
 }
 
-/* ── 2a · biolink — dark, centred, buttons ─────────────────────────────── */
+/* ── 2a · biolink — light, centred, cards ──────────────────────────────── */
 
 function biolinkTree(data: PostcardData, options: PostcardOptions): Node {
 	/* The article count joins the stat row here; subscribers keep the lead. */
@@ -316,15 +370,54 @@ function biolinkTree(data: PostcardData, options: PostcardOptions): Node {
 		...data.stats.slice(1)
 	];
 
-	/* Identity, data and actions as three blocks: `space-between` shares the
-	   canvas out and no dead band opens between chart and buttons. */
+	/* Identity, data and actions as four blocks: `space-between` shares the
+	   canvas out and no dead band opens between chart and signature. On the tall
+	   canvas the five stat cards go two rows deep — five across 4:5 would leave
+	   each one 170px wide and the labels would wrap. */
+	const topRow = cells.slice(0, 2);
+	const bottomRow = cells.slice(2);
+
+	const card = (stat: PostcardStat, lead: boolean) =>
+		div(
+			{
+				flex: 1,
+				flexDirection: 'column',
+				alignItems: 'center',
+				border: lead ? '1px solid rgba(240,90,30,.5)' : `1px solid ${LIGHT_LINE}`,
+				background: lead ? 'rgba(240,90,30,.07)' : '#fff',
+				borderRadius: 24,
+				padding: '30px 0 26px'
+			},
+			[
+				div(
+					{
+						fontWeight: 700,
+						fontSize: 78,
+						lineHeight: 0.85,
+						letterSpacing: -3.1,
+						color: lead ? ORANGE : PAPER_INK
+					},
+					stat.value
+				),
+				div(
+					{
+						fontSize: 25,
+						fontWeight: 500,
+						color: lead ? '#8a4a2c' : LIGHT_MUTED,
+						marginTop: 12
+					},
+					stat.label
+				)
+			]
+		);
+
 	return div(
 		{
 			width: DESIGN_WIDTH,
 			height: DESIGN_HEIGHT,
-			background: DARK,
-			color: CREAM,
-			padding: '40px 110px 36px',
+			background: LIGHT,
+			color: PAPER_INK,
+			padding: '96px 76px 76px',
 			flexDirection: 'column',
 			alignItems: 'center',
 			justifyContent: 'space-between',
@@ -333,51 +426,53 @@ function biolinkTree(data: PostcardData, options: PostcardOptions): Node {
 			fontFamily: 'Space Grotesk'
 		},
 		[
-			div({ position: 'absolute', top: 0, left: 0, width: DESIGN_WIDTH, height: 8, background: ORANGE }, []),
+			div({ position: 'absolute', top: 0, left: 0, width: DESIGN_WIDTH, height: 10, background: ORANGE }, []),
+			/* The warm wash that the dark version got from a glow. On a light
+			   ground it has to be far weaker or it reads as a printing fault. */
 			div(
 				{
 					position: 'absolute',
-					top: -240,
-					left: (DESIGN_WIDTH - 760) / 2,
-					width: 760,
-					height: 760,
+					top: -420,
+					left: (DESIGN_WIDTH - 1120) / 2,
+					width: 1120,
+					height: 1120,
 					borderRadius: 9999,
-					backgroundImage: 'radial-gradient(circle, rgba(240,90,30,.22), rgba(240,90,30,0) 62%)'
+					backgroundImage: 'radial-gradient(circle, rgba(240,90,30,.13), rgba(240,90,30,0) 62%)'
 				},
 				[]
 			),
 			div({ flexDirection: 'column', alignItems: 'center' }, [
 				div({ position: 'relative' }, [
-					avatarCircle(data, options, 100, {
-						background: '#1d1b1a',
-						border: '1px solid rgba(240,90,30,.5)',
+					avatarCircle(data, options, 158, {
+						background: '#f2ece3',
+						border: '1px solid rgba(240,90,30,.45)',
 						color: ORANGE,
-						fontSize: 30
+						fontSize: 48
 					}),
 					div(
 						{
 							position: 'absolute',
-							bottom: -8,
-							right: -8,
-							width: 46,
-							height: 46,
+							bottom: -10,
+							right: -10,
+							width: 74,
+							height: 74,
 							borderRadius: 999,
-							background: DARK,
+							background: LIGHT,
 							alignItems: 'center',
 							justifyContent: 'center',
 							overflow: 'hidden'
 						},
-						[logoMark(options, 32, () => diamond(30, { fill: ORANGE }, { stroke: DARK, strokeWidth: 2 }))]
+						[logoMark(options, 52, () => diamond(50, { fill: ORANGE }, { stroke: LIGHT, strokeWidth: 3 }))]
 					)
 				]),
 				div(
 					{
 						fontFamily: 'Instrument Serif',
-						fontSize: 70,
+						fontSize: 104,
 						lineHeight: 1,
-						letterSpacing: -1.05,
-						color: '#fff',
-						marginTop: 16,
+						letterSpacing: -1.6,
+						color: PAPER_INK,
+						marginTop: 28,
 						textAlign: 'center'
 					},
 					data.name
@@ -386,84 +481,50 @@ function biolinkTree(data: PostcardData, options: PostcardOptions): Node {
 					{
 						fontFamily: 'JetBrains Mono',
 						fontWeight: 500,
-						fontSize: 18,
-						letterSpacing: 2.5,
+						fontSize: 25,
+						letterSpacing: 3.4,
 						color: ORANGE,
-						marginTop: 12
+						marginTop: 22
 					},
 					data.pubHost.toUpperCase()
 				),
 				div(
-					{ fontSize: 21, lineHeight: 1.4, color: 'rgba(245,241,234,.55)', marginTop: 8 },
+					{ fontSize: 29, lineHeight: 1.4, color: LIGHT_MUTED, marginTop: 14 },
 					`${data.authorName} · escribiendo desde ${data.sinceYear}`
 				)
 			]),
-			div(
-				{ gap: 14, marginTop: 8, width: '100%' },
-				cells.map((stat, index) =>
-					div(
-						{
-							flex: 1,
-							flexDirection: 'column',
-							alignItems: 'center',
-							border:
-								index === 0
-									? '1px solid rgba(240,90,30,.55)'
-									: '1px solid rgba(245,241,234,.16)',
-							background: index === 0 ? 'rgba(240,90,30,.1)' : 'transparent',
-							borderRadius: 16,
-							padding: '18px 0'
-						},
-						[
-							div(
-								{
-									fontWeight: 700,
-									fontSize: 56,
-									lineHeight: 0.85,
-									letterSpacing: -2.2,
-									color: index <= 1 ? ORANGE : CREAM
-								},
-								stat.value
-							),
-							div(
-								{
-									fontSize: LABEL_SIZE,
-									fontWeight: 500,
-									color: index === 0 ? LABEL_ON_DARK_STRONG : LABEL_ON_DARK,
-									marginTop: 8
-								},
-								stat.label
-							)
-						]
-					)
-				)
-			),
-			div({ width: '100%', marginTop: 8, flexDirection: 'column' }, [
+			div({ width: '100%', flexDirection: 'column', gap: 18 }, [
+				div({ gap: 18, width: '100%' }, topRow.map((stat, index) => card(stat, index === 0))),
+				bottomRow.length
+					? div({ gap: 18, width: '100%' }, bottomRow.map((stat) => card(stat, false)))
+					: div({}, [])
+			]),
+			div({ width: '100%', flexDirection: 'column' }, [
 				data.peak
 					? div(
 							{
 								justifyContent: 'flex-end',
 								fontFamily: 'JetBrains Mono',
 								fontWeight: 500,
-								fontSize: 16,
+								fontSize: 21,
 								color: ORANGE,
-								marginBottom: 8
+								marginBottom: 14
 							},
 							data.peak
 						)
 					: div({}, []),
 				div(
-					{ alignItems: 'flex-end', gap: 8, height: 84 },
+					{ alignItems: 'flex-end', gap: 10, height: 224 },
 					data.bars.map((bar) =>
 						barColumn(
 							bar,
-							60,
-							'rgba(240,90,30,.35)',
+							172,
+							'rgba(240,90,30,.26)',
 							div(
 								{
-									fontSize: MONTH_SIZE,
+									fontSize: 21,
 									fontWeight: 500,
-									color: MONTH_ON_DARK,
+									color: LIGHT_MUTED,
 									justifyContent: 'center'
 								},
 								bar.month
@@ -476,12 +537,11 @@ function biolinkTree(data: PostcardData, options: PostcardOptions): Node {
 			div(
 				{
 					width: '100%',
-					marginTop: 8,
 					justifyContent: 'center',
 					fontFamily: 'JetBrains Mono',
 					fontWeight: 500,
-					fontSize: 18,
-					letterSpacing: 0.9,
+					fontSize: 25,
+					letterSpacing: 1.2,
 					color: ORANGE
 				},
 				options.toolUrl
@@ -505,19 +565,19 @@ function editorialTree(data: PostcardData, options: PostcardOptions): Node {
 			div(
 				{
 					fontWeight: 700,
-					fontSize: 62,
+					fontSize: 80,
 					lineHeight: 0.82,
-					letterSpacing: -2.5,
+					letterSpacing: -3.2,
 					color: index === 0 ? ORANGE : CREAM
 				},
 				stat.value
 			),
 			div(
 				{
-					fontSize: LABEL_SIZE,
+					fontSize: 24,
 					fontWeight: 500,
 					color: index === 0 ? LABEL_ON_DARK_STRONG : LABEL_ON_DARK,
-					marginTop: 10
+					marginTop: 14
 				},
 				stat.label
 			)
@@ -530,7 +590,7 @@ function editorialTree(data: PostcardData, options: PostcardOptions): Node {
 			height: DESIGN_HEIGHT,
 			background: DARK,
 			color: CREAM,
-			padding: '44px 60px 38px',
+			padding: '84px 72px 76px',
 			flexDirection: 'column',
 			justifyContent: 'space-between',
 			position: 'relative',
@@ -541,11 +601,14 @@ function editorialTree(data: PostcardData, options: PostcardOptions): Node {
 			div({ position: 'absolute', top: 0, left: 0, width: DESIGN_WIDTH, height: 8, background: ORANGE }, []),
 			div(
 				{
+					/* Kept clear of the figures on purpose: its lower vertex has to land
+					   above the stat band or the diagonal draws a strike-through across
+					   a number. At 420 from top −110 it bottoms out around y 397. */
 					position: 'absolute',
-					right: -120,
-					top: 80,
-					width: 380,
-					height: 380,
+					right: -150,
+					top: -110,
+					width: 420,
+					height: 420,
 					transform: 'rotate(45deg)',
 					border: '1px solid rgba(240,90,30,.28)'
 				},
@@ -557,30 +620,33 @@ function editorialTree(data: PostcardData, options: PostcardOptions): Node {
 						{
 							fontFamily: 'JetBrains Mono',
 							fontWeight: 500,
-							fontSize: 15,
-							letterSpacing: 3.3,
+							fontSize: 20,
+							letterSpacing: 4.4,
 							color: ORANGE,
-							marginBottom: 14
+							marginBottom: 22
 						},
 						`SUBSTACK · DESDE ${data.sinceYear}`
 					),
 					div(
 						{
 							fontFamily: 'Instrument Serif',
-							fontSize: 84,
+							/* Two lines here, not one: a portrait canvas has the height for
+							   it and clamping «Tu Plan B» to one line at this size would
+							   push the type back down to the landscape scale. */
+							fontSize: 132,
 							lineHeight: 0.94,
-							letterSpacing: -1.7,
+							letterSpacing: -2.6,
 							color: '#fff',
 							display: 'block',
-							lineClamp: 1,
-							maxWidth: 800
+							lineClamp: 2,
+							maxWidth: 760
 						},
 						data.name
 					)
 				]),
-				div({ flex: 'none', marginTop: 4 }, [
-					logoMark(options, 84, () =>
-						diamond(84, { stroke: ORANGE, strokeWidth: 2.5 }, { stroke: 'rgba(240,90,30,.5)', strokeWidth: 1.5 })
+				div({ flex: 'none', marginTop: 8 }, [
+					logoMark(options, 104, () =>
+						diamond(104, { stroke: ORANGE, strokeWidth: 3 }, { stroke: 'rgba(240,90,30,.5)', strokeWidth: 1.8 })
 					)
 				])
 			]),
@@ -589,52 +655,52 @@ function editorialTree(data: PostcardData, options: PostcardOptions): Node {
 					alignItems: 'baseline',
 					borderTop: '1px solid rgba(245,241,234,.16)',
 					borderBottom: '1px solid rgba(245,241,234,.16)',
-					padding: '28px 0'
+					padding: '58px 0'
 				},
 				statCells
 			),
 			div({ flexDirection: 'column' }, [
-				div({ alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 12 }, [
+				div({ alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 20 }, [
 					div(
 						{
 							fontFamily: 'JetBrains Mono',
 							fontWeight: 500,
-							fontSize: 15,
-							letterSpacing: 2.7,
+							fontSize: 19,
+							letterSpacing: 3.4,
 							color: 'rgba(245,241,234,.45)'
 						},
 						'INTERACCIONES POR MES'
 					),
 					div(
-						{ fontFamily: 'JetBrains Mono', fontWeight: 500, fontSize: 15, letterSpacing: 0.9, color: ORANGE },
+						{ fontFamily: 'JetBrains Mono', fontWeight: 500, fontSize: 19, letterSpacing: 1.1, color: ORANGE },
 						data.peak ?? ''
 					)
 				]),
 				div(
-					{ alignItems: 'flex-end', gap: 10, height: 96 },
+					{ alignItems: 'flex-end', gap: 12, height: 420 },
 					data.bars.map((bar) =>
 						barColumn(
 							bar,
-							64,
+							330,
 							'rgba(240,90,30,.35)',
-							div({ fontSize: MONTH_SIZE, fontWeight: 500, color: MONTH_ON_DARK, justifyContent: 'center' }, bar.month)
+							div({ fontSize: 21, fontWeight: 500, color: MONTH_ON_DARK, justifyContent: 'center' }, bar.month)
 						)
 					)
 				)
 			]),
-			div({ alignItems: 'center', justifyContent: 'space-between', gap: 24, paddingTop: 4 }, [
-				div({ alignItems: 'center', gap: 14 }, [
-					avatarCircle(data, options, 46, {
+			div({ alignItems: 'center', justifyContent: 'space-between', gap: 24, paddingTop: 8 }, [
+				div({ alignItems: 'center', gap: 18 }, [
+					avatarCircle(data, options, 64, {
 						background: '#2a2726',
 						border: '1px solid rgba(240,90,30,.5)',
 						color: ORANGE,
-						fontSize: 15
+						fontSize: 20
 					}),
 					div({ flexDirection: 'column' }, [
-						div({ fontWeight: 500, fontSize: 21, lineHeight: 1.2 }, data.authorName),
+						div({ fontWeight: 500, fontSize: 27, lineHeight: 1.2 }, data.authorName),
 						data.followers
 							? div(
-									{ fontSize: 17, lineHeight: 1.3, color: 'rgba(245,241,234,.5)', marginTop: 2 },
+									{ fontSize: 21, lineHeight: 1.3, color: 'rgba(245,241,234,.5)', marginTop: 4 },
 									data.followers
 								)
 							: div({}, [])
@@ -646,7 +712,7 @@ function editorialTree(data: PostcardData, options: PostcardOptions): Node {
 						alignItems: 'flex-end',
 						fontFamily: 'JetBrains Mono',
 						fontWeight: 500,
-						fontSize: 16,
+						fontSize: 20,
 						lineHeight: 1.5,
 						color: 'rgba(245,241,234,.75)'
 					},
@@ -673,15 +739,15 @@ function gemaTree(data: PostcardData, options: PostcardOptions): Node {
 			{
 				flex: 1,
 				flexDirection: 'column',
-				padding: '22px 0 20px 24px',
+				padding: '38px 0 34px 28px',
 				borderRight: index < row.length - 1 ? '1px solid rgba(23,20,18,.18)' : 'none'
 			},
 			[
 				div(
-					{ fontWeight: 700, fontSize: 60, lineHeight: 0.82, letterSpacing: -3, color: PAPER_INK },
+					{ fontWeight: 700, fontSize: 76, lineHeight: 0.82, letterSpacing: -3.8, color: PAPER_INK },
 					stat.value
 				),
-				div({ fontSize: LABEL_SIZE, fontWeight: 500, color: LABEL_ON_PAPER, marginTop: 9 }, stat.label)
+				div({ fontSize: 24, fontWeight: 500, color: LABEL_ON_PAPER, marginTop: 13 }, stat.label)
 			]
 		)
 	);
@@ -700,7 +766,7 @@ function gemaTree(data: PostcardData, options: PostcardOptions): Node {
 		[
 			div(
 				{
-					padding: '32px 52px 20px',
+					padding: '64px 60px 40px',
 					borderBottom: `2px solid ${PAPER_INK}`,
 					justifyContent: 'space-between',
 					alignItems: 'flex-end',
@@ -712,29 +778,29 @@ function gemaTree(data: PostcardData, options: PostcardOptions): Node {
 							{
 								fontFamily: 'JetBrains Mono',
 								fontWeight: 500,
-								fontSize: 15,
-								letterSpacing: 3.6,
+								fontSize: 19,
+								letterSpacing: 4.2,
 								color: PAPER_MUTED,
-								marginBottom: 10
+								marginBottom: 16
 							},
 							`BOLETÍN · SUBSTACK · DESDE ${data.sinceYear}`
 						),
 						div(
 							{
 								fontFamily: 'Instrument Serif',
-								fontSize: 76,
+								fontSize: 104,
 								lineHeight: 0.9,
-								letterSpacing: -1.15,
+								letterSpacing: -1.6,
 								display: 'block',
-								lineClamp: 1,
-								maxWidth: 820
+								lineClamp: 2,
+								maxWidth: 760
 							},
 							data.name
 						)
 					]),
 					div({ flex: 'none' }, [
-						logoMark(options, 84, () =>
-							diamond(84, { fill: ORANGE }, { stroke: PAPER, strokeWidth: 1.6, opacity: 0.85 })
+						logoMark(options, 104, () =>
+							diamond(104, { fill: ORANGE }, { stroke: PAPER, strokeWidth: 2, opacity: 0.85 })
 						)
 					])
 				]
@@ -744,80 +810,87 @@ function gemaTree(data: PostcardData, options: PostcardOptions): Node {
 					{
 						flex: 1.15,
 						flexDirection: 'column',
-						padding: '22px 0 20px 52px',
+						padding: '38px 0 34px 60px',
 						borderRight: '1px solid rgba(23,20,18,.18)',
 						background: ORANGE,
 						color: '#fff'
 					},
 					[
-						div({ fontWeight: 700, fontSize: 78, lineHeight: 0.82, letterSpacing: -3.9 }, lead.value),
-						div({ fontSize: LABEL_SIZE, fontWeight: 500, marginTop: 9, opacity: 0.95 }, lead.label)
+						div({ fontWeight: 700, fontSize: 98, lineHeight: 0.82, letterSpacing: -4.9 }, lead.value),
+						div({ fontSize: 24, fontWeight: 500, marginTop: 13, opacity: 0.95 }, lead.label)
 					]
 				),
 				...statCells
 			]),
-			div({ flex: 1, padding: '20px 52px 0', flexDirection: 'column' }, [
-				div({ justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 10 }, [
+			div({ flex: 1, padding: '38px 60px 0', flexDirection: 'column' }, [
+				div({ justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 16 }, [
 					div(
 						{
 							fontFamily: 'JetBrains Mono',
 							fontWeight: 500,
-							fontSize: 15,
-							letterSpacing: 3.6,
+							fontSize: 19,
+							letterSpacing: 4.2,
 							color: PAPER_MUTED
 						},
 						'LIKES + COMENTARIOS + RESTACKS'
 					),
 					div(
-						{ fontFamily: 'Instrument Serif', fontStyle: 'italic', fontSize: 24, color: ORANGE },
+						{ fontFamily: 'Instrument Serif', fontStyle: 'italic', fontSize: 32, color: ORANGE },
 						data.peakLong ?? ''
 					)
 				]),
+				/* `flex: 1` gives this block whatever the rest leaves over, so the bar
+				   scale below has to be raised BY HAND when the canvas grows — the
+				   columns don't stretch, they are drawn at `maxHeight` and sit on the
+				   baseline. Get this wrong and the chart floats in a white field. */
 				div(
 					{
 						alignItems: 'flex-end',
-						gap: 12,
+						gap: 14,
 						flex: 1,
-						paddingBottom: 12,
+						paddingBottom: 18,
 						borderBottom: '1px solid rgba(23,20,18,.18)'
 					},
 					data.bars.map((bar) =>
 						barColumn(
 							bar,
-							120,
+							/* Measured against the block this leaves: ~710px between the
+							   eyebrow and the rule. 560 puts the peak column's head just
+							   under the eyebrow; 330 left it floating 300px below it. */
+							560,
 							'rgba(240,90,30,.3)',
-							div({ fontSize: MONTH_SIZE, fontWeight: 500, color: LABEL_ON_PAPER, justifyContent: 'center' }, bar.month)
+							div({ fontSize: 21, fontWeight: 500, color: LABEL_ON_PAPER, justifyContent: 'center' }, bar.month)
 						)
 					)
 				)
 			]),
 			div(
 				{
-					padding: '14px 52px 24px',
+					padding: '26px 60px 44px',
 					alignItems: 'center',
 					justifyContent: 'space-between',
 					gap: 24
 				},
 				[
-					div({ alignItems: 'center', gap: 14 }, [
-						avatarCircle(data, options, 46, {
+					div({ alignItems: 'center', gap: 18 }, [
+						avatarCircle(data, options, 64, {
 							background: '#e6ded1',
 							color: PAPER_MUTED,
-							fontSize: 15
+							fontSize: 20
 						}),
 						div({ flexDirection: 'column' }, [
-							div({ fontWeight: 500, fontSize: 20, lineHeight: 1.2 }, data.authorName),
-							div({ fontSize: 16, lineHeight: 1.3, color: PAPER_MUTED, marginTop: 2 }, data.pubHost)
+							div({ fontWeight: 500, fontSize: 26, lineHeight: 1.2 }, data.authorName),
+							div({ fontSize: 20, lineHeight: 1.3, color: PAPER_MUTED, marginTop: 4 }, data.pubHost)
 						])
 					]),
 					div(
 						{
 							fontFamily: 'JetBrains Mono',
 							fontWeight: 500,
-							fontSize: 16,
+							fontSize: 20,
 							color: PAPER_INK,
-							border: `1.5px solid ${PAPER_INK}`,
-							padding: '10px 16px',
+							border: `2px solid ${PAPER_INK}`,
+							padding: '14px 22px',
 							borderRadius: 999
 						},
 						options.toolUrl
@@ -840,7 +913,7 @@ function cartelTree(data: PostcardData, options: PostcardOptions): Node {
 		...data.stats.slice(1)
 	];
 	const lead = cells[0];
-	const giantSize = lead.value.length <= 3 ? 300 : lead.value.length <= 6 ? 190 : 150;
+	const giantSize = lead.value.length <= 3 ? 400 : lead.value.length <= 6 ? 250 : 196;
 	const caption =
 		lead.label === 'suscriptores'
 			? 'SUSCRIPTORES'
@@ -853,14 +926,14 @@ function cartelTree(data: PostcardData, options: PostcardOptions): Node {
 			div(
 				{
 					fontWeight: 700,
-					fontSize: 56,
+					fontSize: 74,
 					lineHeight: 0.85,
-					letterSpacing: -2.2,
+					letterSpacing: -2.9,
 					color: index === 0 ? '#fff' : ORANGE
 				},
 				stat.value
 			),
-			div({ fontSize: LABEL_SIZE, fontWeight: 500, color: 'rgba(255,255,255,.8)', marginTop: 8 }, stat.label)
+			div({ fontSize: 24, fontWeight: 500, color: 'rgba(255,255,255,.8)', marginTop: 12 }, stat.label)
 		])
 	);
 
@@ -877,18 +950,18 @@ function cartelTree(data: PostcardData, options: PostcardOptions): Node {
 		},
 		[
 			div(
-				{ padding: '32px 52px 0', justifyContent: 'space-between', alignItems: 'flex-start', gap: 24 },
+				{ padding: '60px 60px 0', justifyContent: 'space-between', alignItems: 'flex-start', gap: 24 },
 				[
 					div({ flexDirection: 'column' }, [
 						div(
 							{
 								fontFamily: 'Instrument Serif',
-								fontSize: 64,
+								fontSize: 88,
 								lineHeight: 0.95,
-								letterSpacing: -0.64,
+								letterSpacing: -0.9,
 								display: 'block',
-								lineClamp: 1,
-								maxWidth: 840
+								lineClamp: 2,
+								maxWidth: 740
 							},
 							data.name
 						),
@@ -896,15 +969,15 @@ function cartelTree(data: PostcardData, options: PostcardOptions): Node {
 							{
 								fontFamily: 'JetBrains Mono',
 								fontWeight: 500,
-								fontSize: 17,
-								marginTop: 10,
+								fontSize: 22,
+								marginTop: 16,
 								color: 'rgba(255,255,255,.9)'
 							},
 							data.pubHost
 						)
 					]),
-					div({ flex: 'none', marginTop: 2 }, [
-						logoMark(options, 64, () => diamond(64, { fill: '#fff' }, { stroke: ORANGE, strokeWidth: 1.8 }))
+					div({ flex: 'none', marginTop: 4 }, [
+						logoMark(options, 88, () => diamond(88, { fill: '#fff' }, { stroke: ORANGE, strokeWidth: 2.4 }))
 					])
 				]
 			),
@@ -922,59 +995,74 @@ function cartelTree(data: PostcardData, options: PostcardOptions): Node {
 				/* The caption rides the number: bigger, and no dead band between. */
 				div(
 					{
-						marginTop: 6,
+						marginTop: 10,
 						fontFamily: 'JetBrains Mono',
 						fontWeight: 500,
-						fontSize: 22,
-						letterSpacing: 6.6,
+						fontSize: 28,
+						letterSpacing: 8.4,
 						color: 'rgba(255,255,255,.92)'
 					},
 					caption
 				)
 			]),
-			div({ background: DARK_BAND, padding: '22px 52px 24px', flexDirection: 'column' }, [
-				/* The chart rides the stat row — its own gesture in this variant —
-				   but takes a wider slot (flex 3) so the twelve months read. */
-				div({ borderBottom: '1px solid rgba(255,255,255,.15)', paddingBottom: 16 }, [
-					...statCells,
-					div(
-						{ flex: 3, alignSelf: 'flex-end', alignItems: 'flex-end', gap: 8, height: 76 },
-						data.bars.map((bar) =>
-							barColumn(
-								bar,
-								48,
-								'rgba(255,255,255,.22)',
-								div(
-									{
-										fontSize: MONTH_SIZE,
-										fontWeight: 500,
-										color: 'rgba(255,255,255,.7)',
-										justifyContent: 'center'
-									},
-									bar.month
+			div({ background: DARK_BAND, padding: '40px 60px 44px', flexDirection: 'column' }, [
+				/* The stat row and the chart are STACKED here, not side by side. Side
+				   by side was the landscape gesture and it does not survive a portrait
+				   canvas: four figures and twelve months sharing 1080px crushed the
+				   month labels into each other (they overlapped their own bars). */
+				div({ borderBottom: '1px solid rgba(255,255,255,.15)', paddingBottom: 30 }, statCells),
+				div(
+					{
+						/* The rule and the padding live on the WRAPPER, never on the row
+						   that carries `height`. A bar column is bar + gap + label inside
+						   that height, and when the total overflowed it was the month label
+						   that spilled — the peak month's label used to print on top of its
+						   own bar. Give the row real slack over the tallest bar. */
+						marginTop: 30,
+						paddingBottom: 30,
+						borderBottom: '1px solid rgba(255,255,255,.15)',
+						flexDirection: 'column'
+					},
+					[
+						div(
+							{ alignItems: 'flex-end', gap: 12, height: 230 },
+							data.bars.map((bar) =>
+								barColumn(
+									bar,
+									152,
+									'rgba(255,255,255,.22)',
+									div(
+										{
+											fontSize: 21,
+											fontWeight: 500,
+											color: 'rgba(255,255,255,.7)',
+											justifyContent: 'center'
+										},
+										bar.month
+									)
 								)
 							)
 						)
-					)
-				]),
-				div({ justifyContent: 'space-between', alignItems: 'center', gap: 24, marginTop: 14 }, [
-					div({ alignItems: 'center', gap: 14 }, [
-						avatarCircle(data, options, 46, {
+					]
+				),
+				div({ justifyContent: 'space-between', alignItems: 'center', gap: 24, marginTop: 30 }, [
+					div({ alignItems: 'center', gap: 18 }, [
+						avatarCircle(data, options, 64, {
 							background: '#2a2726',
 							border: '1px solid rgba(240,90,30,.6)',
 							color: ORANGE,
-							fontSize: 15
+							fontSize: 20
 						}),
 						div({ flexDirection: 'column' }, [
-							div({ fontWeight: 500, fontSize: 19, lineHeight: 1.2, color: '#fff' }, data.authorName),
+							div({ fontWeight: 500, fontSize: 26, lineHeight: 1.2, color: '#fff' }, data.authorName),
 							div(
-								{ fontSize: 16, lineHeight: 1.3, color: 'rgba(255,255,255,.55)', marginTop: 2 },
+								{ fontSize: 20, lineHeight: 1.3, color: 'rgba(255,255,255,.55)', marginTop: 4 },
 								[data.followers, `desde ${data.sinceYear}`].filter(Boolean).join(' · ')
 							)
 						])
 					]),
 					div(
-						{ fontFamily: 'JetBrains Mono', fontWeight: 500, fontSize: 16, color: ORANGE },
+						{ fontFamily: 'JetBrains Mono', fontWeight: 500, fontSize: 20, color: ORANGE },
 						options.toolUrl
 					)
 				])

@@ -1,7 +1,10 @@
 <script lang="ts">
 	import PageMeta from '$lib/components/PageMeta.svelte';
 	import { copy } from '$lib/authors/copy';
-	import { POSTCARD_VARIANTS } from '$lib/authors/postcard';
+	// The intrinsic size comes from the module, never typed here: the `<img>`
+	// attributes are what reserve the slot before the PNG lands, so a hardcoded
+	// pair silently mis-reserves it the next time the canvas ratio moves.
+	import { POSTCARD_VARIANTS, POSTCARD_WIDTH, POSTCARD_HEIGHT } from '$lib/authors/postcard';
 	import type { PageData } from './$types';
 
 	/**
@@ -113,8 +116,8 @@
 								class="poster"
 								src={src(variant)}
 								alt={t.cardAlt.replace('{name}', card.metrics.pub.name)}
-								width="1456"
-								height="1048"
+								width={POSTCARD_WIDTH}
+								height={POSTCARD_HEIGHT}
 								loading={index === 0 ? 'eager' : 'lazy'}
 							/>
 						</a>
