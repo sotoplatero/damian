@@ -15,11 +15,13 @@ import type { Metrics } from './metrics';
  * manual «Set full width»; this ratio lands full-width as-is.
  *
  * THE TYPE SCALE (design units; output multiplies by 1.348):
- *   micro 17 · small 19 · body 21 · mono eyebrows 15 — the smallest text
- *   lands at ~23 final px, the legibility floor for an image read in a feed.
- *   Values (one notch above the rest, on request): stack 56 / secondary 62 /
- *   leads 78–112 / cartel giant 300. Serif displays 54–74. Letter-spacing
- *   keeps its em ratio (−0.04em on values) at every size.
+ *   micro 17 · months 17/500 · labels 20/500 · body 21 · mono eyebrows 15 —
+ *   the smallest text lands at ~23 final px, the legibility floor for an
+ *   image read in a feed. Stat and month labels share ONE voice across the
+ *   four variants (size, weight and contrast), whatever the ground. Values:
+ *   stack 56 / secondary 62 / leads 78 / cartel giant 300 (stepping down for
+ *   long magnitudes). Serif displays 64–84. Letter-spacing keeps its em ratio
+ *   (−0.04em on values) at every size.
  *
  * Same satori caveats as before (learned the hard way, see git history):
  * subset of CSS, explicit `display: flex`, fonts as TTF from
@@ -36,6 +38,18 @@ const CREAM = '#f5f1ea';
 const PAPER = '#f6f2ea';
 const PAPER_INK = '#171412';
 const PAPER_MUTED = '#8a8178';
+
+/*
+ * The one label voice, shared by the four variants: same size, same weight,
+ * per-ground contrast. Months use the same weight one step smaller.
+ */
+const LABEL_SIZE = 20;
+const MONTH_SIZE = 17;
+const LABEL_ON_DARK = 'rgba(245,241,234,.78)';
+const LABEL_ON_DARK_STRONG = 'rgba(245,241,234,.9)';
+const MONTH_ON_DARK = 'rgba(245,241,234,.65)';
+/** Stronger than PAPER_MUTED: labels must read from the feed. */
+const LABEL_ON_PAPER = '#6f665c';
 
 /**
  * The published size: 1456×1048 (14:10). 1456 is Substack's retina 2× of its
@@ -358,9 +372,9 @@ function biolinkTree(data: PostcardData, options: PostcardOptions): Node {
 				div(
 					{
 						fontFamily: 'Instrument Serif',
-						fontSize: 62,
+						fontSize: 70,
 						lineHeight: 1,
-						letterSpacing: -0.93,
+						letterSpacing: -1.05,
 						color: '#fff',
 						marginTop: 16,
 						textAlign: 'center'
@@ -412,10 +426,9 @@ function biolinkTree(data: PostcardData, options: PostcardOptions): Node {
 							),
 							div(
 								{
-									/* Lifted well above the dark ground: the labels read
-									   from the feed, not only the figures. */
-									fontSize: 19,
-									color: index === 0 ? 'rgba(245,241,234,.85)' : 'rgba(245,241,234,.72)',
+									fontSize: LABEL_SIZE,
+									fontWeight: 500,
+									color: index === 0 ? LABEL_ON_DARK_STRONG : LABEL_ON_DARK,
 									marginTop: 8
 								},
 								stat.label
@@ -446,7 +459,12 @@ function biolinkTree(data: PostcardData, options: PostcardOptions): Node {
 							60,
 							'rgba(240,90,30,.35)',
 							div(
-								{ fontSize: 16, color: 'rgba(245,241,234,.55)', justifyContent: 'center' },
+								{
+									fontSize: MONTH_SIZE,
+									fontWeight: 500,
+									color: MONTH_ON_DARK,
+									justifyContent: 'center'
+								},
 								bar.month
 							)
 						)
@@ -495,10 +513,9 @@ function editorialTree(data: PostcardData, options: PostcardOptions): Node {
 			),
 			div(
 				{
-					/* Lifted well above the dark ground: the labels read from the
-					   feed, not only the figures. */
-					fontSize: 19,
-					color: index === 0 ? 'rgba(245,241,234,.85)' : 'rgba(245,241,234,.72)',
+					fontSize: LABEL_SIZE,
+					fontWeight: 500,
+					color: index === 0 ? LABEL_ON_DARK_STRONG : LABEL_ON_DARK,
 					marginTop: 10
 				},
 				stat.label
@@ -549,9 +566,9 @@ function editorialTree(data: PostcardData, options: PostcardOptions): Node {
 					div(
 						{
 							fontFamily: 'Instrument Serif',
-							fontSize: 74,
+							fontSize: 84,
 							lineHeight: 0.94,
-							letterSpacing: -1.5,
+							letterSpacing: -1.7,
 							color: '#fff',
 							display: 'block',
 							lineClamp: 1,
@@ -599,7 +616,7 @@ function editorialTree(data: PostcardData, options: PostcardOptions): Node {
 							bar,
 							64,
 							'rgba(240,90,30,.35)',
-							div({ fontSize: 16, color: 'rgba(245,241,234,.45)', justifyContent: 'center' }, bar.month)
+							div({ fontSize: MONTH_SIZE, fontWeight: 500, color: MONTH_ON_DARK, justifyContent: 'center' }, bar.month)
 						)
 					)
 				)
@@ -663,7 +680,7 @@ function gemaTree(data: PostcardData, options: PostcardOptions): Node {
 					{ fontWeight: 700, fontSize: 60, lineHeight: 0.82, letterSpacing: -3, color: PAPER_INK },
 					stat.value
 				),
-				div({ fontSize: 19, color: PAPER_MUTED, marginTop: 9 }, stat.label)
+				div({ fontSize: LABEL_SIZE, fontWeight: 500, color: LABEL_ON_PAPER, marginTop: 9 }, stat.label)
 			]
 		)
 	);
@@ -704,9 +721,9 @@ function gemaTree(data: PostcardData, options: PostcardOptions): Node {
 						div(
 							{
 								fontFamily: 'Instrument Serif',
-								fontSize: 66,
+								fontSize: 76,
 								lineHeight: 0.9,
-								letterSpacing: -1,
+								letterSpacing: -1.15,
 								display: 'block',
 								lineClamp: 1,
 								maxWidth: 820
@@ -733,7 +750,7 @@ function gemaTree(data: PostcardData, options: PostcardOptions): Node {
 					},
 					[
 						div({ fontWeight: 700, fontSize: 78, lineHeight: 0.82, letterSpacing: -3.9 }, lead.value),
-						div({ fontSize: 19, marginTop: 9, opacity: 0.9 }, lead.label)
+						div({ fontSize: LABEL_SIZE, fontWeight: 500, marginTop: 9, opacity: 0.95 }, lead.label)
 					]
 				),
 				...statCells
@@ -768,7 +785,7 @@ function gemaTree(data: PostcardData, options: PostcardOptions): Node {
 							bar,
 							120,
 							'rgba(240,90,30,.3)',
-							div({ fontSize: 16, color: PAPER_MUTED, justifyContent: 'center' }, bar.month)
+							div({ fontSize: MONTH_SIZE, fontWeight: 500, color: LABEL_ON_PAPER, justifyContent: 'center' }, bar.month)
 						)
 					)
 				)
@@ -842,7 +859,7 @@ function cartelTree(data: PostcardData, options: PostcardOptions): Node {
 				},
 				stat.value
 			),
-			div({ fontSize: 16, color: 'rgba(255,255,255,.72)', marginTop: 8 }, stat.label)
+			div({ fontSize: LABEL_SIZE, fontWeight: 500, color: 'rgba(255,255,255,.8)', marginTop: 8 }, stat.label)
 		])
 	);
 
@@ -865,9 +882,9 @@ function cartelTree(data: PostcardData, options: PostcardOptions): Node {
 						div(
 							{
 								fontFamily: 'Instrument Serif',
-								fontSize: 54,
+								fontSize: 64,
 								lineHeight: 0.95,
-								letterSpacing: -0.54,
+								letterSpacing: -0.64,
 								display: 'block',
 								lineClamp: 1,
 								maxWidth: 840
@@ -890,7 +907,7 @@ function cartelTree(data: PostcardData, options: PostcardOptions): Node {
 					])
 				]
 			),
-			div({ position: 'relative', flex: 1, alignItems: 'center', justifyContent: 'center' }, [
+			div({ flex: 1, flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }, [
 				div(
 					{
 						fontWeight: 700,
@@ -901,40 +918,47 @@ function cartelTree(data: PostcardData, options: PostcardOptions): Node {
 					},
 					lead.value
 				),
+				/* The caption rides the number: bigger, and no dead band between. */
 				div(
 					{
-						position: 'absolute',
-						bottom: 12,
-						left: 0,
-						width: '100%',
-						justifyContent: 'center',
+						marginTop: 6,
 						fontFamily: 'JetBrains Mono',
 						fontWeight: 500,
-						fontSize: 15,
-						letterSpacing: 4.5,
-						color: 'rgba(255,255,255,.9)'
+						fontSize: 22,
+						letterSpacing: 6.6,
+						color: 'rgba(255,255,255,.92)'
 					},
 					caption
 				)
 			]),
-			div({ background: DARK_BAND, padding: '24px 52px 26px', flexDirection: 'column' }, [
-				div({ borderBottom: '1px solid rgba(255,255,255,.15)', paddingBottom: 18 }, [
-					...statCells,
-					div(
-						{ flex: 2, alignSelf: 'flex-end', alignItems: 'flex-end', gap: 5, height: 76 },
-						data.bars.map((bar) =>
-							barColumn(
-								bar,
-								50,
-								'rgba(255,255,255,.22)',
-								div(
-									{ fontSize: 13, color: 'rgba(255,255,255,.55)', justifyContent: 'center' },
-									bar.month
-								)
+			div({ background: DARK_BAND, padding: '22px 52px 24px', flexDirection: 'column' }, [
+				div({ paddingBottom: 16 }, statCells),
+				/* The chart takes the band's full width: twelve legible months. */
+				div(
+					{
+						alignItems: 'flex-end',
+						gap: 10,
+						height: 80,
+						borderBottom: '1px solid rgba(255,255,255,.15)',
+						paddingBottom: 10
+					},
+					data.bars.map((bar) =>
+						barColumn(
+							bar,
+							48,
+							'rgba(255,255,255,.22)',
+							div(
+								{
+									fontSize: MONTH_SIZE,
+									fontWeight: 500,
+									color: 'rgba(255,255,255,.7)',
+									justifyContent: 'center'
+								},
+								bar.month
 							)
 						)
 					)
-				]),
+				),
 				div({ justifyContent: 'space-between', alignItems: 'center', gap: 24, marginTop: 14 }, [
 					div({ alignItems: 'center', gap: 14 }, [
 						avatarCircle(data, options, 46, {
