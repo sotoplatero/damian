@@ -12,9 +12,14 @@ import type { Metrics } from './metrics';
  *
  * THE CANVAS IS LANDSCAPE 1456×1048 (14:10), Substack's native full-bleed post
  * ratio: squares pasted into a post land narrower than the column and need a
- * manual «Set full width»; this ratio lands full-width as-is. The handoff was
- * specified square, so each composition was re-balanced for the shorter
- * canvas — same hierarchy, tighter verticals.
+ * manual «Set full width»; this ratio lands full-width as-is.
+ *
+ * THE TYPE SCALE (design units; output multiplies by 1.348):
+ *   micro 17 · small 19 · body 21 · mono eyebrows 15 — the smallest text
+ *   lands at ~23 final px, the legibility floor for an image read in a feed.
+ *   Values (one notch above the rest, on request): stack 56 / secondary 62 /
+ *   leads 78–112 / cartel giant 300. Serif displays 54–74. Letter-spacing
+ *   keeps its em ratio (−0.04em on values) at every size.
  *
  * Same satori caveats as before (learned the hard way, see git history):
  * subset of CSS, explicit `display: flex`, fonts as TTF from
@@ -304,7 +309,7 @@ function biolinkTree(data: PostcardData, options: PostcardOptions): Node {
 			height: DESIGN_HEIGHT,
 			background: DARK,
 			color: CREAM,
-			padding: '42px 120px 40px',
+			padding: '40px 110px 36px',
 			flexDirection: 'column',
 			alignItems: 'center',
 			justifyContent: 'space-between',
@@ -327,59 +332,59 @@ function biolinkTree(data: PostcardData, options: PostcardOptions): Node {
 				[]
 			),
 			div({ flexDirection: 'column', alignItems: 'center' }, [
-			div({ position: 'relative' }, [
-				avatarCircle(data, options, 92, {
-					background: '#1d1b1a',
-					border: '1px solid rgba(240,90,30,.5)',
-					color: ORANGE,
-					fontSize: 28
-				}),
+				div({ position: 'relative' }, [
+					avatarCircle(data, options, 100, {
+						background: '#1d1b1a',
+						border: '1px solid rgba(240,90,30,.5)',
+						color: ORANGE,
+						fontSize: 30
+					}),
+					div(
+						{
+							position: 'absolute',
+							bottom: -8,
+							right: -8,
+							width: 46,
+							height: 46,
+							borderRadius: 999,
+							background: DARK,
+							alignItems: 'center',
+							justifyContent: 'center',
+							overflow: 'hidden'
+						},
+						[logoMark(options, 32, () => diamond(30, { fill: ORANGE }, { stroke: DARK, strokeWidth: 2 }))]
+					)
+				]),
 				div(
 					{
-						position: 'absolute',
-						bottom: -8,
-						right: -8,
-						width: 40,
-						height: 40,
-						borderRadius: 999,
-						background: DARK,
-						alignItems: 'center',
-						justifyContent: 'center',
-						overflow: 'hidden'
+						fontFamily: 'Instrument Serif',
+						fontSize: 62,
+						lineHeight: 1,
+						letterSpacing: -0.93,
+						color: '#fff',
+						marginTop: 16,
+						textAlign: 'center'
 					},
-					[logoMark(options, 28, () => diamond(26, { fill: ORANGE }, { stroke: DARK, strokeWidth: 2 }))]
+					data.name
+				),
+				div(
+					{
+						fontFamily: 'JetBrains Mono',
+						fontWeight: 500,
+						fontSize: 18,
+						letterSpacing: 2.5,
+						color: ORANGE,
+						marginTop: 12
+					},
+					data.pubHost.toUpperCase()
+				),
+				div(
+					{ fontSize: 21, lineHeight: 1.4, color: 'rgba(245,241,234,.55)', marginTop: 8 },
+					`${data.authorName} · escribiendo desde ${data.sinceYear}`
 				)
 			]),
 			div(
-				{
-					fontFamily: 'Instrument Serif',
-					fontSize: 54,
-					lineHeight: 1,
-					letterSpacing: -0.8,
-					color: '#fff',
-					marginTop: 18,
-					textAlign: 'center'
-				},
-				data.name
-			),
-			div(
-				{
-					fontFamily: 'JetBrains Mono',
-					fontWeight: 500,
-					fontSize: 14,
-					letterSpacing: 2,
-					color: ORANGE,
-					marginTop: 12
-				},
-				data.pubHost.toUpperCase()
-			),
-			div(
-				{ fontSize: 16, lineHeight: 1.4, color: 'rgba(245,241,234,.55)', marginTop: 8 },
-				`${data.authorName} · escribiendo desde ${data.sinceYear}`
-			)
-			]),
-			div(
-				{ gap: 14, marginTop: 10, width: '100%' },
+				{ gap: 14, marginTop: 8, width: '100%' },
 				cells.map((stat, index) =>
 					div(
 						{
@@ -391,23 +396,23 @@ function biolinkTree(data: PostcardData, options: PostcardOptions): Node {
 									? '1px solid rgba(240,90,30,.55)'
 									: '1px solid rgba(245,241,234,.16)',
 							background: index === 0 ? 'rgba(240,90,30,.1)' : 'transparent',
-							borderRadius: 14,
-							padding: '16px 0'
+							borderRadius: 16,
+							padding: '18px 0'
 						},
 						[
 							div(
 								{
 									fontWeight: 700,
-									fontSize: 38,
+									fontSize: 56,
 									lineHeight: 0.85,
-									letterSpacing: -1.5,
+									letterSpacing: -2.2,
 									color: index <= 1 ? ORANGE : CREAM
 								},
 								stat.value
 							),
 							div(
 								{
-									fontSize: 13,
+									fontSize: 19,
 									color: index === 0 ? 'rgba(245,241,234,.62)' : 'rgba(245,241,234,.5)',
 									marginTop: 8
 								},
@@ -417,16 +422,16 @@ function biolinkTree(data: PostcardData, options: PostcardOptions): Node {
 					)
 				)
 			),
-			div({ width: '100%', marginTop: 10, flexDirection: 'column' }, [
+			div({ width: '100%', marginTop: 8, flexDirection: 'column' }, [
 				div(
-					{ alignItems: 'flex-end', gap: 8, height: 56 },
-					data.bars.map((bar) => barColumn(bar, 56, 'rgba(240,90,30,.35)'))
+					{ alignItems: 'flex-end', gap: 8, height: 60 },
+					data.bars.map((bar) => barColumn(bar, 60, 'rgba(240,90,30,.35)'))
 				),
 				div(
 					{
 						justifyContent: 'space-between',
 						fontFamily: 'JetBrains Mono',
-						fontSize: 12,
+						fontSize: 16,
 						color: 'rgba(245,241,234,.4)',
 						marginTop: 8
 					},
@@ -437,16 +442,16 @@ function biolinkTree(data: PostcardData, options: PostcardOptions): Node {
 					]
 				)
 			]),
-			div({ flexDirection: 'row', gap: 12, width: '100%', marginTop: 10 }, [
+			div({ flexDirection: 'row', gap: 12, width: '100%', marginTop: 8 }, [
 				div(
 					{
 						flex: 1,
 						background: ORANGE,
 						color: '#fff',
 						borderRadius: 999,
-						padding: '14px 0',
+						padding: '16px 0',
 						fontWeight: 500,
-						fontSize: 16,
+						fontSize: 20,
 						justifyContent: 'center'
 					},
 					'Suscribirse gratis'
@@ -457,9 +462,9 @@ function biolinkTree(data: PostcardData, options: PostcardOptions): Node {
 						border: '1px solid rgba(245,241,234,.22)',
 						color: CREAM,
 						borderRadius: 999,
-						padding: '14px 0',
+						padding: '16px 0',
 						fontWeight: 500,
-						fontSize: 16,
+						fontSize: 20,
 						justifyContent: 'center'
 					},
 					options.toolUrl
@@ -477,16 +482,16 @@ function editorialTree(data: PostcardData, options: PostcardOptions): Node {
 			div(
 				{
 					fontWeight: 700,
-					fontSize: 44,
+					fontSize: 62,
 					lineHeight: 0.82,
-					letterSpacing: -1.76,
+					letterSpacing: -2.5,
 					color: index === 0 ? ORANGE : CREAM
 				},
 				stat.value
 			),
 			div(
 				{
-					fontSize: 15,
+					fontSize: 19,
 					color: index === 0 ? 'rgba(245,241,234,.6)' : 'rgba(245,241,234,.5)',
 					marginTop: 10
 				},
@@ -501,7 +506,7 @@ function editorialTree(data: PostcardData, options: PostcardOptions): Node {
 			height: DESIGN_HEIGHT,
 			background: DARK,
 			color: CREAM,
-			padding: '46px 60px 40px',
+			padding: '44px 60px 38px',
 			flexDirection: 'column',
 			justifyContent: 'space-between',
 			position: 'relative',
@@ -528,8 +533,8 @@ function editorialTree(data: PostcardData, options: PostcardOptions): Node {
 						{
 							fontFamily: 'JetBrains Mono',
 							fontWeight: 500,
-							fontSize: 12,
-							letterSpacing: 2.6,
+							fontSize: 15,
+							letterSpacing: 3.3,
 							color: ORANGE,
 							marginBottom: 14
 						},
@@ -538,20 +543,20 @@ function editorialTree(data: PostcardData, options: PostcardOptions): Node {
 					div(
 						{
 							fontFamily: 'Instrument Serif',
-							fontSize: 66,
+							fontSize: 74,
 							lineHeight: 0.94,
-							letterSpacing: -1.3,
+							letterSpacing: -1.5,
 							color: '#fff',
 							display: 'block',
 							lineClamp: 1,
-							maxWidth: 820
+							maxWidth: 800
 						},
 						data.name
 					)
 				]),
 				div({ flex: 'none', marginTop: 4 }, [
-					logoMark(options, 76, () =>
-						diamond(76, { stroke: ORANGE, strokeWidth: 2.5 }, { stroke: 'rgba(240,90,30,.5)', strokeWidth: 1.5 })
+					logoMark(options, 84, () =>
+						diamond(84, { stroke: ORANGE, strokeWidth: 2.5 }, { stroke: 'rgba(240,90,30,.5)', strokeWidth: 1.5 })
 					)
 				])
 			]),
@@ -560,16 +565,16 @@ function editorialTree(data: PostcardData, options: PostcardOptions): Node {
 					alignItems: 'baseline',
 					borderTop: '1px solid rgba(245,241,234,.16)',
 					borderBottom: '1px solid rgba(245,241,234,.16)',
-					padding: '22px 0'
+					padding: '24px 0'
 				},
 				[
 					div({ flex: 1.3, flexDirection: 'column' }, [
 						div(
-							{ fontWeight: 700, fontSize: 76, lineHeight: 0.82, letterSpacing: -3.8, color: ORANGE },
+							{ fontWeight: 700, fontSize: 112, lineHeight: 0.82, letterSpacing: -4.5, color: ORANGE },
 							data.articles
 						),
 						div(
-							{ fontSize: 16, color: 'rgba(245,241,234,.6)', marginTop: 10 },
+							{ fontSize: 21, color: 'rgba(245,241,234,.6)', marginTop: 12 },
 							data.articles === '1' ? 'artículo' : 'artículos'
 						)
 					]),
@@ -577,47 +582,47 @@ function editorialTree(data: PostcardData, options: PostcardOptions): Node {
 				]
 			),
 			div({ flexDirection: 'column' }, [
-				div({ alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 10 }, [
+				div({ alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 12 }, [
 					div(
 						{
 							fontFamily: 'JetBrains Mono',
 							fontWeight: 500,
-							fontSize: 11,
-							letterSpacing: 2,
+							fontSize: 15,
+							letterSpacing: 2.7,
 							color: 'rgba(245,241,234,.45)'
 						},
 						'INTERACCIONES POR MES'
 					),
 					div(
-						{ fontFamily: 'JetBrains Mono', fontWeight: 500, fontSize: 11, letterSpacing: 0.66, color: ORANGE },
+						{ fontFamily: 'JetBrains Mono', fontWeight: 500, fontSize: 15, letterSpacing: 0.9, color: ORANGE },
 						data.peak ?? ''
 					)
 				]),
 				div(
-					{ alignItems: 'flex-end', gap: 10, height: 92 },
+					{ alignItems: 'flex-end', gap: 10, height: 96 },
 					data.bars.map((bar) =>
 						barColumn(
 							bar,
 							64,
 							'rgba(240,90,30,.35)',
-							div({ fontSize: 12, color: 'rgba(245,241,234,.45)', justifyContent: 'center' }, bar.month)
+							div({ fontSize: 16, color: 'rgba(245,241,234,.45)', justifyContent: 'center' }, bar.month)
 						)
 					)
 				)
 			]),
 			div({ alignItems: 'center', justifyContent: 'space-between', gap: 24, paddingTop: 4 }, [
-				div({ alignItems: 'center', gap: 12 }, [
-					avatarCircle(data, options, 40, {
+				div({ alignItems: 'center', gap: 14 }, [
+					avatarCircle(data, options, 46, {
 						background: '#2a2726',
 						border: '1px solid rgba(240,90,30,.5)',
 						color: ORANGE,
-						fontSize: 13
+						fontSize: 15
 					}),
 					div({ flexDirection: 'column' }, [
-						div({ fontWeight: 500, fontSize: 17, lineHeight: 1.2 }, data.authorName),
+						div({ fontWeight: 500, fontSize: 21, lineHeight: 1.2 }, data.authorName),
 						data.followers
 							? div(
-									{ fontSize: 13, lineHeight: 1.3, color: 'rgba(245,241,234,.5)', marginTop: 2 },
+									{ fontSize: 17, lineHeight: 1.3, color: 'rgba(245,241,234,.5)', marginTop: 2 },
 									data.followers
 								)
 							: div({}, [])
@@ -629,7 +634,7 @@ function editorialTree(data: PostcardData, options: PostcardOptions): Node {
 						alignItems: 'flex-end',
 						fontFamily: 'JetBrains Mono',
 						fontWeight: 500,
-						fontSize: 13,
+						fontSize: 16,
 						lineHeight: 1.5,
 						color: 'rgba(245,241,234,.75)'
 					},
@@ -648,21 +653,21 @@ function gemaTree(data: PostcardData, options: PostcardOptions): Node {
 			{
 				flex: 1,
 				flexDirection: 'column',
-				padding: '20px 0 18px 24px',
+				padding: '22px 0 20px 24px',
 				borderRight: index < data.stats.length - 1 ? '1px solid rgba(23,20,18,.18)' : 'none'
 			},
 			[
 				div(
 					{
 						fontWeight: 700,
-						fontSize: 40,
+						fontSize: 60,
 						lineHeight: 0.82,
-						letterSpacing: -2,
+						letterSpacing: -3,
 						color: index === 0 ? ORANGE : PAPER_INK
 					},
 					stat.value
 				),
-				div({ fontSize: 13, color: PAPER_MUTED, marginTop: 9 }, stat.label)
+				div({ fontSize: 19, color: PAPER_MUTED, marginTop: 9 }, stat.label)
 			]
 		)
 	);
@@ -681,7 +686,7 @@ function gemaTree(data: PostcardData, options: PostcardOptions): Node {
 		[
 			div(
 				{
-					padding: '34px 52px 20px',
+					padding: '32px 52px 20px',
 					borderBottom: `2px solid ${PAPER_INK}`,
 					justifyContent: 'space-between',
 					alignItems: 'flex-end',
@@ -693,8 +698,8 @@ function gemaTree(data: PostcardData, options: PostcardOptions): Node {
 							{
 								fontFamily: 'JetBrains Mono',
 								fontWeight: 500,
-								fontSize: 11,
-								letterSpacing: 2.6,
+								fontSize: 15,
+								letterSpacing: 3.6,
 								color: PAPER_MUTED,
 								marginBottom: 10
 							},
@@ -703,19 +708,19 @@ function gemaTree(data: PostcardData, options: PostcardOptions): Node {
 						div(
 							{
 								fontFamily: 'Instrument Serif',
-								fontSize: 58,
+								fontSize: 66,
 								lineHeight: 0.9,
-								letterSpacing: -0.9,
+								letterSpacing: -1,
 								display: 'block',
 								lineClamp: 1,
-								maxWidth: 840
+								maxWidth: 820
 							},
 							data.name
 						)
 					]),
 					div({ flex: 'none' }, [
-						logoMark(options, 76, () =>
-							diamond(76, { fill: ORANGE }, { stroke: PAPER, strokeWidth: 1.6, opacity: 0.85 })
+						logoMark(options, 84, () =>
+							diamond(84, { fill: ORANGE }, { stroke: PAPER, strokeWidth: 1.6, opacity: 0.85 })
 						)
 					])
 				]
@@ -725,35 +730,35 @@ function gemaTree(data: PostcardData, options: PostcardOptions): Node {
 					{
 						flex: 1.15,
 						flexDirection: 'column',
-						padding: '20px 0 18px 52px',
+						padding: '22px 0 20px 52px',
 						borderRight: '1px solid rgba(23,20,18,.18)',
 						background: ORANGE,
 						color: '#fff'
 					},
 					[
-						div({ fontWeight: 700, fontSize: 52, lineHeight: 0.82, letterSpacing: -2.6 }, data.articles),
+						div({ fontWeight: 700, fontSize: 78, lineHeight: 0.82, letterSpacing: -3.9 }, data.articles),
 						div(
-							{ fontSize: 13, marginTop: 9, opacity: 0.9 },
+							{ fontSize: 19, marginTop: 9, opacity: 0.9 },
 							data.articles === '1' ? 'artículo' : 'artículos'
 						)
 					]
 				),
 				...statCells
 			]),
-			div({ flex: 1, padding: '18px 52px 0', flexDirection: 'column' }, [
+			div({ flex: 1, padding: '20px 52px 0', flexDirection: 'column' }, [
 				div({ justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 10 }, [
 					div(
 						{
 							fontFamily: 'JetBrains Mono',
 							fontWeight: 500,
-							fontSize: 11,
-							letterSpacing: 2.4,
+							fontSize: 15,
+							letterSpacing: 3.6,
 							color: PAPER_MUTED
 						},
 						'LIKES + COMENTARIOS + RESTACKS'
 					),
 					div(
-						{ fontFamily: 'Instrument Serif', fontStyle: 'italic', fontSize: 19, color: ORANGE },
+						{ fontFamily: 'Instrument Serif', fontStyle: 'italic', fontSize: 24, color: ORANGE },
 						data.peakLong ?? ''
 					)
 				]),
@@ -768,40 +773,40 @@ function gemaTree(data: PostcardData, options: PostcardOptions): Node {
 					data.bars.map((bar) =>
 						barColumn(
 							bar,
-							92,
+							120,
 							'rgba(240,90,30,.3)',
-							div({ fontSize: 12, color: PAPER_MUTED, justifyContent: 'center' }, bar.month)
+							div({ fontSize: 16, color: PAPER_MUTED, justifyContent: 'center' }, bar.month)
 						)
 					)
 				)
 			]),
 			div(
 				{
-					padding: '14px 52px 26px',
+					padding: '14px 52px 24px',
 					alignItems: 'center',
 					justifyContent: 'space-between',
 					gap: 24
 				},
 				[
-					div({ alignItems: 'center', gap: 12 }, [
-						avatarCircle(data, options, 38, {
+					div({ alignItems: 'center', gap: 14 }, [
+						avatarCircle(data, options, 46, {
 							background: '#e6ded1',
 							color: PAPER_MUTED,
-							fontSize: 13
+							fontSize: 15
 						}),
 						div({ flexDirection: 'column' }, [
-							div({ fontWeight: 500, fontSize: 16, lineHeight: 1.2 }, data.authorName),
-							div({ fontSize: 12, lineHeight: 1.3, color: PAPER_MUTED, marginTop: 2 }, data.pubHost)
+							div({ fontWeight: 500, fontSize: 20, lineHeight: 1.2 }, data.authorName),
+							div({ fontSize: 16, lineHeight: 1.3, color: PAPER_MUTED, marginTop: 2 }, data.pubHost)
 						])
 					]),
 					div(
 						{
 							fontFamily: 'JetBrains Mono',
 							fontWeight: 500,
-							fontSize: 12,
+							fontSize: 16,
 							color: PAPER_INK,
 							border: `1.5px solid ${PAPER_INK}`,
-							padding: '8px 14px',
+							padding: '10px 16px',
 							borderRadius: 999
 						},
 						options.toolUrl
@@ -820,14 +825,14 @@ function cartelTree(data: PostcardData, options: PostcardOptions): Node {
 			div(
 				{
 					fontWeight: 700,
-					fontSize: 38,
+					fontSize: 56,
 					lineHeight: 0.85,
-					letterSpacing: -1.5,
+					letterSpacing: -2.2,
 					color: index === 0 ? '#fff' : ORANGE
 				},
 				stat.value
 			),
-			div({ fontSize: 12, color: 'rgba(255,255,255,.55)', marginTop: 8 }, stat.label)
+			div({ fontSize: 16, color: 'rgba(255,255,255,.55)', marginTop: 8 }, stat.label)
 		])
 	);
 
@@ -844,15 +849,15 @@ function cartelTree(data: PostcardData, options: PostcardOptions): Node {
 		},
 		[
 			div(
-				{ padding: '34px 52px 0', justifyContent: 'space-between', alignItems: 'flex-start', gap: 24 },
+				{ padding: '32px 52px 0', justifyContent: 'space-between', alignItems: 'flex-start', gap: 24 },
 				[
 					div({ flexDirection: 'column' }, [
 						div(
 							{
 								fontFamily: 'Instrument Serif',
-								fontSize: 46,
+								fontSize: 54,
 								lineHeight: 0.95,
-								letterSpacing: -0.46,
+								letterSpacing: -0.54,
 								display: 'block',
 								lineClamp: 1,
 								maxWidth: 840
@@ -863,7 +868,7 @@ function cartelTree(data: PostcardData, options: PostcardOptions): Node {
 							{
 								fontFamily: 'JetBrains Mono',
 								fontWeight: 500,
-								fontSize: 14,
+								fontSize: 17,
 								marginTop: 10,
 								color: 'rgba(255,255,255,.9)'
 							},
@@ -871,43 +876,43 @@ function cartelTree(data: PostcardData, options: PostcardOptions): Node {
 						)
 					]),
 					div({ flex: 'none', marginTop: 2 }, [
-						logoMark(options, 58, () => diamond(58, { fill: '#fff' }, { stroke: ORANGE, strokeWidth: 1.8 }))
+						logoMark(options, 64, () => diamond(64, { fill: '#fff' }, { stroke: ORANGE, strokeWidth: 1.8 }))
 					])
 				]
 			),
 			div({ position: 'relative', flex: 1, alignItems: 'center', justifyContent: 'center' }, [
 				div(
-					{ fontWeight: 700, fontSize: 230, lineHeight: 1, letterSpacing: -13.8, color: '#fff' },
+					{ fontWeight: 700, fontSize: 300, lineHeight: 1, letterSpacing: -15, color: '#fff' },
 					data.articles
 				),
 				div(
 					{
 						position: 'absolute',
-						bottom: 16,
+						bottom: 12,
 						left: 0,
 						width: '100%',
 						justifyContent: 'center',
 						fontFamily: 'JetBrains Mono',
 						fontWeight: 500,
-						fontSize: 12,
-						letterSpacing: 3.6,
+						fontSize: 15,
+						letterSpacing: 4.5,
 						color: 'rgba(255,255,255,.9)'
 					},
 					data.articles === '1' ? 'ARTÍCULO PUBLICADO' : 'ARTÍCULOS PUBLICADOS'
 				)
 			]),
-			div({ background: DARK_BAND, padding: '24px 52px 28px', flexDirection: 'column' }, [
+			div({ background: DARK_BAND, padding: '24px 52px 26px', flexDirection: 'column' }, [
 				div({ borderBottom: '1px solid rgba(255,255,255,.15)', paddingBottom: 18 }, [
 					...statCells,
 					div({ flex: 1.2, alignSelf: 'flex-end', flexDirection: 'column', alignItems: 'flex-end' }, [
 						div(
-							{ alignItems: 'flex-end', gap: 5, height: 46, justifyContent: 'flex-end' },
+							{ alignItems: 'flex-end', gap: 5, height: 56, justifyContent: 'flex-end' },
 							data.bars.map((bar) =>
 								div(
 									{
-										width: 14,
+										width: 16,
 										background: bar.solid ? ORANGE : 'rgba(255,255,255,.22)',
-										height: Math.max(3, Math.round(bar.share * 42))
+										height: Math.max(3, Math.round(bar.share * 50))
 									},
 									[]
 								)
@@ -916,7 +921,7 @@ function cartelTree(data: PostcardData, options: PostcardOptions): Node {
 						div(
 							{
 								fontFamily: 'JetBrains Mono',
-								fontSize: 11,
+								fontSize: 15,
 								color: 'rgba(255,255,255,.5)',
 								marginTop: 8
 							},
@@ -925,23 +930,23 @@ function cartelTree(data: PostcardData, options: PostcardOptions): Node {
 					])
 				]),
 				div({ justifyContent: 'space-between', alignItems: 'center', gap: 24, marginTop: 14 }, [
-					div({ alignItems: 'center', gap: 12 }, [
-						avatarCircle(data, options, 38, {
+					div({ alignItems: 'center', gap: 14 }, [
+						avatarCircle(data, options, 46, {
 							background: '#2a2726',
 							border: '1px solid rgba(240,90,30,.6)',
 							color: ORANGE,
-							fontSize: 13
+							fontSize: 15
 						}),
 						div({ flexDirection: 'column' }, [
-							div({ fontWeight: 500, fontSize: 15, lineHeight: 1.2, color: '#fff' }, data.authorName),
+							div({ fontWeight: 500, fontSize: 19, lineHeight: 1.2, color: '#fff' }, data.authorName),
 							div(
-								{ fontSize: 12, lineHeight: 1.3, color: 'rgba(255,255,255,.55)', marginTop: 2 },
+								{ fontSize: 16, lineHeight: 1.3, color: 'rgba(255,255,255,.55)', marginTop: 2 },
 								[data.followers, `desde ${data.sinceYear}`].filter(Boolean).join(' · ')
 							)
 						])
 					]),
 					div(
-						{ fontFamily: 'JetBrains Mono', fontWeight: 500, fontSize: 12, color: ORANGE },
+						{ fontFamily: 'JetBrains Mono', fontWeight: 500, fontSize: 16, color: ORANGE },
 						options.toolUrl
 					)
 				])
