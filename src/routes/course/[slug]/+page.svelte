@@ -1,12 +1,9 @@
 <script lang="ts">
-	import raw from '$lib/content/course.md?raw';
-	import { parseCopy } from '$lib/content';
+	/** UI strings belong to every course; the content belongs to the course. */
+	import { t } from '$lib/courses/copy';
 	import CourseRunner from '$lib/components/course/CourseRunner.svelte';
 
 	let { data } = $props();
-
-	/** UI strings belong to every course; the content belongs to the course. */
-	const { t } = parseCopy(raw);
 </script>
 
 <svelte:head>

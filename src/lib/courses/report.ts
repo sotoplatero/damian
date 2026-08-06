@@ -1,5 +1,4 @@
-import raw from '$lib/content/course.md?raw';
-import { parseCopy } from '$lib/content';
+import { t } from './copy';
 import { escapeMarkdown } from '$lib/tools/markdown';
 import { annualise, budgetBalance, estimateVerdict, formatEuros, savingsRate } from './engine';
 import type { Course, Module, ModuleAnswer, Reference } from './types';
@@ -36,11 +35,9 @@ import type { Course, Module, ModuleAnswer, Reference } from './types';
  * credit lives in the email shell (`src/lib/emails/course.md`) and in the links.
  */
 
-const { t } = parseCopy(raw);
-
 /**
- * Labels come from the SAME file the page reads, so the two can never tell
- * different stories about the same thing.
+ * Labels come from the SAME file the page reads — one parse, in `./copy` — so
+ * the two can never tell different stories about the same thing.
  */
 function label(key: string, fallback: string): string {
 	return t[key] ?? fallback;
