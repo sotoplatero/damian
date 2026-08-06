@@ -8,6 +8,7 @@ import toolNewsletterTemplate from '../emails/tool-newsletter.md?raw';
 import toolPostsTemplate from '../emails/tool-10-post-types.md?raw';
 import toolRepurposeTemplate from '../emails/tool-repurpose.md?raw';
 import toolSubstackAboutTemplate from '../emails/tool-substack-about.md?raw';
+import courseTemplate from '../emails/course.md?raw';
 
 /** A subscriber as stored in the Resend audience. */
 export type Contact = {
@@ -139,4 +140,17 @@ export async function sendToolPiecesEmail(to: string, piecesMarkdown: string): P
 
 export async function sendSubstackAboutEmail(to: string, reportMarkdown: string): Promise<void> {
 	await sendToolEmail(toolSubstackAboutTemplate, 'REPORT', to, reportMarkdown);
+}
+
+/**
+ * Deliver what someone did in a `/course/[slug]` run.
+ *
+ * Shares the shell with the tools but SUBSCRIBES NOBODY: the endpoint never
+ * calls `subscribe()`. Courses are private demos to show the creator whose
+ * content they're built on, and adding that creator to Damian's mailing list for
+ * trying their own demo is the opposite of the point. If one ever ships as lead
+ * capture, the signup goes there in plain sight, not hidden in here.
+ */
+export async function sendCourseEmail(to: string, reportMarkdown: string): Promise<void> {
+	await sendToolEmail(courseTemplate, 'REPORT', to, reportMarkdown);
 }
