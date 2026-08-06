@@ -17,6 +17,10 @@ node_modules
 /.svelte-kit
 /build
 
+# Dev server logs written by the Codex runner. Scratch, and they grow.
+.codex-dev-server.log
+.codex-dev-server.err.log
+
 # OS
 .DS_Store
 Thumbs.db
