@@ -813,7 +813,24 @@ function gemaTree(data: PostcardData, options: PostcardOptions): Node {
 /* ── 1c · cartel — orange poster, giant number ──────────────────────────── */
 
 function cartelTree(data: PostcardData, options: PostcardOptions): Node {
-	const statCells = data.stats.map((stat, index) =>
+	/* Subscribers ARE the poster: the giant number. The article count joins
+	   the dark band below. When a long magnitude («7,7 mil+») takes the giant
+	   slot, the size steps down so it still fits the canvas. */
+	const cells: PostcardStat[] = [
+		...data.stats.slice(0, 1),
+		{ value: data.articles, label: data.articles === '1' ? 'artículo' : 'artículos' },
+		...data.stats.slice(1)
+	];
+	const lead = cells[0];
+	const giantSize = lead.value.length <= 3 ? 300 : lead.value.length <= 6 ? 190 : 150;
+	const caption =
+		lead.label === 'suscriptores'
+			? 'SUSCRIPTORES'
+			: data.articles === '1'
+				? 'ARTÍCULO PUBLICADO'
+				: 'ARTÍCULOS PUBLICADOS';
+
+	const statCells = cells.slice(1).map((stat, index) =>
 		div({ flex: 1, flexDirection: 'column' }, [
 			div(
 				{
@@ -825,7 +842,7 @@ function cartelTree(data: PostcardData, options: PostcardOptions): Node {
 				},
 				stat.value
 			),
-			div({ fontSize: 16, color: 'rgba(255,255,255,.55)', marginTop: 8 }, stat.label)
+			div({ fontSize: 16, color: 'rgba(255,255,255,.72)', marginTop: 8 }, stat.label)
 		])
 	);
 
@@ -875,8 +892,14 @@ function cartelTree(data: PostcardData, options: PostcardOptions): Node {
 			),
 			div({ position: 'relative', flex: 1, alignItems: 'center', justifyContent: 'center' }, [
 				div(
-					{ fontWeight: 700, fontSize: 300, lineHeight: 1, letterSpacing: -15, color: '#fff' },
-					data.articles
+					{
+						fontWeight: 700,
+						fontSize: giantSize,
+						lineHeight: 1,
+						letterSpacing: -(giantSize * 0.05),
+						color: '#fff'
+					},
+					lead.value
 				),
 				div(
 					{
@@ -891,36 +914,26 @@ function cartelTree(data: PostcardData, options: PostcardOptions): Node {
 						letterSpacing: 4.5,
 						color: 'rgba(255,255,255,.9)'
 					},
-					data.articles === '1' ? 'ARTÍCULO PUBLICADO' : 'ARTÍCULOS PUBLICADOS'
+					caption
 				)
 			]),
 			div({ background: DARK_BAND, padding: '24px 52px 26px', flexDirection: 'column' }, [
 				div({ borderBottom: '1px solid rgba(255,255,255,.15)', paddingBottom: 18 }, [
 					...statCells,
-					div({ flex: 1.2, alignSelf: 'flex-end', flexDirection: 'column', alignItems: 'flex-end' }, [
-						div(
-							{ alignItems: 'flex-end', gap: 5, height: 56, justifyContent: 'flex-end' },
-							data.bars.map((bar) =>
+					div(
+						{ flex: 2, alignSelf: 'flex-end', alignItems: 'flex-end', gap: 5, height: 76 },
+						data.bars.map((bar) =>
+							barColumn(
+								bar,
+								50,
+								'rgba(255,255,255,.22)',
 								div(
-									{
-										width: 16,
-										background: bar.solid ? ORANGE : 'rgba(255,255,255,.22)',
-										height: Math.max(3, Math.round(bar.share * 50))
-									},
-									[]
+									{ fontSize: 13, color: 'rgba(255,255,255,.55)', justifyContent: 'center' },
+									bar.month
 								)
 							)
-						),
-						div(
-							{
-								fontFamily: 'JetBrains Mono',
-								fontSize: 15,
-								color: 'rgba(255,255,255,.5)',
-								marginTop: 8
-							},
-							`${data.bars[0]?.month ?? ''} → ${data.bars.at(-1)?.month ?? ''}${data.peak ? ` · pico ${data.peak.replace(' · ', ' ')}` : ''}`
 						)
-					])
+					)
 				]),
 				div({ justifyContent: 'space-between', alignItems: 'center', gap: 24, marginTop: 14 }, [
 					div({ alignItems: 'center', gap: 14 }, [
