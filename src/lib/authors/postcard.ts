@@ -142,6 +142,13 @@ export function postcardData(metrics: Metrics, followers: number | null): Postca
 export type PostcardOptions = {
 	/** The author's photo as a data URI; null draws the initials circle. */
 	avatar: string | null;
+	/**
+	 * The PUBLICATION's logo as a data URI. The handoff drew a faceted diamond
+	 * there because the mock was Objeto Brillante, whose logo IS a diamond —
+	 * the slot belongs to each newsletter's own logo, and the drawn diamond
+	 * survives only as the fallback when a publication has none.
+	 */
+	logo: string | null;
 	/** «damiansoto.me/postcard/{slug}» — the image leads back to the tool. */
 	toolUrl: string;
 };
@@ -187,6 +194,26 @@ function diamond(
 			]
 		}
 	};
+}
+
+/** The publication's logo in the mark slot; the drawn diamond as fallback. */
+function logoMark(
+	options: PostcardOptions,
+	size: number,
+	fallback: () => Node
+): Node {
+	if (options.logo) {
+		return {
+			type: 'img',
+			props: {
+				src: options.logo,
+				width: size,
+				height: size,
+				style: { borderRadius: Math.round(size * 0.18) }
+			}
+		};
+	}
+	return fallback();
 }
 
 /** The author's photo in a circle, or the prototype's initials fallback. */
@@ -293,9 +320,10 @@ function biolinkTree(data: PostcardData, options: PostcardOptions): Node {
 						borderRadius: 999,
 						background: DARK,
 						alignItems: 'center',
-						justifyContent: 'center'
+						justifyContent: 'center',
+						overflow: 'hidden'
 					},
-					[diamond(34, { fill: ORANGE }, { stroke: DARK, strokeWidth: 2 })]
+					[logoMark(options, 36, () => diamond(34, { fill: ORANGE }, { stroke: DARK, strokeWidth: 2 }))]
 				)
 			]),
 			div(
@@ -494,7 +522,9 @@ function editorialTree(data: PostcardData, options: PostcardOptions): Node {
 					)
 				]),
 				div({ flex: 'none', marginTop: 8 }, [
-					diamond(96, { stroke: ORANGE, strokeWidth: 2.5 }, { stroke: 'rgba(240,90,30,.5)', strokeWidth: 1.5 })
+					logoMark(options, 96, () =>
+						diamond(96, { stroke: ORANGE, strokeWidth: 2.5 }, { stroke: 'rgba(240,90,30,.5)', strokeWidth: 1.5 })
+					)
 				])
 			]),
 			div(
@@ -655,7 +685,9 @@ function gemaTree(data: PostcardData, options: PostcardOptions): Node {
 						)
 					]),
 					div({ flex: 'none' }, [
-						diamond(120, { fill: ORANGE }, { stroke: PAPER, strokeWidth: 1.6, opacity: 0.85 })
+						logoMark(options, 120, () =>
+							diamond(120, { fill: ORANGE }, { stroke: PAPER, strokeWidth: 1.6, opacity: 0.85 })
+						)
 					])
 				]
 			),
@@ -817,7 +849,7 @@ function cartelTree(data: PostcardData, options: PostcardOptions): Node {
 						)
 					]),
 					div({ flex: 'none', marginTop: 6 }, [
-						diamond(88, { fill: '#fff' }, { stroke: ORANGE, strokeWidth: 1.8 })
+						logoMark(options, 88, () => diamond(88, { fill: '#fff' }, { stroke: ORANGE, strokeWidth: 1.8 }))
 					])
 				]
 			),

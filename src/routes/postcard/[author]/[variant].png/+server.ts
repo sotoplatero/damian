@@ -76,11 +76,15 @@ export const GET: RequestHandler = async ({ params, url }) => {
 	}
 
 	const { metrics } = result.card;
-	const avatar = await avatarDataUri(metrics.pub.authorPhotoUrl);
+	const [avatar, logo] = await Promise.all([
+		avatarDataUri(metrics.pub.authorPhotoUrl),
+		avatarDataUri(metrics.pub.logoUrl)
+	]);
 
 	return new ImageResponse(
 		postcardTree(variant, postcardData(metrics, result.card.followers), {
 			avatar,
+			logo,
 			toolUrl: `${url.host}/postcard/${slug}`
 		}),
 		{
