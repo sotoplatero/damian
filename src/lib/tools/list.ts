@@ -28,18 +28,24 @@ export type Tool = {
 	blurb: string;
 	/**
 	 * Marks the ones that ask for an email, so you can see at a glance which ones
-	 * capture. `/author` is the first one without it, on purpose: the card is a
-	 * gift meant to open a conversation with another author, and a form in front of
-	 * it would turn it into lead capture.
+	 * capture. `/postcard` is the first one without it, on purpose: the postcard
+	 * is a gift meant to open a conversation with another author, and a form in
+	 * front of it would turn it into lead capture.
 	 */
 	capturesEmail?: boolean;
 };
 
 export const tools: Tool[] = [
 	{
-		name: 'El Wrapped de tu Substack',
-		href: '/author',
-		blurb: 'Pega la dirección de un newsletter. Sale la tarjeta de toda su historia.'
+		name: 'La postal de tu Substack',
+		href: '/postcard',
+		blurb: 'Pega tu dirección y llévate cuatro postales con tu historia, listas para compartir.'
+	},
+	{
+		name: 'Distribuye tu artículo',
+		href: '/tool/repurpose',
+		blurb: 'Convierte un artículo en nueve notas breves para seguir llevándole lectores.',
+		capturesEmail: true
 	},
 	{
 		name: 'Reescribe el “Acerca de” de tu Substack',
@@ -48,21 +54,9 @@ export const tools: Tool[] = [
 		capturesEmail: true
 	},
 	{
-		name: 'Reescribe tu oferta con 7 fórmulas de venta',
-		href: '/tool/7-frameworks',
-		blurb: 'Pega tu web. Te doy siete versiones listas para usar.',
-		capturesEmail: true
-	},
-	{
 		name: 'Saca 10 posts distintos de una sola idea',
 		href: '/tool/10-post-types',
 		blurb: 'Escribe el tema. Te doy diez posts listos para publicar.',
-		capturesEmail: true
-	},
-	{
-		name: 'Reparte un artículo entre Substack, X y LinkedIn',
-		href: '/tool/repurpose',
-		blurb: 'Pega el enlace de tu artículo. Te lo reparto en nueve publicaciones.',
 		capturesEmail: true
 	}
 ];

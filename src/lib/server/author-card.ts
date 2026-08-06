@@ -1,5 +1,6 @@
 import {
 	readPubInfo,
+	readFollowers,
 	walkArchive,
 	readFeed,
 	UnreadableError,
@@ -7,7 +8,6 @@ import {
 	type PubInfo
 } from './substack-archive';
 import { computeMetrics, ownPosts } from '$lib/authors/metrics';
-import { linesFor } from '$lib/authors/lines';
 import { readCard, writeCard, type AuthorCard } from './author-cache';
 
 /**
@@ -78,8 +78,14 @@ export async function buildCard(slug: string, now = new Date()): Promise<CardRes
 	}
 
 	let collected;
+	let followers: number | null = null;
 	try {
-		collected = await collect(pub);
+		// The profile ride-along costs one request against the walk's ~29 and
+		// never rejects: a card is never lost over a nicety.
+		[collected, followers] = await Promise.all([
+			collect(pub),
+			pub.authorHandle ? readFollowers(pub.authorHandle) : Promise.resolve(null)
+		]);
 	} catch (cause) {
 		return failureFor(cause);
 	}
@@ -89,10 +95,10 @@ export async function buildCard(slug: string, now = new Date()): Promise<CardRes
 
 	const card: AuthorCard = {
 		metrics,
-		lines: linesFor(metrics),
 		source: collected.source,
 		truncated: collected.truncated,
-		importedCount: metrics.totalOwnPosts - metrics.totalPosts
+		importedCount: metrics.totalOwnPosts - metrics.totalPosts,
+		followers
 	};
 	writeCard(slug, card);
 	return { card };

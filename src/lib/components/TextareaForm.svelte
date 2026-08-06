@@ -72,7 +72,8 @@
 	></textarea>
 	<div class="mt-3 flex flex-wrap items-center gap-3">
 		<button type="submit" disabled={busy || !ready} class="btn btn-primary btn-lg shrink-0">
-			{busy ? busyLabel : label}
+			{#if busy}<span class="loading loading-spinner loading-sm" aria-hidden="true"></span>{/if}
+			<span>{busy ? busyLabel : label}</span>
 		</button>
 		{#if hint}<p class="muted">{hint}</p>{/if}
 	</div>

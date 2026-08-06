@@ -5,6 +5,8 @@
 # No escribas ese marcador entre llaves aquí arriba: solo se sustituye en el
 # cuerpo, pero mejor no tentar a la suerte.
 subject: Tu oferta, escrita de 7 formas distintas
+# El preheader es la línea que la bandeja enseña después del asunto.
+preheader: Los siete textos, listos para copiar y pegar.
 ---
 
 Aquí tienes lo que acabas de generar. Los siete, para que no dependas de tener la pestaña abierta.

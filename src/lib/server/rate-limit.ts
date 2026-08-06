@@ -60,11 +60,8 @@ export const LIMITS = {
 	/** Autocomplete fires on every keystroke. Generous, but capped. */
 	placesAutocomplete: { max: 60, windowMs: HOUR_MS },
 
-	/** Signing up writes to Resend and sends an email. It shouldn't repeat much. */
-	subscribe: { max: 5, windowMs: DAY_MS },
-
 	/**
-	 * The /author card. It costs no money — there is no model call and no email —
+	 * The /postcard walk. It costs no money — there is no model call and no email —
 	 * but each walk is up to 50 requests to someone else's server. This limit
 	 * exists to protect Substack, not the bill. Keyed by IP because there is no
 	 * email to ask for: it is the only tool with no gate.

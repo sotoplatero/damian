@@ -14,7 +14,6 @@ import {
 	headlineStats,
 	topHour,
 	aggregates,
-	heatmapRows,
 	computeMetrics,
 	WORDS_PER_NOVEL
 } from './metrics';
@@ -29,6 +28,9 @@ const PUB: PubInfo = {
 	language: 'es',
 	subscriberCount: 7000,
 	logoUrl: null,
+	authorPhotoUrl: null,
+	subscriberMagnitude: null,
+	authorHandle: null,
 	tagline: 'Una publicación de prueba',
 	brandColor: null,
 	paymentsEnabled: true
@@ -229,15 +231,6 @@ describe('aggregates', () => {
 	it('gives no book equivalence without words (the RSS case)', () => {
 		const posts = [{ ...deep[3], slug: 'a', words: 0 }];
 		expect(aggregates(posts).novels).toBe(null);
-	});
-});
-
-describe('heatmap', () => {
-	it('gives one row per year with a cell per week', () => {
-		const rows = heatmapRows(datedPosts(deep, DEEP_CREATED_AT));
-		expect(rows[0].year).toBe(2024);
-		expect(rows[0].weeks).toHaveLength(53);
-		expect(rows[0].weeks.filter(Boolean).length).toBeGreaterThan(30);
 	});
 });
 

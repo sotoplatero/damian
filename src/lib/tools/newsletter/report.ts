@@ -1,5 +1,4 @@
-import raw from '$lib/content/tool-newsletter.md?raw';
-import { parseCopy } from '$lib/content';
+import { copy as t } from './copy';
 import { strengths, type Measurements } from './checks';
 import {
 	DIMENSIONS,
@@ -19,9 +18,9 @@ import { escapeMarkdown } from '$lib/tools/markdown';
  *
  * 1. **Es el MISMO documento que la pantalla, con lo tapado abierto.** No una
  *    segunda versión. El orden es el de `+page.svelte` y las etiquetas salen del
- *    mismo `tool-newsletter.md`, así que no pueden divergir por descuido. Y sí
- *    repite lo que ya vio gratis, a propósito: el correo es lo único que le queda
- *    cuando cierra la pestaña.
+ *    mismo `./copy.ts`, así que no pueden divergir por descuido. Y sí repite lo
+ *    que ya vio gratis, a propósito: el correo es lo único que le queda cuando
+ *    cierra la pestaña.
  * 2. **Cada sección lleva un dato o una propuesta, o no existe.** Salió de auditar
  *    un informe SEO de referencia con dos páginas repetidas literalmente y
  *    recomendaciones del tipo "mejora la experiencia de usuario".
@@ -40,8 +39,6 @@ import { escapeMarkdown } from '$lib/tools/markdown';
  * El texto del modelo se escapa antes de meterlo en el markdown: una línea que
  * empiece por "#" o "-" la pintaría el cliente de correo como titular o lista.
  */
-
-const { t } = parseCopy(raw);
 
 function clean(value: unknown): string {
 	return typeof value === 'string' && value.trim() ? escapeMarkdown(value.trim()) : '';

@@ -52,13 +52,19 @@
 }
 
 /*
- * The site is pinned to DaisyUI's light theme (see +layout.svelte). Its primary
- * colour is overridden here with the brand blue: that way buttons and links pick
- * it up on their own, without repeating the class on each one.
+ * The site is pinned to DaisyUI's light theme (see +layout.svelte), customised
+ * here into the site's own theme: the palette above mapped onto DaisyUI's
+ * semantic slots. Components keep DaisyUI's structure (`badge`, `btn`,
+ * `text-error`...) and pick the site's colours up on their own — no
+ * site-specific utility classes needed in the markup.
  */
 [data-theme='light'] {
 	--color-primary: #0076ff;
 	--color-primary-content: #ffffff;
+	--color-neutral: #171717;
+	--color-neutral-content: #ffffff;
+	--color-error: #ff4d00;
+	--color-error-content: #ffffff;
 }
 
 /*
@@ -71,10 +77,6 @@
  *   note  0.875rem                             -> .muted, footnotes, warnings
  * Hierarchy comes from colour (ink > soft > muted), not from size. If you catch
  * yourself writing text-base or text-lg in the markup, a class is missing here.
- *
- * The one deliberate exception is `.figure`, at the bottom: a Wrapped card lives
- * on the number being seen before its label. It is a class here rather than a
- * utility in the markup precisely because of the rule above.
  */
 @layer components {
 	/* Spacing between large blocks. One single measure across the whole site. */
@@ -82,15 +84,15 @@
 		@apply mt-20;
 	}
 	.section-title {
-		@apply text-3xl font-bold;
+		@apply text-2xl font-bold;
 	}
 	.section-intro {
-		@apply mt-2 text-xl leading-relaxed text-soft;
+		@apply mt-2 text-lg leading-relaxed text-soft;
 	}
 
 	/* Body text outside .prose: the same size as the letter. */
 	.body-text {
-		@apply text-xl leading-relaxed;
+		@apply text-lg leading-relaxed;
 	}
 
 	/* Text that doesn't ask for attention: footnotes, notes, warnings. */
@@ -110,11 +112,6 @@
 		background: color-mix(in srgb, white 82%, transparent);
 		box-shadow: 0 1px 0 rgba(23, 23, 23, 0.04), 0 12px 35px rgba(23, 23, 23, 0.025);
 	}
-	/* What is there but can't be read yet. */
-	.box-locked {
-		@apply rounded-lg border border-dashed border-line p-5;
-		background: repeating-linear-gradient(-45deg, transparent, transparent 8px, rgba(23,23,23,.018) 8px, rgba(23,23,23,.018) 9px);
-	}
 	/* A box that is also a link: the border asserts itself on hover. */
 	.box-link {
 		@apply relative grid rounded-lg border border-line p-5 transition-all;
@@ -132,12 +129,12 @@
 
 	/* Title and body inside a box. */
 	.box-title {
-		@apply text-xl font-bold;
+		@apply text-lg font-bold;
 	}
 	/* A card's subtitle. Clamped to two lines: if the text runs on, the card
 	   grows and the list stops being readable at a glance. */
 	.box-text {
-		@apply col-start-2 mt-2 line-clamp-2 text-xl leading-relaxed text-soft;
+		@apply col-start-2 mt-2 line-clamp-2 text-lg leading-relaxed text-soft;
 	}
 
 	/* The tool layout takes care of vertical centring. */
@@ -165,211 +162,70 @@
 	}
 
 	/*
-	 * The big numbers on the /author cards.
-	 *
-	 * The site has two font sizes and hierarchy comes from colour. A Wrapped is
-	 * the deliberate exception: it lives on the number being read before its
-	 * label. It enters as a class and not as a loose `text-6xl` because that is
-	 * exactly what the rule at the top of this layer says — if another size is
-	 * needed, a class is missing here.
+	 * /postcard: the downloadable images, staged as the posters they are. The
+	 * page shows the PNGs themselves — the figures live inside — so this only
+	 * frames them.
 	 */
-	.figure {
-		@apply leading-none font-bold tracking-tight text-ink;
-		font-size: 3.5rem;
-	}
-	@media (width >= 48rem) {
-		.figure {
-			font-size: 4.5rem;
-		}
-	}
-	/* The label under a `.figure`. It is the site's note size, with no size of its own. */
-	.figure-note {
-		@apply text-sm text-muted;
+	.poster {
+		@apply mt-2 w-full rounded-2xl border border-line;
+		height: auto;
+		box-shadow: 0 24px 70px rgba(23, 23, 23, 0.16);
 	}
 
 	/*
-	 * The /author hero name. Same deliberate exception as `.figure`: this page
-	 * is a profile people show off, so the name has to read like one — bigger
-	 * than the rest of the site's headings, fluid so a long publication name
-	 * never breaks the layout.
+	 * The postcard slider: a scroll-snap rail. The snap IS the swipe on touch —
+	 * no dependency, no JS in the gesture path; the arrows and the dots ride ON
+	 * the image, and all of them read/write the same scroll position. The dots
+	 * sit in a dark pill so they survive every postcard background (dark,
+	 * paper, orange).
 	 */
-	.author-hero {
-		font-size: clamp(2.5rem, 7vw, 4.5rem);
-		@apply leading-none font-bold tracking-tight text-ink;
+	.slider-frame {
+		@apply relative;
 	}
-
-	/* A small coloured circle behind a stat's icon. The colour is set inline per
-	   stat, same idea as `.chip`: this only supplies the shape. */
-	.stat-icon {
-		@apply flex h-11 w-11 shrink-0 items-center justify-center rounded-full;
+	.slider {
+		@apply flex w-full gap-4 overflow-x-auto;
+		scroll-snap-type: x mandatory;
+		scrollbar-width: none;
 	}
-
-	/*
-	 * ── /author profile ──────────────────────────────────────────────────
-	 *
-	 * A profile page, not a report: banner, avatar, name, tagline, a band of
-	 * headline numbers, then posts with their real cover art. The cover art is
-	 * what stops the page reading as a spreadsheet, so the image slots have
-	 * fixed aspect ratios and a placeholder tint — a publication with no art
-	 * must still look composed rather than broken.
-	 */
-	.profile {
-		/* Pulls the banner up under the site header, which the page shell pads. */
-		@apply mt-8;
+	.slider::-webkit-scrollbar {
+		display: none;
 	}
-	/*
-	 * The banner, tinted by `--tint` (the publication's own accent colour, set
-	 * inline by the page).
-	 *
-	 * Deliberately NOT the publication's cover photo: measured, that URL 403s —
-	 * it sits on Substack's private bucketeer bucket — and it is a 512x512 square
-	 * rather than a banner. A wash never arrives broken.
-	 */
-	.profile-banner {
-		@apply relative h-32 overflow-hidden rounded-xl border border-line sm:h-44;
-		background:
-			radial-gradient(115% 150% at 10% 0%, color-mix(in srgb, var(--tint) 34%, transparent), transparent 62%),
-			radial-gradient(95% 130% at 92% 8%, color-mix(in srgb, var(--color-ink) 12%, transparent), transparent 60%),
-			var(--color-paper);
+	.slide {
+		@apply w-full shrink-0;
+		scroll-snap-align: center;
 	}
-	/* A hairline of the accent along the bottom, so the wash reads as chosen. */
-	.profile-banner::after {
-		content: '';
-		@apply absolute inset-x-0 bottom-0 h-1;
-		background: var(--tint);
-		opacity: 0.55;
+	.slider-arrow {
+		@apply absolute top-1/2 flex h-11 w-11 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-line text-lg text-ink transition-all;
+		background: rgba(255, 255, 255, 0.88);
+		box-shadow: 0 4px 14px rgba(23, 23, 23, 0.18);
 	}
-	/*
-	 * The avatar overlaps the banner: the move that reads as "profile".
-	 *
-	 * `relative z-10` is load-bearing, not decoration. The banner is
-	 * `position: relative` (it needs it for its accent hairline), and a
-	 * positioned element paints above a static sibling — so without this the
-	 * banner covered the top half of the avatar and it looked cropped.
-	 */
-	.profile-head {
-		@apply relative z-10 -mt-12 flex flex-col sm:-mt-14;
+	.slider-arrow-prev {
+		left: 0.9rem;
 	}
-	.profile-avatar {
-		@apply h-24 w-24 shrink-0 rounded-2xl border-4 object-cover sm:h-28 sm:w-28;
-		border-color: var(--color-paper);
-		background: var(--color-paper);
-		box-shadow: 0 10px 30px rgba(23, 23, 23, 0.14);
+	.slider-arrow-next {
+		right: 0.9rem;
 	}
-	.profile-name {
-		font-size: clamp(2rem, 5.5vw, 3.25rem);
-		@apply leading-none font-bold tracking-tight text-ink;
-	}
-	.profile-tagline {
-		@apply text-xl leading-snug text-soft;
-		font-family: var(--font-serif);
-	}
-	/* The outbound link to the real publication. Quiet until hovered. */
-	.profile-link {
-		@apply ml-auto inline-flex shrink-0 items-center gap-1.5 rounded-full border border-line px-4 py-2 text-sm font-semibold text-soft transition-colors;
-	}
-	.profile-link:hover {
+	.slider-arrow:hover:not(:disabled) {
+		background: #ffffff;
 		border-color: var(--color-ink);
-		color: var(--color-ink);
 	}
-
-	/*
-	 * The headline numbers. One band split by hairlines, no boxes: boxes made
-	 * every figure weigh the same and the page read as a grid of cells.
-	 *
-	 * Three columns and not six. Measured: the site's content column is 632px, so
-	 * six columns give each figure 105px and "348.637" collides with its
-	 * neighbour. Three wrap onto two rows and stay legible.
-	 */
-	.profile-stats {
-		@apply mt-10 grid grid-cols-2 gap-y-7 rounded-xl border border-line py-7 sm:grid-cols-3;
-		background: color-mix(in srgb, white 70%, transparent);
+	.slider-arrow:disabled {
+		opacity: 0;
+		cursor: default;
+		pointer-events: none;
 	}
-	.stat-cell {
-		@apply flex min-w-0 flex-col gap-1 px-5;
+	.slider-dots {
+		@apply absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-2.5 rounded-full px-3.5 py-2.5;
+		background: rgba(17, 16, 16, 0.55);
 	}
-	/* Hairline between columns only, never before the first of a row. */
-	.stat-cell:not(:nth-child(2n + 1)) {
-		box-shadow: inset 1px 0 0 var(--color-line);
+	.slider-dot {
+		@apply h-2 w-2 cursor-pointer rounded-full border-0 p-0;
+		background: rgba(255, 255, 255, 0.45);
+		transition: background 180ms ease, transform 180ms ease;
 	}
-	@media (width >= 40rem) {
-		.stat-cell:not(:nth-child(2n + 1)) {
-			box-shadow: none;
-		}
-		.stat-cell:not(:nth-child(3n + 1)) {
-			box-shadow: inset 1px 0 0 var(--color-line);
-		}
-	}
-	.stat-value {
-		@apply text-3xl leading-none font-bold tracking-tight text-ink tabular-nums sm:text-4xl;
-	}
-
-	/* The word count gets its own band: it is the figure no author has ever
-	   seen summed, and it deserves more room than a sixth of a row. */
-	.profile-words {
-		@apply mt-4 flex flex-wrap items-baseline gap-x-4 gap-y-1 rounded-xl px-5 py-6;
-		background: color-mix(in srgb, var(--color-brand) 8%, transparent);
-	}
-
-	/* Their best post: art on the left, everything else on the right. */
-	.post-hero {
-		@apply grid gap-6 rounded-xl border border-line p-5 transition-all sm:grid-cols-[minmax(0,14rem)_minmax(0,1fr)];
-		background: color-mix(in srgb, white 82%, transparent);
-	}
-	.post-hero:hover {
-		border-color: var(--color-ink);
-		transform: translateY(-2px);
-	}
-	.post-hero img {
-		@apply aspect-[4/3] w-full rounded-lg object-cover sm:aspect-square;
-	}
-	.post-hero-title {
-		font-size: clamp(1.4rem, 2.6vw, 2rem);
-		@apply leading-tight font-bold tracking-tight text-ink;
-	}
-
-	/* The latest-posts strip. */
-	.post-grid {
-		@apply grid grid-cols-2 gap-5 lg:grid-cols-4;
-	}
-	.post-card {
-		@apply flex flex-col gap-2.5;
-	}
-	.post-thumb {
-		@apply aspect-[3/2] overflow-hidden rounded-lg border border-line;
-		background: color-mix(in srgb, var(--color-ink) 5%, transparent);
-	}
-	.post-thumb img {
-		@apply h-full w-full object-cover transition-transform;
-	}
-	.post-card:hover .post-thumb img {
-		transform: scale(1.04);
-	}
-	.post-card-title {
-		@apply line-clamp-2 leading-snug font-semibold text-ink;
-	}
-
-	/* A soft fact chip. Lower contrast than `.chip`, which shouts severity. */
-	.chip-soft {
-		@apply inline-block rounded-full border border-line px-3 py-1 text-sm text-soft;
-	}
-
-	/*
-	 * The week heatmap: one row per year, 53 cells.
-	 *
-	 * The cell knows nothing about what it measures, same idea as `.meter`. The
-	 * year is painted outside the grid.
-	 */
-	.heat {
-		@apply grid gap-[2px];
-		grid-template-columns: repeat(53, minmax(0, 1fr));
-	}
-	.heat-cell {
-		@apply rounded-[2px] bg-line;
-		aspect-ratio: 1;
-	}
-	.heat-on {
-		@apply bg-ink;
+	.slider-dot-active {
+		background: #ffffff;
+		transform: scale(1.3);
 	}
 }
 
@@ -411,25 +267,77 @@ body { background: var(--color-paper); }
 }
 
 .site-mark { display: inline-flex; align-items: center; gap: .6rem; }
-.site-symbol { font-family: ui-monospace, monospace; font-size: .9rem; font-weight: 400; line-height: 1; color: currentColor; }
+/* The mark is an inline SVG (see +layout.svelte): a true square whose star is
+   drawn around the exact centre of its viewBox, so rotation has no wobble. */
+.site-symbol { display: inline-flex; width: .9rem; height: .9rem; color: currentColor; transition: color 220ms ease; transform-origin: 50% 50%; }
+.site-symbol svg { display: block; width: 100%; height: 100%; }
+/* A small reward for hovering the mark: the star lights up. The spin lives in
+   the reduced-motion block below; the colour change works for everyone. */
+.site-mark:hover .site-symbol { color: var(--color-signal); }
 .site-mark .site-symbol { color: var(--color-ink); }
 .site-status { display: inline-flex; align-items: center; gap: .45rem; color: var(--color-muted); font-weight: 600; }
 .site-status .site-symbol { font-size: .78rem; }
+.site-build { display: inline-block; font-size: .9rem; transform-origin: 45% 70%; }
 
 .tool-shell { display: flex; flex: 1; flex-direction: column; }
 .tool-stage { width: 100%; margin-block: auto; }
+
+/* The colophon line at the bottom: same small-caps voice as the header. */
+.site-footer {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	margin-top: clamp(4rem, 10vw, 6rem);
+	padding-top: 1.25rem;
+	border-top: 1px solid var(--color-line);
+	font-size: .68rem;
+	font-weight: 700;
+	letter-spacing: .11em;
+	color: var(--color-muted);
+}
+.site-footer a { color: inherit; text-decoration: none; transition: color 180ms ease; }
+.site-footer a:hover { color: var(--color-ink); }
+/* The ⌘K hint: a real key, quietly drawn. */
+.key-hint {
+	cursor: pointer;
+	border: 1px solid var(--color-line);
+	border-radius: .35rem;
+	padding: .15rem .45rem;
+	font: inherit;
+	color: inherit;
+	background: transparent;
+	transition: color 180ms ease, border-color 180ms ease;
+}
+.key-hint:hover { color: var(--color-ink); border-color: var(--color-ink); }
 
 .prose h1 { text-wrap: balance; }
 .prose > p:first-of-type {
 	max-width: 30rem;
 	margin-top: 1.35rem;
-	font-size: clamp(1.35rem, 3.5vw, 1.6rem);
+	font-size: clamp(1.15rem, 3vw, 1.4rem);
 	font-weight: 500;
 	line-height: 1.35;
 	letter-spacing: -.018em;
 	color: var(--color-soft);
 }
 .prose a, .link { text-decoration-color: color-mix(in srgb, var(--color-brand) 55%, transparent); text-underline-offset: .22em; }
+
+/*
+ * The lead treatment above styles the first paragraph after the headline. The
+ * home letter is split in two by the tools section, so its second half starts
+ * with a plain story paragraph that must NOT read as a lead: `prose-quiet`
+ * puts that first paragraph back to the prose's own body style.
+ */
+.prose-quiet > p:first-of-type {
+	max-width: none;
+	margin-top: 1.2em;
+	font-size: 1.25rem;
+	font-weight: 400;
+	line-height: 1.8;
+	letter-spacing: 0;
+	color: var(--tw-prose-body);
+}
 
 .tool-index { grid-column: 1; padding-top: .35rem; font-size: .68rem; font-weight: 700; letter-spacing: .1em; color: var(--color-muted); }
 .tool-arrow { grid-column: 3; font-size: 1rem; color: var(--color-muted); transition: transform 220ms ease, color 220ms ease; }
@@ -451,15 +359,32 @@ body { background: var(--color-paper); }
 
 @media (prefers-reduced-motion: no-preference) {
 	.site-header, .greeting, .prose, .embed-shell, .section { animation: reveal .6s both; }
-	.site-mark .site-symbol { animation: diamond-pulse 2.8s ease-in-out infinite; }
+	.site-mark .site-symbol { animation: mark-pulse 2.8s ease-in-out infinite; }
+	/*
+	 * The spin is a TRANSITION, not a looping animation: half a turn in, half a
+	 * turn back out, both eased — so there is never a snap, whenever the cursor
+	 * leaves. The star's four-point symmetry makes the return read as another
+	 * spin rather than a rewind. Opacity pulse and rotation coexist because the
+	 * pulse no longer touches transform.
+	 */
+	.site-mark .site-symbol { transition: color 220ms ease, transform 700ms cubic-bezier(0.34, 1.2, 0.4, 1); }
+	.site-mark:hover .site-symbol { transform: rotate(180deg); }
+	.site-build { animation: building 1.35s ease-in-out infinite; }
 	.greeting { animation-delay: .06s; }
 	.prose { animation-delay: .12s; }
 	.embed-shell { animation-delay: .2s; }
 	.section { animation-delay: .28s; }
 	@keyframes reveal { from { opacity: 0; transform: translateY(9px); } to { opacity: 1; transform: none; } }
-	@keyframes diamond-pulse {
-		0%, 100% { opacity: .58; transform: scale(.88); }
-		50% { opacity: 1; transform: scale(1.08); }
+	/* Opacity only: a scale here snapped to 1 the instant the hover spin took
+	   over the transform, and the handoff read as a jump. */
+	@keyframes mark-pulse {
+		0%, 100% { opacity: .58; }
+		50% { opacity: 1; }
+	}
+	@keyframes building {
+		0%, 100% { transform: rotate(-10deg) translateY(0); }
+		45% { transform: rotate(16deg) translateY(-1px); }
+		60% { transform: rotate(5deg) translateY(1px); }
 	}
 }
 
@@ -495,9 +420,32 @@ body { background: var(--color-paper); }
  */
 .prose h1 {
 	margin-bottom: 0;
-	font-size: clamp(2.8rem, 11vw, 5.5rem);
+	font-size: clamp(2.35rem, 9vw, 4.4rem);
 	line-height: 0.96;
 	letter-spacing: -0.045em;
+}
+
+.prose h1 strong,
+.prose h1 mark {
+	display: inline-block;
+	position: relative;
+	z-index: 0;
+	font-weight: inherit;
+	color: inherit;
+	background: transparent;
+}
+.prose h1 strong::after,
+.prose h1 mark::after {
+	content: '';
+	position: absolute;
+	z-index: -1;
+	left: -.04em;
+	right: -.04em;
+	bottom: .06em;
+	height: .24em;
+	border-radius: .08em;
+	background: color-mix(in srgb, var(--color-signal) 68%, transparent);
+	transform: rotate(-1.2deg);
 }
 
 /*

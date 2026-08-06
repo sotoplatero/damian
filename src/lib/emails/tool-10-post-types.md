@@ -5,6 +5,8 @@
 # No escribas ese marcador entre llaves aquí arriba: solo se sustituye en el
 # cuerpo, pero mejor no tentar a la suerte.
 subject: Tu tema, en 10 tipos de post
+# El preheader es la línea que la bandeja enseña después del asunto.
+preheader: Los diez posts, listos para copiar y pegar.
 ---
 
 Aquí tienes lo que acabas de generar. Los diez, para que no dependas de tener la pestaña abierta.

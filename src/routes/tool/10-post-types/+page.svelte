@@ -1,80 +1,78 @@
 <script lang="ts">
-	import { marked } from 'marked';
 	import PageMeta from '$lib/components/PageMeta.svelte';
-	import { tick } from 'svelte';
-	import raw from '$lib/content/tool-10-post-types.md?raw';
-	import { postTypes, freePostType } from '$lib/tools/10-post-types/types';
-	import { toPlainText, type GeneratedPost } from '$lib/tools/10-post-types/format';
-	import { parseCopy } from '$lib/content';
 	import InlineForm from '$lib/components/InlineForm.svelte';
 	import TextareaForm from '$lib/components/TextareaForm.svelte';
+	import ResultCard from '$lib/components/ResultCard.svelte';
+	import GateBox from '$lib/components/GateBox.svelte';
+	import { postTypes, freePostType } from '$lib/tools/10-post-types/types';
+	import { toPlainText, type GeneratedPost } from '$lib/tools/10-post-types/format';
+	import { postTool, revealResult } from '$lib/tools/client';
 
-	/** Los mismos limites que valida el servidor. Si cambian alli, cambian aqui. */
+	/** The same limits the server validates. If they change there, they change here. */
 	const IDEA_MIN = 20;
 	const IDEA_MAX = 2000;
 
-	const { t, body } = parseCopy(raw);
-	const intro = marked.parse(body) as string;
+	/* The page's copy. The gate names what's missing: urgency comes from seeing
+	   the list, not from adjectives. */
+	const t = {
+		ideaPlaceholder:
+			'Escribe tu idea. Por ejemplo: llevo seis años montando cocinas industriales y la mayoría de los restaurantes que cierran lo hacen por cómo tienen puesta la cocina, no por la comida.',
+		ideaButton: 'Enviar',
+		ideaWorking: 'Escribiendo...',
+		ideaHint: 'Cuéntame de qué va y para quién. Un par de frases bastan.',
+		ideaShortcut: 'O pulsa Ctrl+Enter.',
+		resultTitle: 'Tu tema, en diez posts distintos.',
+		lowConfidence:
+			'Tu idea es un poco corta, así que he supuesto bastante. Si los posts no te encajan, ese es el motivo: cuéntame algo más y vuelve a probar.',
+		freeBadge: 'Gratis',
+		copyAction: 'Copiar',
+		copiedAction: 'Copiado',
+		restart: 'Probar con otra idea',
+		gateTitle: 'Esto era uno de diez',
+		gateBody:
+			'Te faltan la observación, la lista, el caso de éxito, la historia personal, el contracorriente y cuatro más, todos sobre tu mismo tema. Dime a dónde te los mando y te llegan los diez, listos para copiar y pegar.',
+		gatePlaceholder: 'tu@email.com',
+		gateButton: 'Enviar',
+		gateUnlocking: 'Escribiendo y enviando...',
+		sentTitle: 'Van para tu correo',
+		sentBody: 'Los diez, escritos y enviados. Si en un par de minutos no lo ves, mira en spam.',
+		errorUnreadable:
+			'No he sacado nada en claro de eso. Cuéntame de qué va tu tema y para quién, aunque sea en dos frases.',
+		errorIdeaShort: 'Con eso no tengo suficiente. Escribe un par de frases: de qué va y para quién.',
+		errorInvalidEmail: 'Ese email no parece válido.',
+		errorDisposable:
+			'Eso es un buzón de usar y tirar. Dame uno de verdad, que es donde te mando los posts.',
+		errorSendFailed: 'No he podido enviarte el correo. Inténtalo otra vez.',
+		errorRateLimit: 'Has generado unos cuantos ya. Espera un rato y vuelve.',
+		errorGeneric: 'Algo ha fallado por mi parte. Inténtalo otra vez.',
+		errorOffline: 'No se pudo conectar. Revisa tu conexión.'
+	};
 
-	type Busy = '' | 'analyzing' | 'unlocking';
-
-	let busy = $state<Busy>('');
+	let busy = $state<'' | 'analyzing' | 'unlocking'>('');
 	let error = $state('');
 
-	/** La idea escrita por la persona. Antes esto era una URL que se raspaba. */
+	/** The idea as the person wrote it. This used to be a scraped URL. */
 	let idea = $state('');
-	/** El tema que el modelo dedujo. Viaja al servidor otra vez para escribir los nueve restantes. */
+	/** The topic the model inferred. Travels back to the server to write the other nine. */
 	let topic = $state<Record<string, string> | null>(null);
 	let lowConfidence = $state(false);
 
 	let posts = $state<GeneratedPost[]>([]);
-	/** El correo con los diez ya ha salido. */
 	let sent = $state(false);
 	let email = $state('');
-	let copiedId = $state('');
 
 	const byId = $derived(new Map(posts.map((post) => [post.id, post])));
-
-	/** Los que ya están escritos primero; los bloqueados, detrás del muro. */
-	const ordered = $derived([
-		...postTypes.filter((type) => byId.has(type.id)),
-		...postTypes.filter((type) => !byId.has(type.id))
-	]);
-
-	/** El muro se intercala justo detrás de lo último que ya puede leer. */
-	const gateAfter = $derived(posts.length);
-
-	function errorFor(code: unknown): string {
-		if (code === 'unreadable') return t.errorUnreadable;
-		if (code === 'idea_short') return t.errorIdeaShort;
-		if (code === 'invalid_email') return t.errorInvalidEmail;
-		if (code === 'disposable') return t.errorDisposable;
-		if (code === 'send_failed') return t.errorSendFailed;
-		if (code === 'rate_limit') return t.errorRateLimit;
-		return t.errorGeneric;
-	}
-
-	async function post(payload: Record<string, unknown>) {
-		const response = await fetch('/tool/10-post-types', {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify(payload)
-		});
-		const data = await response.json().catch(() => ({}));
-		if (!response.ok) throw new Error(errorFor(data?.error));
-		return data;
-	}
+	const writtenTypes = $derived(postTypes.filter((type) => byId.has(type.id)));
 
 	async function analyze() {
 		busy = 'analyzing';
 		error = '';
 		try {
-			const data = await post({ step: 'extract', idea });
-			topic = data.topic;
-			posts = data.posts;
+			const data = await postTool('/tool/10-post-types', { step: 'extract', idea }, t);
+			topic = data.topic as Record<string, string>;
+			posts = data.posts as GeneratedPost[];
 			lowConfidence = data.confidence === 'baja';
-			await tick();
-			document.getElementById('resultado')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+			await revealResult();
 		} catch (caught) {
 			error = caught instanceof Error ? caught.message : t.errorOffline;
 		} finally {
@@ -83,28 +81,21 @@
 	}
 
 	/**
-	 * Los nueve restantes se mandan por correo y no se enseñan nunca aquí.
-	 * El correo es el único sitio donde están, y por eso el email vale algo.
+	 * The other nine posts are written server-side and only ever sent by email.
+	 * The email is the only place they exist, which is why the address is worth
+	 * something.
 	 */
 	async function unlock() {
 		busy = 'unlocking';
 		error = '';
 		try {
-			await post({ step: 'unlock', topic, email, free: posts });
+			await postTool('/tool/10-post-types', { step: 'unlock', topic, email, free: posts }, t);
 			sent = true;
 		} catch (caught) {
 			error = caught instanceof Error ? caught.message : t.errorOffline;
 		} finally {
 			busy = '';
 		}
-	}
-
-	async function copyToClipboard(post: GeneratedPost) {
-		await navigator.clipboard.writeText(toPlainText(post));
-		copiedId = post.id;
-		setTimeout(() => {
-			if (copiedId === post.id) copiedId = '';
-		}, 2000);
 	}
 
 	function restart() {
@@ -116,7 +107,6 @@
 		posts = [];
 		sent = false;
 		email = '';
-		copiedId = '';
 	}
 </script>
 
@@ -125,10 +115,6 @@
 	description="Escribe un tema y recibe diez posts distintos listos para publicar. El primero es gratis."
 />
 
-<!--
-	El crédito y la introducción se reutilizan con snippets: en el estado inicial
-	el crédito va debajo del formulario, y con resultados va al final.
--->
 {#snippet credit()}
 	<p class="muted">
 		Los diez tipos están tomados de
@@ -141,21 +127,17 @@
 	</p>
 {/snippet}
 
-{#snippet intro_()}
-	<article class="prose prose-xl prose-neutral max-w-none">
-		<!-- Markdown propio del repo (src/lib/content/tool-10-post-types.md), igual
-		     que la home. No hay nada del visitante aquí dentro. -->
-		{@html intro}
-	</article>
-{/snippet}
-
 {#if !posts.length}
 	<section class="screen-center">
-		{@render intro_()}
+		<article class="prose prose-xl prose-neutral max-w-none">
+			<h1>Saca 10 posts <strong>distintos</strong> de una sola idea.</h1>
+			<p>
+				<strong>Escribe el tema.</strong> Te doy diez posts listos para publicar. Así no vuelves a
+				mirar el cursor sin saber qué decir.
+			</p>
+		</article>
 
-		{#if error}
-			<p class="mt-6 text-sm text-error">{error}</p>
-		{/if}
+		{#if error}<p class="mt-6 text-sm text-error">{error}</p>{/if}
 
 		<div class="mt-8">
 			<TextareaForm
@@ -171,99 +153,49 @@
 			/>
 		</div>
 
-		<!-- El crédito, justo debajo del formulario. -->
 		<div class="mt-6">{@render credit()}</div>
 	</section>
 {:else}
-	{@render intro_()}
-
-	{#if error}
-		<p class="mt-6 text-sm text-error">{error}</p>
-	{/if}
-{/if}
-
-<!-- Paso 2: los posts -->
-{#if posts.length}
-	<section id="resultado" class="mt-10 space-y-6">
+	<section id="resultado" class="space-y-6">
+		<button type="button" class="link-quiet" onclick={restart}>← {t.restart}</button>
+		<header class="prose prose-xl prose-neutral max-w-none">
+			<h1>{t.resultTitle}</h1>
+		</header>
 		{#if lowConfidence}<p class="muted">{t.lowConfidence}</p>{/if}
+		{#if error}<p class="text-sm text-error">{error}</p>{/if}
 
-		{#each ordered as type, index (type.id)}
+		{#each writtenTypes as type (type.id)}
 			{@const written = byId.get(type.id)}
-
-			<!-- El muro va justo después de lo que ya ha leído. Si lo dejamos al final,
-			     queda detrás de nueve tarjetas vacías y nadie baja tanto. -->
-			{#if index === gateAfter}
-				<section class="box bg-line/40">
-					{#if sent}
-						<h3 class="section-title">{t.sentTitle}</h3>
-						<p class="section-intro">{t.sentBody}</p>
-					{:else}
-						<h3 class="section-title">{t.gateTitle}</h3>
-						<p class="section-intro">{t.gateBody}</p>
-						<!-- Input y botón en la misma línea. El input se encoge (min-w-0)
-						     y el botón no, para que quepan juntos también en móvil. -->
-						<div class="mt-4">
-							<InlineForm
-								type="email"
-								bind:value={email}
-								placeholder={t.gatePlaceholder}
-								label={t.gateButton}
-								busyLabel={t.gateUnlocking}
-								busy={busy === 'unlocking'}
-								inputmode="email"
-								autocomplete="email"
-								onsubmit={unlock}
-							/>
-						</div>
-					{/if}
-				</section>
-			{/if}
-
 			{#if written}
-				<article class="box">
-					<header class="mb-4 flex items-start justify-between gap-3">
-						<div>
-							<h3 class="box-title">
-								{type.name}
-								{#if type.id === freePostType.id}
-									<span class="badge badge-sm badge-neutral align-middle">{t.freeBadge}</span>
-								{/if}
-							</h3>
-							<p class="muted">{type.bestFor}</p>
-						</div>
-						<button
-							type="button"
-							onclick={() => copyToClipboard(written)}
-							class="btn btn-ghost btn-xs shrink-0"
-						>
-							{copiedId === type.id ? t.copiedAction : t.copyAction}
-						</button>
-					</header>
-
+				<ResultCard
+					title={type.name}
+					badge={type.id === freePostType.id ? t.freeBadge : ''}
+					note={type.bestFor}
+					copyText={toPlainText(written)}
+					copyLabel={t.copyAction}
+					copiedLabel={t.copiedAction}
+				>
 					<p class="body-text whitespace-pre-wrap">{written.text}</p>
-				</article>
-			{:else}
-				<!-- Bloqueado: se ve el tipo y un ejemplo de la forma (otro tema), nunca
-				     el texto sobre TU tema. Los nueve tuyos no se generan hasta que entra
-				     el email, así que aquí no hay nada que descubrir mirando el HTML: el
-				     ejemplo es fijo y sale de types.ts. -->
-				<article class="box-locked">
-					<h3 class="box-title text-muted">{type.name}</h3>
-					<p class="muted mb-4">{type.bestFor}</p>
-					<p class="eyebrow opacity-70">{t.exampleLabel}</p>
-					<p class="body-text mt-1 whitespace-pre-wrap text-muted">{type.example}</p>
-				</article>
+				</ResultCard>
 			{/if}
 		{/each}
 
-		<button type="button" onclick={restart} class="link-quiet">
-			{t.restart}
-		</button>
-	</section>
-{/if}
+		<GateBox
+			{sent}
+			bind:email
+			busy={busy === 'unlocking'}
+			gateTitle={t.gateTitle}
+			gateBody={t.gateBody}
+			sentTitle={t.sentTitle}
+			sentBody={t.sentBody}
+			placeholder={t.gatePlaceholder}
+			label={t.gateButton}
+			busyLabel={t.gateUnlocking}
+			onsubmit={unlock}
+		/>
 
-{#if posts.length}
-	<footer class="section border-t border-line pt-6">
-		{@render credit()}
-	</footer>
+		<footer class="section border-t border-line pt-6">
+			{@render credit()}
+		</footer>
+	</section>
 {/if}

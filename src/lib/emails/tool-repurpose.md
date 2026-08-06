@@ -1,8 +1,10 @@
 ---
-subject: Tu artículo, repartido en nueve piezas
+subject: Nueve notas para distribuir tu artículo
+# El preheader es la línea que la bandeja enseña después del asunto.
+preheader: Las nueve notas y el prompt para repetirlo por tu cuenta.
 ---
 
-Aquí tienes tu artículo repartido. Las nueve, para que no dependas de tener la pestaña abierta.
+Aquí tienes las nueve notas. Distintas ideas, ángulos y tamaños para que el artículo siga encontrando lectores.
 
 {{PIECES}}
 
@@ -10,17 +12,17 @@ Aquí tienes tu artículo repartido. Las nueve, para que no dependas de tener la
 
 **Cómo se usan**
 
-No las publiques todas el mismo día. Las tienes para tres semanas, y ese es el punto: el artículo ya estaba escrito.
+No hay una red ni un calendario obligatorio. Usa cada nota donde encaje.
 
-Cambia dos frases de cada una para que suene a ti. Se nota cuando algo se ha publicado sin releerlo.
+Algunas llevan el enlace porque lo necesitan. Otras aportan la idea completa y pueden circular solas. Esa diferencia es deliberada.
 
-Donde veas algo **entre corchetes**, es un hueco. Lo he dejado a propósito: son tus cifras, y esas no me las invento yo.
+Relee cada una antes de publicarla. Conservan la voz del artículo, pero tu última edición sigue siendo la que manda.
 
-Y solo una de las nueve lleva enlace. Las demás van sin él porque una pieza que manda fuera se reparte peor: la red no la mueve igual.
+También va adjunto **prompt-distribuye-tu-articulo.txt**. Pega en él otro artículo para repetir el proceso manualmente con el modelo que prefieras.
 
 ---
 
-Esto era la parte fácil. Lo difícil es tener algo que repartir cada semana.
+Esto era la parte fácil. Lo difícil es tener algo que distribuir cada semana.
 
 Eso se llama Objeto Brillante: un email a la semana con algo que he hecho con IA y que funciona. Sin cursos y sin que toques una tecla.
 

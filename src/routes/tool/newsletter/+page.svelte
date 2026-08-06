@@ -1,8 +1,7 @@
 <script lang="ts">
-	import { marked } from 'marked';
 	import PageMeta from '$lib/components/PageMeta.svelte';
 	import { tick } from 'svelte';
-	import raw from '$lib/content/tool-newsletter.md?raw';
+	import { copy as t } from '$lib/tools/newsletter/copy';
 	import type { Measurements } from '$lib/tools/newsletter/checks';
 	import {
 		DIMENSIONS,
@@ -12,7 +11,6 @@
 		type Severity,
 		type Tally
 	} from '$lib/tools/newsletter/rules';
-	import { parseCopy } from '$lib/content';
 	import InlineForm from '$lib/components/InlineForm.svelte';
 
 	/**
@@ -28,13 +26,11 @@
 	 * y cómo de gordos, no qué dicen. Del servidor solo bajan gravedad, dimensión e
 	 * impacto, así que no hay ni un hallazgo que sacar del HTML.
 	 *
-	 * El orden y las etiquetas de aquí son los del correo: `report.ts` lee las
-	 * mismas claves de `tool-newsletter.md`. Antes esta pantalla y el correo
-	 * llamaban de forma distinta a los mismos bloques y parecían dos informes.
+	 * El orden y las etiquetas de aquí son los del correo: `report.ts` importa el
+	 * mismo objeto de `$lib/tools/newsletter/copy.ts`. Antes esta pantalla y el
+	 * correo llamaban de forma distinta a los mismos bloques y parecían dos
+	 * informes.
 	 */
-
-	const { t, body } = parseCopy(raw);
-	const intro = marked.parse(body) as string;
 
 	type Preview = {
 		site: string;
@@ -160,7 +156,18 @@
 />
 
 {#snippet introBlock()}
-	<article class="prose prose-xl prose-neutral max-w-none">{@html intro}</article>
+	<article class="prose prose-xl prose-neutral max-w-none">
+		<h1>Auditoría de tu newsletter.</h1>
+		<p>
+			<strong>Pega la dirección de tu Substack.</strong> Leo tus últimos números enteros y te digo
+			qué está mal, con qué gravedad y cómo se arregla. El primer hallazgo, con su arreglo
+			escrito, en pantalla.
+		</p>
+		<p>
+			Cada cosa que señalo va con la cita de dónde lo he visto. Si no puedo citarlo, no te lo
+			cuento. No te pido acceso a tus estadísticas.
+		</p>
+	</article>
 {/snippet}
 
 {#if !preview}
@@ -311,27 +318,6 @@
 					<p class="body-text mt-1">{f.propuesta}</p>
 				</div>
 			</article>
-		{/if}
-
-		<!-- Lo que queda: se ve cuántos y cómo de gordos, no qué dicen. -->
-		{#if preview.locked.length}
-			<div class="box-locked">
-				<p class="eyebrow">{t.labelLocked.replace('{rest}', String(preview.locked.length))}</p>
-				<div class="mt-3 space-y-3">
-					{#each preview.locked as item, i (i)}
-						<div class="flex items-center gap-3">
-							<span class="chip {SEVERITY[item.severity].chip} shrink-0">
-								{SEVERITY[item.severity].label}
-							</span>
-							<p class="eyebrow shrink-0">{DIMENSIONS[item.dimension]}</p>
-							<!-- El ancho es su gravedad: se ve el tamaño de lo que falta, no el texto. -->
-							<div class="meter flex-1 opacity-40">
-								<span style="width: {SEVERITY[item.severity].width}%"></span>
-							</div>
-						</div>
-					{/each}
-				</div>
-			</div>
 		{/if}
 
 		<!-- El muro -->
