@@ -474,7 +474,14 @@ function biolinkTree(data: PostcardData, options: PostcardOptions): Node {
 /* ── 1a · editorial — dark, typographic ────────────────────────────────── */
 
 function editorialTree(data: PostcardData, options: PostcardOptions): Node {
-	const statCells = data.stats.map((stat, index) =>
+	/* Subscribers lead the band, highlighted; the article count joins as one
+	   figure among equals — same size as every other number. */
+	const cells: PostcardStat[] = [
+		...data.stats.slice(0, 1),
+		{ value: data.articles, label: data.articles === '1' ? 'artículo' : 'artículos' },
+		...data.stats.slice(1)
+	];
+	const statCells = cells.map((stat, index) =>
 		div({ flex: index === 0 ? 1.1 : 1, flexDirection: 'column' }, [
 			div(
 				{
@@ -488,8 +495,10 @@ function editorialTree(data: PostcardData, options: PostcardOptions): Node {
 			),
 			div(
 				{
+					/* Lifted well above the dark ground: the labels read from the
+					   feed, not only the figures. */
 					fontSize: 19,
-					color: index === 0 ? 'rgba(245,241,234,.6)' : 'rgba(245,241,234,.5)',
+					color: index === 0 ? 'rgba(245,241,234,.85)' : 'rgba(245,241,234,.72)',
 					marginTop: 10
 				},
 				stat.label
@@ -562,21 +571,9 @@ function editorialTree(data: PostcardData, options: PostcardOptions): Node {
 					alignItems: 'baseline',
 					borderTop: '1px solid rgba(245,241,234,.16)',
 					borderBottom: '1px solid rgba(245,241,234,.16)',
-					padding: '24px 0'
+					padding: '28px 0'
 				},
-				[
-					div({ flex: 1.3, flexDirection: 'column' }, [
-						div(
-							{ fontWeight: 700, fontSize: 112, lineHeight: 0.82, letterSpacing: -4.5, color: ORANGE },
-							data.articles
-						),
-						div(
-							{ fontSize: 21, color: 'rgba(245,241,234,.6)', marginTop: 12 },
-							data.articles === '1' ? 'artículo' : 'artículos'
-						)
-					]),
-					...statCells
-				]
+				statCells
 			),
 			div({ flexDirection: 'column' }, [
 				div({ alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 12 }, [
@@ -645,23 +642,25 @@ function editorialTree(data: PostcardData, options: PostcardOptions): Node {
 /* ── 1b · gema — warm paper, catalogue grid ─────────────────────────────── */
 
 function gemaTree(data: PostcardData, options: PostcardOptions): Node {
-	const statCells = data.stats.map((stat, index) =>
+	/* Subscribers take the highlighted lead cell; the article count joins the
+	   row as one figure among equals. */
+	const cells: PostcardStat[] = [
+		...data.stats.slice(0, 1),
+		{ value: data.articles, label: data.articles === '1' ? 'artículo' : 'artículos' },
+		...data.stats.slice(1)
+	];
+	const lead = cells[0];
+	const statCells = cells.slice(1).map((stat, index, row) =>
 		div(
 			{
 				flex: 1,
 				flexDirection: 'column',
 				padding: '22px 0 20px 24px',
-				borderRight: index < data.stats.length - 1 ? '1px solid rgba(23,20,18,.18)' : 'none'
+				borderRight: index < row.length - 1 ? '1px solid rgba(23,20,18,.18)' : 'none'
 			},
 			[
 				div(
-					{
-						fontWeight: 700,
-						fontSize: 60,
-						lineHeight: 0.82,
-						letterSpacing: -3,
-						color: index === 0 ? ORANGE : PAPER_INK
-					},
+					{ fontWeight: 700, fontSize: 60, lineHeight: 0.82, letterSpacing: -3, color: PAPER_INK },
 					stat.value
 				),
 				div({ fontSize: 19, color: PAPER_MUTED, marginTop: 9 }, stat.label)
@@ -733,11 +732,8 @@ function gemaTree(data: PostcardData, options: PostcardOptions): Node {
 						color: '#fff'
 					},
 					[
-						div({ fontWeight: 700, fontSize: 78, lineHeight: 0.82, letterSpacing: -3.9 }, data.articles),
-						div(
-							{ fontSize: 19, marginTop: 9, opacity: 0.9 },
-							data.articles === '1' ? 'artículo' : 'artículos'
-						)
+						div({ fontWeight: 700, fontSize: 78, lineHeight: 0.82, letterSpacing: -3.9 }, lead.value),
+						div({ fontSize: 19, marginTop: 9, opacity: 0.9 }, lead.label)
 					]
 				),
 				...statCells
