@@ -7,9 +7,9 @@
 	 * The tool's front door.
 	 *
 	 * A plain `<form method="GET">` rather than a `fetch`: that way the server
-	 * redirects to the card's canonical URL and the visitor lands on an address
-	 * they can share. A `fetch` would leave the card sitting on `/author` with no
-	 * URL of its own.
+	 * redirects to the postcards' canonical URL and the visitor lands on an
+	 * address they can share. A `fetch` would leave the postcards sitting on
+	 * `/postcard` with no URL of their own.
 	 */
 	let { data }: { data: PageData } = $props();
 </script>
@@ -20,16 +20,16 @@
 	<h1 class="box-title">{t.title}</h1>
 	<div class="body-text mt-4">
 		<p>
-			Pega la dirección de un newsletter de Substack y sale la tarjeta de todo lo que ha
-			publicado: cuántas semanas seguidas lleva, cuántas palabras ha escrito y qué post le
-			funcionó mejor.
+			Pega la dirección de un newsletter de Substack y salen cuatro postales con toda su
+			historia pública: cuántos artículos lleva, cómo responde su gente y su ritmo del último
+			año. Elige la que más te guste y descárgala.
 		</p>
 		<p class="mt-4">
 			Solo lee lo que Substack ya enseña en público. No hace falta entrar en ninguna cuenta.
 		</p>
 	</div>
 
-	<form method="GET" action="/author" class="mt-8 flex flex-wrap items-center gap-3">
+	<form method="GET" action="/postcard" class="mt-8 flex flex-wrap items-center gap-3">
 		<input
 			class="input input-bordered grow"
 			type="text"

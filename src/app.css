@@ -162,15 +162,51 @@
 	}
 
 	/*
-	 * /author: the downloadable card, staged as the poster it is. The page
-	 * shows the PNG itself — the figures live inside the image — so this only
-	 * frames it. The old HTML profile vocabulary (banner, stat bands, post
-	 * grids, heatmap) was deleted with the page that used it; git has it.
+	 * /postcard: the downloadable images, staged as the posters they are. The
+	 * page shows the PNGs themselves — the figures live inside — so this only
+	 * frames them.
 	 */
 	.poster {
 		@apply mt-2 w-full rounded-2xl border border-line;
 		height: auto;
 		box-shadow: 0 24px 70px rgba(23, 23, 23, 0.16);
+	}
+
+	/*
+	 * The postcard slider: a scroll-snap rail. The snap IS the swipe on touch —
+	 * no dependency, no JS in the gesture path; arrows and dots ride on top for
+	 * pointers, and all of them read/write the same scroll position.
+	 */
+	.slider {
+		@apply flex w-full gap-4 overflow-x-auto;
+		scroll-snap-type: x mandatory;
+		scrollbar-width: none;
+	}
+	.slider::-webkit-scrollbar {
+		display: none;
+	}
+	.slide {
+		@apply w-full shrink-0;
+		scroll-snap-align: center;
+	}
+	.slider-arrow {
+		@apply flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-line bg-transparent text-lg text-soft transition-colors;
+	}
+	.slider-arrow:hover:not(:disabled) {
+		border-color: var(--color-ink);
+		color: var(--color-ink);
+	}
+	.slider-arrow:disabled {
+		opacity: 0.35;
+		cursor: default;
+	}
+	.slider-dot {
+		@apply h-2 w-2 cursor-pointer rounded-full border-0 bg-line p-0;
+		transition: background 180ms ease, transform 180ms ease;
+	}
+	.slider-dot-active {
+		background: var(--color-ink);
+		transform: scale(1.3);
 	}
 }
 

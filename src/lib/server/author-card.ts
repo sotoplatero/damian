@@ -8,7 +8,6 @@ import {
 	type PubInfo
 } from './substack-archive';
 import { computeMetrics, ownPosts } from '$lib/authors/metrics';
-import { linesFor } from '$lib/authors/lines';
 import { readCard, writeCard, type AuthorCard } from './author-cache';
 
 /**
@@ -96,7 +95,6 @@ export async function buildCard(slug: string, now = new Date()): Promise<CardRes
 
 	const card: AuthorCard = {
 		metrics,
-		lines: linesFor(metrics),
 		source: collected.source,
 		truncated: collected.truncated,
 		importedCount: metrics.totalOwnPosts - metrics.totalPosts,

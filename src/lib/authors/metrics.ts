@@ -427,23 +427,6 @@ export function monthlyEngagement(posts: ArchivePost[], now: Date, months = 12):
 	return keys.map((key) => buckets.get(key)!);
 }
 
-export type HeatmapRow = { year: number; weeks: boolean[] };
-
-/** One row per year, 53 cells, true where at least one post landed. */
-export function heatmapRows(posts: ArchivePost[]): HeatmapRow[] {
-	const years = new Map<number, boolean[]>();
-	for (const p of posts) {
-		const date = new Date(p.date);
-		const year = date.getUTCFullYear();
-		if (!years.has(year)) years.set(year, new Array(53).fill(false));
-		// Week of the year from the absolute index, so it lines up with the streak.
-		const first = weekIndex(new Date(Date.UTC(year, 0, 4)));
-		const slot = weekIndex(date) - first;
-		if (slot >= 0 && slot < 53) years.get(year)![slot] = true;
-	}
-	return [...years.keys()].sort((a, b) => a - b).map((year) => ({ year, weeks: years.get(year)! }));
-}
-
 export type Metrics = {
 	pub: PubInfo;
 	/** Their own posts with a trustworthy date. This is the number shown. */
@@ -468,7 +451,6 @@ export type Metrics = {
 	split: FreePaid | null;
 	aggregates: Aggregates;
 	engagement: MonthEngagement[];
-	heatmap: HeatmapRow[];
 	/** Newest first, for the profile's post strip. */
 	recent: ArchivePost[];
 };
@@ -508,7 +490,6 @@ export function computeMetrics(posts: ArchivePost[], pub: PubInfo, now: Date): M
 		split: freePaid(dated),
 		aggregates: aggregates(dated),
 		engagement: monthlyEngagement(dated, now),
-		heatmap: heatmapRows(dated),
 		recent: recentPosts(dated)
 	};
 }

@@ -5,7 +5,7 @@ import { overLimit } from '$lib/server/rate-limit';
 import { buildCard, isFailure } from '$lib/server/author-card';
 
 /**
- * The card, built on the server in one go.
+ * The postcards, built on the server in one go.
  *
  * The whole walk happens here rather than being streamed to the browser. A deep
  * archive takes about 20 s the first time (measured: 1330 posts in 29 requests),
@@ -21,10 +21,10 @@ import { buildCard, isFailure } from '$lib/server/author-card';
 
 export const load: PageServerLoad = async ({ params, setHeaders, getClientAddress }) => {
 	// Slugs are always lowercase (see `slugFromUrl`), so a hand-typed
-	// /author/Kloshletter would fail on a publication that exists. Redirect to the
-	// canonical form instead of erroring on a URL that is merely capitalised.
+	// /postcard/Kloshletter would fail on a publication that exists. Redirect to
+	// the canonical form instead of erroring on a URL that is merely capitalised.
 	const slug = params.author.toLowerCase();
-	if (slug !== params.author) redirect(308, `/author/${slug}`);
+	if (slug !== params.author) redirect(308, `/postcard/${slug}`);
 
 	if (!isValidSlug(slug)) {
 		return { slug, card: null, failure: 'not_substack', tooNewPosts: 0 };

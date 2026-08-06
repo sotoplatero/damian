@@ -1,20 +1,15 @@
 <script lang="ts">
 	import PageMeta from '$lib/components/PageMeta.svelte';
 	import { copy } from '$lib/authors/copy';
+	import { POSTCARD_VARIANTS } from '$lib/authors/postcard';
 	import type { PageData } from './$types';
 
 	/**
-	 * The frame of the card, not a report.
+	 * The frame of the postcards, not a report.
 	 *
-	 * What the visitor sees IS card.png — the file they download, pixel for
-	 * pixel — so the page and the image can never disagree. Everything the old
-	 * profile page rebuilt in HTML (stat bands, best post, latest posts, word
-	 * bars, sentences) is gone: the figures live inside the image, chosen by
-	 * `heroFor`/`chipsFor` in $lib/authors/card.ts.
-	 *
-	 * Below the poster, exactly two things: the download, and the contagion
-	 * loop — whoever receives the gift is invited to make their own. That loop
-	 * is how every wrapped spreads, and it used to be buried in an error state.
+	 * What the visitor sees ARE the PNGs they can download — the four handoff
+	 * designs in a snap rail. `scroll-snap` is the slider: native swipe on
+	 * touch, no dependency; arrows and dots ride on top for pointers.
 	 */
 	let { data }: { data: PageData } = $props();
 
@@ -23,6 +18,7 @@
 	const fill = (key: string, n: number | string) => (t[key] ?? '').replace('{n}', String(n));
 
 	const card = $derived(data.card);
+	const src = (variant: string) => `/postcard/${data.slug}/${variant}.png`;
 
 	const errorText = $derived.by(() => {
 		switch (data.failure) {
@@ -41,6 +37,23 @@
 		}
 	});
 
+	let rail = $state<HTMLElement | null>(null);
+	let active = $state(0);
+
+	/* The rail's scroll position IS the state: swipe, arrows and dots all end
+	   up here, so they can't disagree. */
+	function onScroll() {
+		if (!rail) return;
+		active = Math.min(
+			POSTCARD_VARIANTS.length - 1,
+			Math.max(0, Math.round(rail.scrollLeft / rail.clientWidth))
+		);
+	}
+
+	function goTo(index: number) {
+		rail?.scrollTo({ left: index * rail.clientWidth, behavior: 'smooth' });
+	}
+
 	let linkCopied = $state(false);
 	let copyTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -55,35 +68,74 @@
 <PageMeta
 	title={card ? `${card.metrics.pub.name} en números` : t.title}
 	description={card
-		? `La historia pública de ${card.metrics.pub.name}, en una tarjeta.`
+		? `La historia pública de ${card.metrics.pub.name}, en cuatro postales.`
 		: t.description}
-	image={card ? `/author/${data.slug}/og.png` : undefined}
+	image={card ? src(POSTCARD_VARIANTS[0]) : undefined}
 />
 
 {#if !card}
 	<section class="section">
 		<div class="screen-center gap-4">
 			<p class="body-text">{errorText}</p>
-			<a class="link-quiet" href="/author">{t.restart}</a>
+			<a class="link-quiet" href="/postcard">{t.restart}</a>
 		</div>
 	</section>
 {:else}
 	<article>
 		<h1 class="sr-only">{card.metrics.pub.name}</h1>
 
-		<!-- The poster: the downloadable image itself, staged. -->
-		<img
-			class="poster"
-			src="/author/{data.slug}/card.png"
-			alt={t.cardAlt.replace('{name}', card.metrics.pub.name)}
-			width="1080"
-			height="1080"
-		/>
+		<!-- The slider: the downloadable images themselves, in a snap rail. -->
+		<div class="slider" bind:this={rail} onscroll={onScroll}>
+			{#each POSTCARD_VARIANTS as variant, index (variant)}
+				<div class="slide">
+					<img
+						class="poster"
+						src={src(variant)}
+						alt={t.cardAlt.replace('{name}', card.metrics.pub.name)}
+						width="1080"
+						height="1080"
+						loading={index === 0 ? 'eager' : 'lazy'}
+					/>
+				</div>
+			{/each}
+		</div>
+
+		<div class="mt-4 flex items-center justify-center gap-4">
+			<button
+				type="button"
+				class="slider-arrow"
+				aria-label={t.previous}
+				disabled={active === 0}
+				onclick={() => goTo(active - 1)}>‹</button
+			>
+			<div class="flex items-center gap-2.5">
+				{#each POSTCARD_VARIANTS as variant, index (variant)}
+					<button
+						type="button"
+						class="slider-dot"
+						class:slider-dot-active={index === active}
+						aria-label={t.goTo.replace('{n}', String(index + 1))}
+						onclick={() => goTo(index)}
+					></button>
+				{/each}
+			</div>
+			<button
+				type="button"
+				class="slider-arrow"
+				aria-label={t.next}
+				disabled={active === POSTCARD_VARIANTS.length - 1}
+				onclick={() => goTo(active + 1)}>›</button
+			>
+		</div>
 
 		<div class="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3">
-			<!-- No download in the degraded state: half a card is not a gift. -->
+			<!-- No download in the degraded state: half a postcard is not a gift. -->
 			{#if card.source === 'archive'}
-				<a class="btn btn-primary btn-lg" href="/author/{data.slug}/card.png" download="{data.slug}.png">
+				<a
+					class="btn btn-primary btn-lg"
+					href={src(POSTCARD_VARIANTS[active])}
+					download="{data.slug}-{POSTCARD_VARIANTS[active]}.png"
+				>
 					{t.download}
 				</a>
 			{/if}
@@ -104,7 +156,7 @@
 		<section class="section box bg-line/40">
 			<h2 class="section-title">{t.makeYoursTitle}</h2>
 			<p class="section-intro">{t.makeYoursBody}</p>
-			<form method="GET" action="/author" class="mt-4 flex gap-2">
+			<form method="GET" action="/postcard" class="mt-4 flex gap-2">
 				<input
 					class="input input-bordered input-lg min-w-0 flex-1"
 					type="text"
@@ -117,9 +169,8 @@
 			</form>
 		</section>
 
-		<!-- Caveats stay visible: they qualify the image above them. -->
+		<!-- Caveats stay visible: they qualify the images above them. -->
 		<div class="mt-8 flex flex-col gap-2">
-			{#if card.metrics.day || card.metrics.hour}<p class="muted">{t.noteUtc}</p>{/if}
 			{#if card.importedCount > 0}
 				<p class="muted">{fill('noteImported', es(card.importedCount))}</p>
 			{/if}

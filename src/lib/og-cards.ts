@@ -28,9 +28,9 @@ const HOME_CARD: Card = {
  * A path reduced to its card slug.
  *
  * Both the `/tool/` prefix and a bare leading slash are stripped, because not
- * every tool lives under `/tool/`: `/author` is its own route segment, since what
+ * every tool lives under `/tool/`: `/postcard` is its own route segment, since what
  * follows it is a publication and not a tool name. Without stripping the bare
- * slash, `/author` asked for `/og//author.png` and got nothing.
+ * slash, `/postcard` asked for `/og//postcard.png` and got nothing.
  */
 function toSlug(path: string): string {
 	return path.replace(/^\/tool\//, '').replace(/^\//, '');

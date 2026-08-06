@@ -1,5 +1,4 @@
 import type { Metrics } from '$lib/authors/metrics';
-import type { Lines } from '$lib/authors/lines';
 
 /**
  * An author's already-computed card, held in memory.
@@ -7,7 +6,8 @@ import type { Lines } from '$lib/authors/lines';
  * ─────────────────────────────────────────────────────────────────────────
  * WHY THIS IS A MODULE AND NOT A `Map` INSIDE A ROUTE
  *
- * Two routes use it: the card page and its image (`/author/<slug>/card.png`).
+ * Several routes use it: the postcard page and its four images
+ * (`/postcard/<slug>/<variant>.png`).
  * Both run in the same process, so a module-level `Map` is shared between them.
  *
  * With a `Map` inside each route, viewing a card and then downloading it would
@@ -23,7 +23,6 @@ import type { Lines } from '$lib/authors/lines';
 
 export type AuthorCard = {
 	metrics: Metrics;
-	lines: Lines;
 	/** Where the numbers came from. `feed` means the reduced set. */
 	source: 'archive' | 'feed';
 	/** True when the walk hit its page cap, so this isn't the whole archive. */

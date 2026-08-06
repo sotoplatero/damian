@@ -28,14 +28,19 @@ export type Tool = {
 	blurb: string;
 	/**
 	 * Marks the ones that ask for an email, so you can see at a glance which ones
-	 * capture. `/author` is the first one without it, on purpose: the card is a
-	 * gift meant to open a conversation with another author, and a form in front of
-	 * it would turn it into lead capture.
+	 * capture. `/postcard` is the first one without it, on purpose: the postcard
+	 * is a gift meant to open a conversation with another author, and a form in
+	 * front of it would turn it into lead capture.
 	 */
 	capturesEmail?: boolean;
 };
 
 export const tools: Tool[] = [
+	{
+		name: 'La postal de tu Substack',
+		href: '/postcard',
+		blurb: 'Pega tu dirección y llévate cuatro postales con tu historia, listas para compartir.'
+	},
 	{
 		name: 'Distribuye tu artículo',
 		href: '/tool/repurpose',

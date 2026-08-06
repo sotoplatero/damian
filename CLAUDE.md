@@ -43,8 +43,7 @@ drag in jsdom for nothing.
 - Spanish: everything a visitor reads — the copy strings inside the page components and
   their `copy.ts` modules, the bodies of `src/lib/emails/*.md`, the strings inside
   `src/lib/courses/*/course.ts`, which is course content that happens to live in a `.ts`
-  file, and the sentences in `src/lib/authors/lines.ts`, which are card copy chosen by
-  rule. The editorial notes to Damian inside `src/routes/+page.svelte` are Spanish on
+  file. The editorial notes to Damian inside `src/routes/+page.svelte` are Spanish on
   purpose: their reader is Damian, not the next programmer.
 
 Older files still have Spanish comments from before this rule. They are not wrong, just
@@ -80,7 +79,7 @@ signup form, and below it the list of tools.
   "a nadie", because "a nadie" reads as abandoning his wife).
 - Each tool page carries its own `const t = {...}` with its strings. Copy shared by two
   files lives in a module: `src/lib/tools/newsletter/copy.ts` (page + emailed report)
-  and `src/lib/authors/copy.ts` (both /author pages).
+  and `src/lib/authors/copy.ts` (both /postcard pages).
 - **Signup**: the home embeds Substack's own iframe. The old self-hosted path
   (`SubscribeForm.svelte` → `/api/subscribe` → Resend + welcome email) was **removed in
   August 2026 as unused**; it lives in git history if the iframe ever goes. The tools
@@ -92,12 +91,12 @@ signup form, and below it the list of tools.
 
 Every tool under `src/routes/tool/*` is reachable by URL; only the ones in
 `src/lib/tools/list.ts` show on the home page. Add an object there and it appears.
-**`author` is the exception to that path**: it lives at `/author`, not under
+**`postcard` is the exception to that path**: it lives at `/postcard`, not under
 `/tool/`, because the segment after it is a publication and not a tool name.
 
 | Tool | State |
 |---|---|
-| `author` | Listed. **The only one with no email gate.** Lives at `/author`, not `/tool/`. See below. |
+| `postcard` | Listed. **The only one with no email gate.** Lives at `/postcard`, not `/tool/`. See below. |
 | `substack-about` | Listed. Rewrites a publication's "About" page. |
 | `7-frameworks` | Listed. Built on the site theme. |
 | `10-post-types` | Listed. Built on the site theme. |
@@ -225,25 +224,36 @@ at 320px.
 `window._preloads` — **142 keys, of which we read a couple of dozen; the header comment says
 which and why**) and Substack's undocumented `/api/v1/archive`. The transport underneath it
 lives in **`src/lib/server/substack.ts`** (`get` with the SSRF guard, `readBody` with the byte
-cap, `decode`, `preloads`, `toOrigin`), extracted so `/author` could reuse it — the
+cap, `decode`, `preloads`, `toOrigin`), extracted so `/postcard` could reuse it — the
 `_preloads` double-`JSON.parse` and the guard are expensive to get right and must not exist
 twice. Post bodies need one extra request each: `body_html` comes back empty from the archive
 and `/api/v1/posts/by-slug/` 302s to the page. Bodies are fetched in **both** steps — if only
 the paid step had them, screen and email would disagree.
 
-**`/author` — the Substack Wrapped.** Paste a newsletter's address, get the downloadable
-1080×1080 card of its whole public history. **No email gate**, the only tool without one:
-the card is a gift meant to open a conversation with another author, and a form in front of
-it would turn it into lead capture.
+**`/postcard` — the Substack postcards.** Paste a newsletter's address, get FOUR
+downloadable 1080×1080 postcards of its whole public history, in a slider. **No email
+gate**, the only tool without one: the postcard is a gift meant to open a conversation
+with another author, and a form in front of it would turn it into lead capture. Listed on
+the home page. It replaced `/author` in August 2026 (a catch-all in
+`src/routes/author/[...rest]/+server.ts` 308-redirects the old addresses, which are
+printed on already-shared cards).
 
-**The page is the FRAME of the image, not a report** (redesigned August 2026 after the
-first version buried the download under a parallel HTML profile). What the visitor sees IS
-`card.png` staged as a poster (`.poster` in app.css), so page and download can never
-disagree. Under it, exactly two things: the download button and the contagion loop («¿Tú
-también escribes en Substack?» + inline form) — the recipient of the gift makes the next
-one. Honest notices (UTC, imported posts, truncated/feed) stay visible under the poster.
-The old profile page (banner, stat bands, best post, post grid, word bars, Heatmap/Bars
-components, their CSS vocabulary) was deleted; git history has it.
+**The four designs come from a Claude Design handoff** («Rediseño postal Substack») and
+are implemented pixel-faithful in `src/lib/authors/postcard.ts`: `biolink` (dark,
+centred), `editorial` (dark, typographic), `gema` (warm paper catalogue), `cartel`
+(orange poster with the giant number). Their language is the postcard's own — Space
+Grotesk / Instrument Serif / JetBrains Mono (TTFs for satori in `src/lib/server/fonts/`),
+fixed orange `#f05a1e`, faceted diamond mark — and deliberately does NOT adapt to the
+publication's `brandColor`: every postcard also advertises the tool.
+
+**The page is the FRAME of the images, not a report.** What the visitor sees ARE the four
+PNGs (`/postcard/<slug>/<variant>.png`) in a scroll-snap rail — the snap is the swipe on
+touch, no dependency; arrows and dots ride on top and share the same scroll position.
+Under it: download of the active slide, and the contagion loop («¿Tú también escribes en
+Substack?» + inline form) — the recipient of the gift makes the next one. Honest notices
+(imported posts, truncated/feed) stay visible; no download in the feed-degraded state.
+The single-card era (`card.ts` with heroFor/chips, `lines.ts` sentences, the heatmap, the
+landscape `og.png`) was deleted with it; git history has it.
 
 Its shape, and why:
 
@@ -261,12 +271,9 @@ Its shape, and why:
   and `first_post_date` lies on two of the three reference publications.
 - Several metrics are **conditional and vanish** rather than showing noise: the weekday needs
   ≥40% share (measured top days were 17% and 18%, against 14.3% for an even split), the hour
-  needs ≥50% in a three-hour window, the free/paid split needs both sides present.
-- `src/lib/authors/lines.ts` holds the flattering sentences, chosen by threshold. **If a figure
-  isn't good enough to flatter, there is no sentence** and the number stands alone — a
-  consolation prize reads as condescension on a card nobody asked for. Since the redesign the
-  sentences only appear on the landscape `og.png`; the square card speaks in figures and chips
-  (`heroFor`/`chipsFor` apply the same no-consolation rule).
+  needs ≥50% in a three-hour window, the free/paid split needs both sides present. The same
+  rule shapes `postcardData`: a zero figure is dropped and the stat grids flex — no
+  consolation cells on a gift nobody asked for.
 - **The subscriber count is only shown if its author allows it.** The payload carries it
   either way; since 2026 the explicit `hide_subscriber_count` setting DOES come through and
   it wins when present (`subscriberMagnitude` in `substack-archive.ts`, shown as Substack's
@@ -275,20 +282,13 @@ Its shape, and why:
   profile (`readFollowers`), no setting to respect. The profile also carries a
   `subscriberCount` — it is the AUTHOR's aggregate across publications, never this
   publication's; using it on the card would lie.
-- `src/lib/server/author-card.ts` builds the card; `author-cache.ts` holds it in memory and is
-  **shared by the page and both PNGs**. Without that sharing, viewing a card and downloading it
-  would walk someone else's archive twice — 58 requests instead of 29.
-- **There are two images, on purpose** (`src/lib/authors/card.ts`): `card.png` is the
-  1080×1080 square the download button serves — a poster, not a report: ONE hero figure
-  chosen by rule (`heroFor`, mirroring `lines.ts` thresholds), earned chips only
-  (`chipsFor`, no consolation chips), and the heatmap painted in the publication's own
-  `brandColor` with its avatar on top. `og.png` is the 1200×630 landscape, only for link
-  previews. The PNG font subset has no `≈` or `✦` glyphs — equivalences are written out
-  («unas 2,4 novelas») and the star is drawn as SVG, same path as the header mark.
+- `src/lib/server/author-card.ts` builds the data; `author-cache.ts` holds it in memory and
+  is **shared by the page and all four PNGs**. Without that sharing, viewing the slider and
+  downloading a postcard would walk someone else's archive several times over.
 - **There is no progress stream.** The load does the whole walk server-side (~24 s for the
   deepest archive measured) and `s-maxage=86400` means the CDN serves it afterwards without
-  waking the function. Damian always sees a card before sharing it, so the link is warm by the
-  time anyone else opens it.
+  waking the function. Damian always sees the postcards before sharing them, so the link is
+  warm by the time anyone else opens it.
 - **Deliberately not on the card:** the longest gap without publishing. It is the one figure
   that reads as a reproach, and the one imported dates corrupt most — a first pass reported
   182 weeks of silence for one publication and 56 for another, both invented by imported
