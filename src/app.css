@@ -174,9 +174,14 @@
 
 	/*
 	 * The postcard slider: a scroll-snap rail. The snap IS the swipe on touch —
-	 * no dependency, no JS in the gesture path; arrows and dots ride on top for
-	 * pointers, and all of them read/write the same scroll position.
+	 * no dependency, no JS in the gesture path; the arrows and the dots ride ON
+	 * the image, and all of them read/write the same scroll position. The dots
+	 * sit in a dark pill so they survive every postcard background (dark,
+	 * paper, orange).
 	 */
+	.slider-frame {
+		@apply relative;
+	}
 	.slider {
 		@apply flex w-full gap-4 overflow-x-auto;
 		scroll-snap-type: x mandatory;
@@ -190,22 +195,36 @@
 		scroll-snap-align: center;
 	}
 	.slider-arrow {
-		@apply flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-line bg-transparent text-lg text-soft transition-colors;
+		@apply absolute top-1/2 flex h-11 w-11 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-line text-lg text-ink transition-all;
+		background: rgba(255, 255, 255, 0.88);
+		box-shadow: 0 4px 14px rgba(23, 23, 23, 0.18);
+	}
+	.slider-arrow-prev {
+		left: 0.9rem;
+	}
+	.slider-arrow-next {
+		right: 0.9rem;
 	}
 	.slider-arrow:hover:not(:disabled) {
+		background: #ffffff;
 		border-color: var(--color-ink);
-		color: var(--color-ink);
 	}
 	.slider-arrow:disabled {
-		opacity: 0.35;
+		opacity: 0;
 		cursor: default;
+		pointer-events: none;
+	}
+	.slider-dots {
+		@apply absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-2.5 rounded-full px-3.5 py-2.5;
+		background: rgba(17, 16, 16, 0.55);
 	}
 	.slider-dot {
-		@apply h-2 w-2 cursor-pointer rounded-full border-0 bg-line p-0;
+		@apply h-2 w-2 cursor-pointer rounded-full border-0 p-0;
+		background: rgba(255, 255, 255, 0.45);
 		transition: background 180ms ease, transform 180ms ease;
 	}
 	.slider-dot-active {
-		background: var(--color-ink);
+		background: #ffffff;
 		transform: scale(1.3);
 	}
 }

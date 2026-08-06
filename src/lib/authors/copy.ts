@@ -23,10 +23,13 @@ export const copy = {
 
 	/* The slider and its actions. */
 	cardAlt: 'La postal de {name}: su historia en Substack, en números',
-	download: 'Descargar esta postal',
+	openImage: 'Abrir la postal a tamaño completo',
+	download: 'Descargar',
+	copyImage: 'Copiar imagen',
+	copiedImage: 'Copiada',
+	copyImageFailed: 'No se pudo copiar',
 	copyLink: 'Copiar enlace',
 	copiedLink: 'Copiado',
-	labelViewOnSubstack: 'Ver en Substack',
 	previous: 'Postal anterior',
 	next: 'Postal siguiente',
 	goTo: 'Ir a la postal {n}',

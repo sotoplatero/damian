@@ -928,6 +928,129 @@ function cartelTree(data: PostcardData, options: PostcardOptions): Node {
 	);
 }
 
+export const OG_WIDTH = 1200;
+export const OG_HEIGHT = 630;
+
+/**
+ * The landscape og:image (1200×630), in the editorial variant's language.
+ *
+ * It exists because link scrapers (Substack included) only give the BIG
+ * preview treatment to landscape images; a square og:image falls back to a
+ * thumbnail. It is never downloaded — the postcards are the product, this is
+ * their shop window.
+ */
+export function ogTree(data: PostcardData, options: PostcardOptions): Node {
+	return div(
+		{
+			width: OG_WIDTH,
+			height: OG_HEIGHT,
+			background: DARK,
+			color: CREAM,
+			padding: '52px 64px 44px',
+			flexDirection: 'column',
+			justifyContent: 'space-between',
+			position: 'relative',
+			overflow: 'hidden',
+			fontFamily: 'Space Grotesk'
+		},
+		[
+			div({ position: 'absolute', top: 0, left: 0, width: OG_WIDTH, height: 8, background: ORANGE }, []),
+			div(
+				{
+					position: 'absolute',
+					right: -120,
+					top: 90,
+					width: 420,
+					height: 420,
+					transform: 'rotate(45deg)',
+					border: '1px solid rgba(240,90,30,.28)'
+				},
+				[]
+			),
+			div({ alignItems: 'flex-start', justifyContent: 'space-between', gap: 32 }, [
+				div({ flexDirection: 'column' }, [
+					div(
+						{
+							fontFamily: 'JetBrains Mono',
+							fontWeight: 500,
+							fontSize: 14,
+							letterSpacing: 3,
+							color: ORANGE,
+							marginBottom: 18
+						},
+						`SUBSTACK · DESDE ${data.sinceYear}`
+					),
+					div(
+						{
+							fontFamily: 'Instrument Serif',
+							fontSize: 76,
+							lineHeight: 0.95,
+							letterSpacing: -1.5,
+							color: '#fff',
+							display: 'block',
+							lineClamp: 2,
+							maxWidth: 860
+						},
+						data.name
+					),
+					div(
+						{ fontSize: 19, color: 'rgba(245,241,234,.55)', marginTop: 16 },
+						[data.authorName, data.followers].filter(Boolean).join(' · ')
+					)
+				]),
+				div({ flex: 'none' }, [
+					logoMark(options, 88, () =>
+						diamond(88, { stroke: ORANGE, strokeWidth: 2.5 }, { stroke: 'rgba(240,90,30,.5)', strokeWidth: 1.5 })
+					)
+				])
+			]),
+			div({ alignItems: 'flex-end', justifyContent: 'space-between', gap: 40 }, [
+				div({ alignItems: 'baseline', gap: 48 }, [
+					div({ flexDirection: 'column' }, [
+						div(
+							{ fontWeight: 700, fontSize: 96, lineHeight: 0.82, letterSpacing: -4.8, color: ORANGE },
+							data.articles
+						),
+						div(
+							{ fontSize: 18, color: 'rgba(245,241,234,.6)', marginTop: 14 },
+							data.articles === '1' ? 'artículo' : 'artículos'
+						)
+					]),
+					...data.stats.map((stat) =>
+						div({ flexDirection: 'column' }, [
+							div(
+								{ fontWeight: 700, fontSize: 52, lineHeight: 0.82, letterSpacing: -2, color: CREAM },
+								stat.value
+							),
+							div({ fontSize: 17, color: 'rgba(245,241,234,.5)', marginTop: 12 }, stat.label)
+						])
+					)
+				]),
+				div({ flexDirection: 'column', alignItems: 'flex-end', gap: 12 }, [
+					div(
+						{ alignItems: 'flex-end', gap: 5, height: 64 },
+						data.bars.map((bar) =>
+							div(
+								{
+									width: 16,
+									background: bar.solid ? ORANGE : 'rgba(240,90,30,.35)',
+									height: Math.max(3, Math.round(bar.share * 60)),
+									borderRadius: '3px 3px 0 0'
+								},
+								[]
+							)
+						)
+					),
+					div(
+						{ fontFamily: 'JetBrains Mono', fontWeight: 500, fontSize: 15, color: ORANGE },
+						options.toolUrl
+					)
+				])
+			])
+		]
+	);
+}
+
 const TREES: Record<PostcardVariant, (data: PostcardData, options: PostcardOptions) => Node> = {
 	biolink: biolinkTree,
 	editorial: editorialTree,

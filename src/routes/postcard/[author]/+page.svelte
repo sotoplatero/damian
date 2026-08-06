@@ -9,7 +9,8 @@
 	 *
 	 * What the visitor sees ARE the PNGs they can download — the four handoff
 	 * designs in a snap rail. `scroll-snap` is the slider: native swipe on
-	 * touch, no dependency; arrows and dots ride on top for pointers.
+	 * touch, no dependency; the arrows and the dots ride ON the image and share
+	 * the same scroll position. Clicking a postcard opens the file itself.
 	 */
 	let { data }: { data: PageData } = $props();
 
@@ -55,13 +56,30 @@
 	}
 
 	let linkCopied = $state(false);
-	let copyTimer: ReturnType<typeof setTimeout> | undefined;
+	let linkTimer: ReturnType<typeof setTimeout> | undefined;
 
 	async function copyLink() {
 		await navigator.clipboard.writeText(location.href);
 		linkCopied = true;
-		clearTimeout(copyTimer);
-		copyTimer = setTimeout(() => (linkCopied = false), 2000);
+		clearTimeout(linkTimer);
+		linkTimer = setTimeout(() => (linkCopied = false), 2000);
+	}
+
+	/* '' | 'done' | 'failed' — copying an IMAGE needs a secure context and a
+	   clipboard that accepts PNGs; where it can't, the button says so. */
+	let imageCopied = $state<'' | 'done' | 'failed'>('');
+	let imageTimer: ReturnType<typeof setTimeout> | undefined;
+
+	async function copyImage() {
+		try {
+			const blob = await (await fetch(src(POSTCARD_VARIANTS[active]))).blob();
+			await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
+			imageCopied = 'done';
+		} catch {
+			imageCopied = 'failed';
+		}
+		clearTimeout(imageTimer);
+		imageTimer = setTimeout(() => (imageCopied = ''), 2000);
 	}
 </script>
 
@@ -70,7 +88,7 @@
 	description={card
 		? `La historia pública de ${card.metrics.pub.name}, en cuatro postales.`
 		: t.description}
-	image={card ? src(POSTCARD_VARIANTS[0]) : undefined}
+	image={card ? `/postcard/${data.slug}/og.png` : undefined}
 />
 
 {#if !card}
@@ -84,31 +102,42 @@
 	<article>
 		<h1 class="sr-only">{card.metrics.pub.name}</h1>
 
-		<!-- The slider: the downloadable images themselves, in a snap rail. -->
-		<div class="slider" bind:this={rail} onscroll={onScroll}>
-			{#each POSTCARD_VARIANTS as variant, index (variant)}
-				<div class="slide">
-					<img
-						class="poster"
-						src={src(variant)}
-						alt={t.cardAlt.replace('{name}', card.metrics.pub.name)}
-						width="1080"
-						height="1080"
-						loading={index === 0 ? 'eager' : 'lazy'}
-					/>
-				</div>
-			{/each}
-		</div>
+		<!-- The slider: the downloadable images themselves, in a snap rail. The
+		     arrows and dots sit ON the image; clicking a postcard opens the file. -->
+		<div class="slider-frame">
+			<div class="slider" bind:this={rail} onscroll={onScroll}>
+				{#each POSTCARD_VARIANTS as variant, index (variant)}
+					<div class="slide">
+						<a href={src(variant)} target="_blank" rel="noopener" aria-label={t.openImage}>
+							<img
+								class="poster"
+								src={src(variant)}
+								alt={t.cardAlt.replace('{name}', card.metrics.pub.name)}
+								width="1080"
+								height="1080"
+								loading={index === 0 ? 'eager' : 'lazy'}
+							/>
+						</a>
+					</div>
+				{/each}
+			</div>
 
-		<div class="mt-4 flex items-center justify-center gap-4">
 			<button
 				type="button"
-				class="slider-arrow"
+				class="slider-arrow slider-arrow-prev"
 				aria-label={t.previous}
 				disabled={active === 0}
 				onclick={() => goTo(active - 1)}>‹</button
 			>
-			<div class="flex items-center gap-2.5">
+			<button
+				type="button"
+				class="slider-arrow slider-arrow-next"
+				aria-label={t.next}
+				disabled={active === POSTCARD_VARIANTS.length - 1}
+				onclick={() => goTo(active + 1)}>›</button
+			>
+
+			<div class="slider-dots">
 				{#each POSTCARD_VARIANTS as variant, index (variant)}
 					<button
 						type="button"
@@ -119,16 +148,10 @@
 					></button>
 				{/each}
 			</div>
-			<button
-				type="button"
-				class="slider-arrow"
-				aria-label={t.next}
-				disabled={active === POSTCARD_VARIANTS.length - 1}
-				onclick={() => goTo(active + 1)}>›</button
-			>
 		</div>
 
-		<div class="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3">
+		<!-- The actions, centred: download, copy the image, copy the link. -->
+		<div class="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
 			<!-- No download in the degraded state: half a postcard is not a gift. -->
 			{#if card.source === 'archive'}
 				<a
@@ -139,17 +162,16 @@
 					{t.download}
 				</a>
 			{/if}
+			<button type="button" class="link-quiet" onclick={copyImage}>
+				{imageCopied === 'done'
+					? t.copiedImage
+					: imageCopied === 'failed'
+						? t.copyImageFailed
+						: t.copyImage}
+			</button>
 			<button type="button" class="link-quiet" onclick={copyLink}>
 				{linkCopied ? t.copiedLink : t.copyLink}
 			</button>
-			<a
-				class="link-quiet"
-				href={card.metrics.pub.origin}
-				target="_blank"
-				rel="noopener noreferrer"
-			>
-				{t.labelViewOnSubstack} ↗
-			</a>
 		</div>
 
 		<!-- The contagion loop: the gift invites the next one. -->

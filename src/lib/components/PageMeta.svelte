@@ -3,25 +3,37 @@
 	import { slugForPath } from '$lib/og-cards';
 
 	/**
-	 * Los metadatos de una página: título, descripción y la tarjeta que se ve al
-	 * compartir el enlace.
+	 * A page's metadata: title, description and the card seen when the link is
+	 * shared.
 	 *
-	 * Está aquí y no repetido en cada página porque son once etiquetas y es muy
-	 * fácil olvidarse de una. Cada página pasa su título y su descripción; la
-	 * imagen la deduce de la ruta, así que no hay que pasarla ni mantenerla:
+	 * It lives here rather than repeated on every page because it is a dozen
+	 * tags and forgetting one is easy. Each page passes its title and
+	 * description; the image is deduced from the route, so it needs no passing
+	 * or maintaining:
 	 *   `/`                  -> `/og/home.png`
 	 *   `/tool/newsletter`   -> `/og/newsletter.png`
-	 * Los textos de cada tarjeta salen de `$lib/og-cards.ts`.
+	 * The texts of each card come from `$lib/og-cards.ts`.
 	 *
-	 * Las URLs de og:image tienen que ser absolutas: los rastreadores de las redes
-	 * no resuelven rutas relativas. Se construyen con el origen de la petición.
+	 * og:image URLs must be absolute: social scrapers do not resolve relative
+	 * paths. They are built from the request's origin. The width/height tags
+	 * matter too: scrapers use them to pick the large-preview layout before
+	 * downloading the image.
 	 */
 	let {
 		title,
 		description,
-		/** Por si alguna herramienta quiere su propia imagen en vez de la generada. */
-		image
-	}: { title: string; description: string; image?: string } = $props();
+		/** For a tool that wants its own image instead of the generated card. */
+		image,
+		/** The image's pixel size. Every og image on the site is 1200×630. */
+		imageWidth = 1200,
+		imageHeight = 630
+	}: {
+		title: string;
+		description: string;
+		image?: string;
+		imageWidth?: number;
+		imageHeight?: number;
+	} = $props();
 
 	const origin = $derived(page.url.origin);
 	const slug = $derived(slugForPath(page.url.pathname));
@@ -38,6 +50,9 @@
 	<meta property="og:title" content={title} />
 	<meta property="og:description" content={description} />
 	<meta property="og:image" content={ogImage} />
+	<meta property="og:image:width" content={String(imageWidth)} />
+	<meta property="og:image:height" content={String(imageHeight)} />
+	<meta property="og:image:alt" content={title} />
 	<meta property="og:url" content={canonical} />
 
 	<meta name="twitter:card" content="summary_large_image" />
