@@ -113,8 +113,8 @@
 								class="poster"
 								src={src(variant)}
 								alt={t.cardAlt.replace('{name}', card.metrics.pub.name)}
-								width="1080"
-								height="1080"
+								width="1456"
+								height="1048"
 								loading={index === 0 ? 'eager' : 'lazy'}
 							/>
 						</a>

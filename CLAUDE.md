@@ -231,7 +231,12 @@ and `/api/v1/posts/by-slug/` 302s to the page. Bodies are fetched in **both** st
 the paid step had them, screen and email would disagree.
 
 **`/postcard` — the Substack postcards.** Paste a newsletter's address, get FOUR
-downloadable 1080×1080 postcards of its whole public history, in a slider. **No email
+downloadable postcards of its whole public history, in a slider. **They are landscape
+1456×1048 (14:10) on purpose**: that is Substack's retina full-width post ratio — squares
+pasted into a post land narrower than the column and need the editor's manual «Set full
+width». The handoff was designed square; each composition was re-balanced for the shorter
+canvas in `postcard.ts` (the trees keep a 1080-wide design space, scaled numerically on
+the way out). **No email
 gate**, the only tool without one: the postcard is a gift meant to open a conversation
 with another author, and a form in front of it would turn it into lead capture. Listed on
 the home page. It replaced `/author` in August 2026 (a catch-all in

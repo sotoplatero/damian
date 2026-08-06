@@ -7,7 +7,8 @@ import { POSTCARD_FONTS, imageDataUri } from '$lib/server/postcard-render';
 import {
 	postcardTree,
 	postcardData,
-	POSTCARD_SIZE,
+	POSTCARD_WIDTH,
+	POSTCARD_HEIGHT,
 	POSTCARD_VARIANTS,
 	type PostcardVariant
 } from '$lib/authors/postcard';
@@ -42,8 +43,8 @@ export const GET: RequestHandler = async ({ params, url }) => {
 			toolUrl: `${url.host}/postcard/${slug}`
 		}),
 		{
-			width: POSTCARD_SIZE,
-			height: POSTCARD_SIZE,
+			width: POSTCARD_WIDTH,
+			height: POSTCARD_HEIGHT,
 			fonts: POSTCARD_FONTS,
 			headers: {
 				// Someone's archive changes at most daily.
