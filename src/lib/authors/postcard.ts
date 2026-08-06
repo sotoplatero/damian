@@ -412,8 +412,10 @@ function biolinkTree(data: PostcardData, options: PostcardOptions): Node {
 							),
 							div(
 								{
+									/* Lifted well above the dark ground: the labels read
+									   from the feed, not only the figures. */
 									fontSize: 19,
-									color: index === 0 ? 'rgba(245,241,234,.62)' : 'rgba(245,241,234,.5)',
+									color: index === 0 ? 'rgba(245,241,234,.85)' : 'rgba(245,241,234,.72)',
 									marginTop: 8
 								},
 								stat.label
@@ -423,53 +425,48 @@ function biolinkTree(data: PostcardData, options: PostcardOptions): Node {
 				)
 			),
 			div({ width: '100%', marginTop: 8, flexDirection: 'column' }, [
+				data.peak
+					? div(
+							{
+								justifyContent: 'flex-end',
+								fontFamily: 'JetBrains Mono',
+								fontWeight: 500,
+								fontSize: 16,
+								color: ORANGE,
+								marginBottom: 8
+							},
+							data.peak
+						)
+					: div({}, []),
 				div(
-					{ alignItems: 'flex-end', gap: 8, height: 60 },
-					data.bars.map((bar) => barColumn(bar, 60, 'rgba(240,90,30,.35)'))
-				),
-				div(
-					{
-						justifyContent: 'space-between',
-						fontFamily: 'JetBrains Mono',
-						fontSize: 16,
-						color: 'rgba(245,241,234,.4)',
-						marginTop: 8
-					},
-					[
-						div({}, data.bars[0]?.month ?? ''),
-						div({ color: ORANGE }, data.peak ?? ''),
-						div({}, data.bars.at(-1)?.month ?? '')
-					]
+					{ alignItems: 'flex-end', gap: 8, height: 84 },
+					data.bars.map((bar) =>
+						barColumn(
+							bar,
+							60,
+							'rgba(240,90,30,.35)',
+							div(
+								{ fontSize: 16, color: 'rgba(245,241,234,.55)', justifyContent: 'center' },
+								bar.month
+							)
+						)
+					)
 				)
 			]),
-			div({ flexDirection: 'row', gap: 12, width: '100%', marginTop: 8 }, [
-				div(
-					{
-						flex: 1,
-						background: ORANGE,
-						color: '#fff',
-						borderRadius: 999,
-						padding: '16px 0',
-						fontWeight: 500,
-						fontSize: 20,
-						justifyContent: 'center'
-					},
-					'Suscribirse gratis'
-				),
-				div(
-					{
-						flex: 1.4,
-						border: '1px solid rgba(245,241,234,.22)',
-						color: CREAM,
-						borderRadius: 999,
-						padding: '16px 0',
-						fontWeight: 500,
-						fontSize: 20,
-						justifyContent: 'center'
-					},
-					options.toolUrl
-				)
-			])
+			/* The postcard's own address, plain: a signature, not a button. */
+			div(
+				{
+					width: '100%',
+					marginTop: 8,
+					justifyContent: 'center',
+					fontFamily: 'JetBrains Mono',
+					fontWeight: 500,
+					fontSize: 18,
+					letterSpacing: 0.9,
+					color: ORANGE
+				},
+				options.toolUrl
+			)
 		]
 	);
 }
