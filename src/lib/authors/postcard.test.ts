@@ -28,17 +28,17 @@ function metricsWith(overrides: Partial<Metrics>): Metrics {
 }
 
 describe('compact', () => {
-	it('keeps small figures whole and abbreviates from five digits', () => {
+	it('keeps small figures whole and abbreviates with a glued K from five digits', () => {
 		expect(compact(892)).toBe('892');
-		expect(compact(54_906)).toBe('54,9 mil');
-		expect(compact(1_250_000)).toBe('1,3 M');
+		expect(compact(54_906)).toBe('54,9K');
+		expect(compact(1_250_000)).toBe('1,3M');
 	});
 });
 
 describe('spanishMagnitude', () => {
-	it('says Substack magnitudes in Spanish and leaves the rest alone', () => {
-		expect(spanishMagnitude('7.7K+')).toBe('7,7 mil+');
-		expect(spanishMagnitude('12K')).toBe('12 mil');
+	it('keeps the K and swaps the decimal point for the Spanish comma', () => {
+		expect(spanishMagnitude('7.7K+')).toBe('7,7K+');
+		expect(spanishMagnitude('12K')).toBe('12K');
 		expect(spanishMagnitude('81')).toBe('81');
 	});
 });

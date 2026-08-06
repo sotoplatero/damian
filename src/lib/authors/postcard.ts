@@ -75,22 +75,23 @@ export type PostcardVariant = (typeof POSTCARD_VARIANTS)[number];
 const es = (n: number) => n.toLocaleString('es-ES');
 
 /**
- * Compact Spanish figures: full up to four digits, then «mil» and «M». A
- * number that doesn't read at a glance isn't a poster figure.
+ * Compact Spanish figures: full up to four digits, then «K» and «M» — glued
+ * to the number, never a space: «54,9 mil» line-wrapped inside narrow stat
+ * cells, «54,9K» cannot.
  */
 export function compact(n: number): string {
 	const one = (x: number) =>
 		(Math.round(x * 10) / 10).toLocaleString('es-ES', { maximumFractionDigits: 1 });
 	if (n < 10_000) return es(n);
-	if (n < 1_000_000) return `${one(n / 1000)} mil`;
-	return `${one(n / 1_000_000)} M`;
+	if (n < 1_000_000) return `${one(n / 1000)}K`;
+	return `${one(n / 1_000_000)}M`;
 }
 
-/** Substack's own subscriber magnitude («7.7K+») said in Spanish («7,7 mil+»). */
+/** Substack's own subscriber magnitude («7.7K+») with the Spanish comma («7,7K+»). */
 export function spanishMagnitude(raw: string): string {
 	const match = raw.match(/^([\d.]+)K(\+?)$/i);
 	if (!match) return raw;
-	return `${match[1].replace('.', ',')} mil${match[2]}`;
+	return `${match[1].replace('.', ',')}K${match[2]}`;
 }
 
 const MONTHS_SHORT = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
@@ -932,33 +933,30 @@ function cartelTree(data: PostcardData, options: PostcardOptions): Node {
 				)
 			]),
 			div({ background: DARK_BAND, padding: '22px 52px 24px', flexDirection: 'column' }, [
-				div({ paddingBottom: 16 }, statCells),
-				/* The chart takes the band's full width: twelve legible months. */
-				div(
-					{
-						alignItems: 'flex-end',
-						gap: 10,
-						height: 80,
-						borderBottom: '1px solid rgba(255,255,255,.15)',
-						paddingBottom: 10
-					},
-					data.bars.map((bar) =>
-						barColumn(
-							bar,
-							48,
-							'rgba(255,255,255,.22)',
-							div(
-								{
-									fontSize: MONTH_SIZE,
-									fontWeight: 500,
-									color: 'rgba(255,255,255,.7)',
-									justifyContent: 'center'
-								},
-								bar.month
+				/* The chart rides the stat row — its own gesture in this variant —
+				   but takes a wider slot (flex 3) so the twelve months read. */
+				div({ borderBottom: '1px solid rgba(255,255,255,.15)', paddingBottom: 16 }, [
+					...statCells,
+					div(
+						{ flex: 3, alignSelf: 'flex-end', alignItems: 'flex-end', gap: 8, height: 76 },
+						data.bars.map((bar) =>
+							barColumn(
+								bar,
+								48,
+								'rgba(255,255,255,.22)',
+								div(
+									{
+										fontSize: MONTH_SIZE,
+										fontWeight: 500,
+										color: 'rgba(255,255,255,.7)',
+										justifyContent: 'center'
+									},
+									bar.month
+								)
 							)
 						)
 					)
-				),
+				]),
 				div({ justifyContent: 'space-between', alignItems: 'center', gap: 24, marginTop: 14 }, [
 					div({ alignItems: 'center', gap: 14 }, [
 						avatarCircle(data, options, 46, {
