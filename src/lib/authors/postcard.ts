@@ -23,7 +23,19 @@ const PAPER = '#f6f2ea';
 const PAPER_INK = '#171412';
 const PAPER_MUTED = '#8a8178';
 
-export const POSTCARD_SIZE = 1080;
+/**
+ * The design's own coordinate space: the handoff is specified in 1080×1080 and
+ * every measurement below is faithful to it.
+ */
+const DESIGN_SIZE = 1080;
+
+/**
+ * The published size: 1456×1456. Substack's post column is 728 CSS px and it
+ * treats 1456 (its exact 2×) as the retina full-width size — a 1080 image can
+ * land narrower than the column when pasted. The trees stay in design
+ * coordinates and are scaled up as vectors, so nothing blurs.
+ */
+export const POSTCARD_SIZE = 1456;
 
 /** Slider (and slug) order: the handoff's most recent turn first. */
 export const POSTCARD_VARIANTS = ['biolink', 'editorial', 'gema', 'cartel'] as const;
@@ -278,8 +290,8 @@ function biolinkTree(data: PostcardData, options: PostcardOptions): Node {
 
 	return div(
 		{
-			width: POSTCARD_SIZE,
-			height: POSTCARD_SIZE,
+			width: DESIGN_SIZE,
+			height: DESIGN_SIZE,
 			background: DARK,
 			color: CREAM,
 			padding: '76px 150px',
@@ -290,12 +302,12 @@ function biolinkTree(data: PostcardData, options: PostcardOptions): Node {
 			fontFamily: 'Space Grotesk'
 		},
 		[
-			div({ position: 'absolute', top: 0, left: 0, width: POSTCARD_SIZE, height: 10, background: ORANGE }, []),
+			div({ position: 'absolute', top: 0, left: 0, width: DESIGN_SIZE, height: 10, background: ORANGE }, []),
 			div(
 				{
 					position: 'absolute',
 					top: -260,
-					left: (POSTCARD_SIZE - 820) / 2,
+					left: (DESIGN_SIZE - 820) / 2,
 					width: 820,
 					height: 820,
 					borderRadius: 9999,
@@ -470,8 +482,8 @@ function editorialTree(data: PostcardData, options: PostcardOptions): Node {
 
 	return div(
 		{
-			width: POSTCARD_SIZE,
-			height: POSTCARD_SIZE,
+			width: DESIGN_SIZE,
+			height: DESIGN_SIZE,
 			background: DARK,
 			color: CREAM,
 			padding: 72,
@@ -482,7 +494,7 @@ function editorialTree(data: PostcardData, options: PostcardOptions): Node {
 			fontFamily: 'Space Grotesk'
 		},
 		[
-			div({ position: 'absolute', top: 0, left: 0, width: POSTCARD_SIZE, height: 10, background: ORANGE }, []),
+			div({ position: 'absolute', top: 0, left: 0, width: DESIGN_SIZE, height: 10, background: ORANGE }, []),
 			div(
 				{
 					position: 'absolute',
@@ -641,8 +653,8 @@ function gemaTree(data: PostcardData, options: PostcardOptions): Node {
 
 	return div(
 		{
-			width: POSTCARD_SIZE,
-			height: POSTCARD_SIZE,
+			width: DESIGN_SIZE,
+			height: DESIGN_SIZE,
 			background: PAPER,
 			color: PAPER_INK,
 			flexDirection: 'column',
@@ -812,8 +824,8 @@ function cartelTree(data: PostcardData, options: PostcardOptions): Node {
 
 	return div(
 		{
-			width: POSTCARD_SIZE,
-			height: POSTCARD_SIZE,
+			width: DESIGN_SIZE,
+			height: DESIGN_SIZE,
 			background: ORANGE,
 			color: '#fff',
 			flexDirection: 'column',
@@ -1058,10 +1070,58 @@ const TREES: Record<PostcardVariant, (data: PostcardData, options: PostcardOptio
 	cartel: cartelTree
 };
 
+/**
+ * The design tree, scaled up to the published size NUMERICALLY: every px in
+ * the tree is multiplied on the way out. A CSS `transform: scale()` wrapper
+ * was tried first and satori lost the nested images (logos vanished), so the
+ * scaling walks the tree instead. Unitless properties stay untouched; svg and
+ * img nodes scale through their width/height (the svg viewBox does the rest).
+ */
+const SCALE = POSTCARD_SIZE / DESIGN_SIZE;
+const UNITLESS = new Set([
+	'flex',
+	'flexGrow',
+	'flexShrink',
+	'opacity',
+	'lineHeight',
+	'fontWeight',
+	'zIndex'
+]);
+
+function scaleStyleValue(key: string, value: unknown): unknown {
+	if (typeof value === 'number') return UNITLESS.has(key) ? value : value * SCALE;
+	if (typeof value === 'string') {
+		return value.replace(/(-?\d+\.?\d*)px/g, (_, n: string) => `${Number(n) * SCALE}px`);
+	}
+	return value;
+}
+
+function scaleNode(node: unknown): unknown {
+	if (node === null || typeof node !== 'object') return node;
+	const source = node as Node;
+	const props = source.props as Record<string, unknown> | undefined;
+	if (!props) return node;
+	const next: Record<string, unknown> = { ...props };
+	if (typeof props.width === 'number') next.width = props.width * SCALE;
+	if (typeof props.height === 'number') next.height = props.height * SCALE;
+	if (props.style && typeof props.style === 'object') {
+		next.style = Object.fromEntries(
+			Object.entries(props.style as Record<string, unknown>).map(([key, value]) => [
+				key,
+				scaleStyleValue(key, value)
+			])
+		);
+	}
+	const children = props.children;
+	if (Array.isArray(children)) next.children = children.map(scaleNode);
+	else if (children && typeof children === 'object') next.children = scaleNode(children);
+	return { ...source, props: next };
+}
+
 export function postcardTree(
 	variant: PostcardVariant,
 	data: PostcardData,
 	options: PostcardOptions
 ): Node {
-	return TREES[variant](data, options);
+	return scaleNode(TREES[variant](data, options)) as Node;
 }
