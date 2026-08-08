@@ -86,6 +86,23 @@
 	.section-title {
 		@apply text-2xl font-bold;
 	}
+
+	/*
+	 * The heading of a section of the home letter.
+	 *
+	 * Body size, not a size up: it separates two stretches of the letter without
+	 * turning them into a product page's sections. The hierarchy is weight and
+	 * colour — bold ink over the soft intro right under it — which is the same
+	 * rule as everywhere else here.
+	 *
+	 * `.section-title` is NOT this. That one is a size larger and names a card
+	 * or a panel (the gate, a course step); used on the home it would announce
+	 * the letter's own paragraphs as if they were products.
+	 */
+	.letter-heading {
+		@apply text-lg font-bold leading-snug;
+	}
+
 	.section-intro {
 		@apply mt-2 text-lg leading-relaxed text-soft;
 	}
@@ -474,6 +491,7 @@ iframe {
 .box-text,
 .box-title,
 .section-title,
+.letter-heading,
 .section-intro,
 .muted {
 	overflow-wrap: anywhere;

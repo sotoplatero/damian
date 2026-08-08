@@ -35,6 +35,16 @@
 	 *    Metida entre las cuatro de arriba, una descarga se lee como una quinta
 	 *    herramienta que no funciona.
 	 *
+	 * 2bis. LOS TRES TÍTULOS (herramientas / cosas que te llevas / quién te
+	 *    escribe) son <h2> de verdad, pero con `.letter-heading`, que los deja al
+	 *    tamaño del cuerpo. La jerarquía la hace la negrita sobre la entradilla
+	 *    en gris. NO uses `.section-title` aquí: es un cuerpo mayor y nombra una
+	 *    tarjeta o un panel, no un tramo de la carta.
+	 *
+	 *    Y están escritos en primera persona a propósito. "Herramientas que
+	 *    estoy construyendo" dice algo; "Herramientas" solo etiqueta, y en
+	 *    cuanto etiquetas, la carta se parte en fichas de producto.
+	 *
 	 * 3. FALTAN PRUEBAS. Ni un cliente, ni una cifra. Una línea real —"esto se
 	 *    lo monté a un taller de Montevideo"— vale más que medio texto. Va justo
 	 *    antes de "déjame tu email".
@@ -66,13 +76,26 @@
 	 * ─────────────────────────────────────────────────────────────────────────
 	 */
 
-	const toolsIntro =
-		'Estas son las que uso yo para trabajar. Las dejo aquí por si te sirven. La lista crece.';
+	/*
+	 * El título y la entradilla de cada sección.
+	 *
+	 * El título es un <h2> de verdad, pero al tamaño del cuerpo (`.letter-heading`):
+	 * la jerarquía la hace la negrita sobre la entradilla en gris, no un cuerpo de
+	 * letra mayor. Y está escrito en primera persona, que es lo que lo separa de
+	 * un rótulo: "Herramientas que estoy construyendo" dice algo, "Herramientas"
+	 * solo etiqueta.
+	 */
+	const toolsIntro = {
+		title: 'Herramientas que estoy construyendo',
+		text: 'Las uso yo para trabajar y las dejo aquí por si te sirven. La lista crece.'
+	};
 
 	// Las descargas. Lo de arriba se usa aquí y se acaba al cerrar la pestaña;
-	// esto te lo llevas y se queda contigo. Por eso van separadas.
-	const resourcesIntro =
-		'Y esto te lo llevas puesto. Te lo mando al correo y es tuyo, aunque te borres mañana.';
+	// esto te lo llevas y se queda contigo. El título dice justo esa diferencia.
+	const resourcesIntro = {
+		title: 'Cosas que te puedes llevar',
+		text: 'Te las mando al correo y son tuyas, aunque te borres mañana.'
+	};
 
 	// #4 — the line that "knows" the time. Computed in the browser (local hour),
 	// so it always matches the visitor. Empty on the server to avoid a wrong guess.
@@ -111,10 +134,11 @@
 	<p>Yo me construyo las mías. Tú puedes hacerte las tuyas.</p>
 </article>
 
-<!-- The tools, right after the headline: the proof before the ask. No section
-     title — the list follows the subheading directly and the intro line joins. -->
-<section class="section" aria-label="Herramientas">
-	<p class="section-intro">{toolsIntro}</p>
+<!-- The tools, right after the headline: the proof before the ask. The h2 names
+     the section and no aria-label is needed — a label would override it. -->
+<section class="section">
+	<h2 class="letter-heading">{toolsIntro.title}</h2>
+	<p class="section-intro">{toolsIntro.text}</p>
 
 	<ul class="mt-6 space-y-3">
 		{#each tools as tool, index (tool.href)}
@@ -135,8 +159,9 @@
      into the four above, a download reads as a fifth tool that doesn't work.
      It sits after them on purpose — the tools are the proof, and this is the
      first thing asked of a visitor, so it goes once they have seen something. -->
-<section class="section" aria-label="Descargas">
-	<p class="section-intro">{resourcesIntro}</p>
+<section class="section">
+	<h2 class="letter-heading">{resourcesIntro.title}</h2>
+	<p class="section-intro">{resourcesIntro.text}</p>
 
 	<ul class="mt-6 space-y-3">
 		{#each resources as resource (resource.href)}
@@ -158,6 +183,14 @@
 <!-- The story, a credential now: it ends where the signup begins.
      `prose-quiet` keeps its first paragraph as body text, not as a lead. -->
 <article class="prose prose-xl prose-neutral prose-quiet section max-w-none">
+	<!-- El h2 de la historia. Lleva `.letter-heading` para salirse del tamaño que
+	     `prose` le daría: los títulos de prose usan selectores sin especificidad,
+	     así que una clase normal les gana.
+	     La entradilla dice para qué está la historia aquí, que el formulario viene
+	     justo detrás. Va en su propio párrafo y no pegada al "En 2022 salí de
+	     Cuba", porque ese arranque no se toca (ver nota 5). -->
+	<h2 class="letter-heading">Quién te escribe esto</h2>
+	<p>Antes de que me dejes tu correo, sabe a quién se lo dejas.</p>
 	<p>
 		En 2022 salí de Cuba en un avión a Surinam. Solo. Sin decírselo a mis amigos. Dejando atrás a
 		mi mujer y a mis dos hijos.
