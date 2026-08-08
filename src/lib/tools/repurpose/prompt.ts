@@ -1,5 +1,81 @@
+import type { JsonSchema } from '$lib/server/openai';
 import { formats, freeFormats, NOTE_MAX_CHARS, type NoteFormat } from './formats';
 import { REPURPOSE_STYLE } from './style';
+
+/**
+ * The shape of a set of notes, as a strict schema.
+ *
+ * ASKING FOR `ancla` IN PROSE WAS NOT ENOUGH, and it cost a production
+ * incident. The model returned valid JSON with the field missing,
+ * `readExactPieces` rejected the set, and the endpoint burned a second model
+ * call retrying — which is what pushed it past the function's time limit.
+ *
+ * `src/lib/server/openai.ts` exists for exactly this: `text.format` takes a
+ * strict schema, so the model cannot hand back a shape we didn't ask for. The
+ * repo already learned this once — "with json_object the JSON was valid but the
+ * shape wasn't guaranteed, and sections vanished from reports in silence".
+ *
+ * `ids` pins the count and lets the enum name the ids, so a set with four notes
+ * or an invented id never leaves the API.
+ */
+function piecesSchema(ids: readonly string[]) {
+	return {
+		type: 'array',
+		minItems: ids.length,
+		maxItems: ids.length,
+		items: {
+			type: 'object',
+			additionalProperties: false,
+			required: ['id', 'text', 'ancla'],
+			properties: {
+				id: { type: 'string', enum: [...ids] },
+				text: { type: 'string' },
+				ancla: { type: 'string' }
+			}
+		}
+	};
+}
+
+const STRINGS = { type: 'array', items: { type: 'string' } };
+
+export function extractSchema(): JsonSchema {
+	return {
+		name: 'repurpose_extract',
+		strict: true,
+		schema: {
+			type: 'object',
+			additionalProperties: false,
+			required: ['article', 'confidence', 'pieces'],
+			properties: {
+				article: {
+					type: 'object',
+					additionalProperties: false,
+					required: ['tema', 'tesis', 'publico', 'ideas', 'pruebas', 'escenas', 'tensiones', 'frase', 'voz'],
+					properties: {
+						tema: { type: 'string' }, tesis: { type: 'string' }, publico: { type: 'string' },
+						ideas: STRINGS, pruebas: STRINGS, escenas: STRINGS, tensiones: STRINGS,
+						frase: { type: 'string' }, voz: { type: 'string' }
+					}
+				},
+				confidence: { type: 'string', enum: ['alta', 'baja'] },
+				pieces: piecesSchema(freeFormats.map(({ id }) => id))
+			}
+		}
+	};
+}
+
+export function writeSchema(ids: readonly string[]): JsonSchema {
+	return {
+		name: 'repurpose_write',
+		strict: true,
+		schema: {
+			type: 'object',
+			additionalProperties: false,
+			required: ['pieces', 'orden'],
+			properties: { pieces: piecesSchema(ids), orden: STRINGS }
+		}
+	};
+}
 
 export type ArticleAnalysis = {
 	tema: string;
@@ -59,8 +135,11 @@ Cada nota devuelve "ancla": el material exacto del análisis sobre el que está 
 
 - Las nueve anclas son DISTINTAS. Dos notas sobre el mismo material es una entrega inválida.
 - El ancla sale del análisis. No la inventes ni la reformules hasta que deje de reconocerse.
-- En las notas ancladas a una PRUEBA, una ESCENA o la FRASE, ese material tiene que aparecer DENTRO del texto de la nota: la cifra escrita, el nombre propio escrito, la escena contada. "Muy barato" no es una cifra. "La mayoría" no es un dato. "Un negocio local" no es un nombre.
-- En las notas ancladas a una TENSIÓN, no repitas la tensión: resuélvela, discútela o llévala más lejos.`;
+- "cifra" tiene que contener un NÚMERO del artículo, escrito con sus dígitos. "Muy barato" no es una cifra y "la mayoría" no es un dato.
+- "caso" tiene que contener un NOMBRE PROPIO del artículo: una persona, un negocio, un sitio, una herramienta. "Un negocio local" no es un nombre.
+- En las notas ancladas a una TENSIÓN, no repitas la tensión: resuélvela, discútela o llévala más lejos.
+
+**LA NOTA NO ES EL MATERIAL. Es lo que haces con él.** Copiar el ancla y devolverla como nota es una entrega inválida, aunque cumpla todo lo anterior. Una cifra sin lo que esa cifra deja ver no es una nota. Una frase citada sin nada tuyo alrededor tampoco. Y dos notas no pueden decir lo mismo con otras palabras ni, mucho menos, con las mismas.`;
 
 const RULES = `Cada nota tiene como máximo ${NOTE_MAX_CHARS} caracteres, contando espacios, saltos y URL. Elige libremente su longitud y estructura: puede ser una frase o varios párrafos breves, pero nunca un artículo ni un resumen completo. No repitas una idea cambiando palabras. Sin markdown, títulos, etiquetas de plataforma, emojis ni hashtags.
 

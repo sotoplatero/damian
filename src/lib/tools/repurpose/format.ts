@@ -122,16 +122,30 @@ function sharesMark(a: string, b: string): boolean {
 }
 
 /**
- * Does the note actually carry its anchor, or did it write around it?
+ * Does the note meet its format's mechanical requirement?
  *
- * Only the `articulo` family is held to this. A `mas-alla` note reasons past the
- * article, so demanding it quote its own tension back would push it into
- * restating — the exact failure this whole change exists to end.
+ * Only two formats have one, and both are single tokens the model can see it is
+ * providing: `cifra` must write a figure, `caso` must write a proper name. Both
+ * are checked against the ARTICLE, so an invented number or an invented company
+ * fails — which is the point of the rule, not mere presence of a digit.
+ *
+ * THIS REPLACED A GENERAL "the note must carry its anchor" RULE. That one was in
+ * direct tension with `addsBeyondAnchor` — copy the material and you add nothing
+ * of your own, rewrite it and the carrying disappears — and since the model
+ * cannot see the rule, runs oscillated between the two failures on the same
+ * article. Everything unmeasurable now lives in the `hint`.
  */
-export function carriesAnchor(piece: Piece): boolean {
-	const format = findFormat(piece.id);
-	if (!format || format.family !== 'articulo') return true;
-	return sharesMark(piece.ancla, piece.text);
+export function hasRequiredMark(piece: Piece, articleText: string): boolean {
+	const required = findFormat(piece.id)?.requires;
+	if (!required) return true;
+
+	if (required === 'figure') {
+		const inArticle = new Set(figures(articleText));
+		return figures(piece.text).some((figure) => inArticle.has(figure));
+	}
+
+	const inArticle = new Set(names(articleText));
+	return names(piece.text).some((name) => inArticle.has(name));
 }
 
 /**
@@ -187,21 +201,84 @@ export function anchorsAreDistinct(pieces: Piece[]): boolean {
 }
 
 /**
- * The anchor has to come from the analysis, not from the model's imagination.
+ * The anchor has to come from the article, not from the model's imagination.
  *
- * Containment either way OR a shared mark: the model may hand back a clipped
- * scene, a scene plus three words of its own, or a condensed figure. What it may
- * not do is hand back material that was never in the article.
+ * Two ways to be real, deliberately different in strictness:
+ *
+ * 1. **A literal fragment of the article** — containment against the scraped
+ *    text. Exact, so it cannot be gamed.
+ * 2. **A condensation of something the analysis listed** — `sharesMark` against
+ *    that list, which tolerates the model trimming.
+ *
+ * Checking ONLY the analysis list was the first version and it rejected good
+ * sets in production: the model writes from the whole article, not from the
+ * handful of proofs it happened to enumerate, so a named example that lived in
+ * the text but not in `pruebas` got called invented. Running `sharesMark`
+ * against the whole article would be the opposite mistake — in a long piece any
+ * invented figure shares a digit with something, somewhere.
  */
-export function anchorIsKnown(piece: Piece, material: string[]): boolean {
+export function anchorIsKnown(piece: Piece, material: string[], articleText = ''): boolean {
 	const anchor = normalizeQuoteText(piece.ancla);
 	if (!anchor) return false;
+
+	// A literal fragment of the article, checked exactly.
+	const source = normalizeQuoteText(articleText);
+	if (source && source.includes(anchor)) return true;
+
+	// Or a condensation of something the analysis listed, checked loosely.
 	return material.filter(Boolean).some((entry) => {
 		const normalized = normalizeQuoteText(entry);
 		if (!normalized) return false;
 		if (normalized.includes(anchor) || anchor.includes(normalized)) return true;
 		return sharesMark(piece.ancla, entry);
 	});
+}
+
+/**
+ * Two notes that say the same thing, or null. COMPARED ON THE TEXT, ACROSS ALL
+ * NINE.
+ *
+ * The anchor checks guard the INPUT and a model can satisfy them and still
+ * repeat itself. Measured on 8 August 2026: `leccion` and `cita` came back with
+ * byte-identical text, and `collidingAnchors` could not see it because those two
+ * draw from different slots and are never compared. Guarding the output needs no
+ * slot logic — two notes that read the same are two notes that read the same,
+ * whatever they were built from.
+ */
+export function duplicateNotes(pieces: Piece[]): [string, string] | null {
+	for (let i = 0; i < pieces.length; i += 1) {
+		for (let j = i + 1; j < pieces.length; j += 1) {
+			const a = normalizeQuoteText(pieces[i].text);
+			const b = normalizeQuoteText(pieces[j].text);
+			const [short, long] = a.length <= b.length ? [a, b] : [b, a];
+			if (short && (short === long || long.includes(short))) return [pieces[i].id, pieces[j].id];
+		}
+	}
+	return null;
+}
+
+/** Words in `text` that the anchor does not already contain. */
+function wordsBeyond(text: string, anchor: string): number {
+	const known = new Set(words(anchor));
+	return new Set(words(text).filter((word) => !known.has(word))).size;
+}
+
+const MIN_OWN_WORDS = 6;
+
+/**
+ * Did the note DO something with its material, or just hand it back?
+ *
+ * `carriesAnchor` asks that the material survive into the note, and the cheapest
+ * way to pass that is to copy the material and call it a note. That is exactly
+ * what happened: three of five notes came back byte-identical to their own
+ * `ancla`. A quote with no comment, a figure with nothing said about it.
+ *
+ * So the note has to contribute `MIN_OWN_WORDS` words the anchor did not have.
+ * Six is low on purpose — it is the floor for "there is a sentence of yours in
+ * here", not a measure of quality, and the hints do the rest.
+ */
+export function addsBeyondAnchor(piece: Piece): boolean {
+	return wordsBeyond(piece.text, piece.ancla) >= MIN_OWN_WORDS;
 }
 
 export function pieceContainsQuote(piece: Piece, quote: string): boolean {

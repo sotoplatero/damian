@@ -185,26 +185,42 @@ rather than requested. Each note returns an **`ancla`**: the exact material it s
 copied from the analysis. The server checks three things and treats a failure as a failed
 generation, not a delivery (`format.ts`, all pure and tested):
 
+**On the set (all nine):**
+
 - `collidingAnchors` — no two notes stand on the same material, **compared within an anchor
-  slot, not across all nine**. Comparing everything against everything failed a good set
-  because the quote note stood on «La lista cruda cuesta centavos» and a tension quoted that
-  sentence back: different atoms, overlapping words. The repeat that matters is inside a slot
-  — two notes fighting over one proof, or two of the four tensions being one tension.
-- `anchorIsKnown` — the anchor came from the analysis, not from the model.
-- `carriesAnchor` — the `articulo` family must carry its anchor INTO the text. `mas-alla` is
-  exempt, or it would be pushed back into restating.
+  slot**. Comparing everything against everything failed a good set because the quote note
+  stood on «La lista cruda cuesta centavos» and a tension quoted that sentence back: different
+  atoms, overlapping words.
+- `duplicateNotes` — no two notes SAY the same thing, compared on the text, no slot logic.
+  The anchor rules guard the input and a model can satisfy them and still repeat itself:
+  measured, `leccion` and `cita` came back byte-identical.
 
-Both of the last two run on `sharesMark`: a shared figure, a shared proper name (mid-sentence
-capitals only — every sentence starts with one), or four shared consecutive words. **Exact
-containment was tried first and was wrong**: a model condenses, so «…salieron 65 negocios
-reales por 0.45» comes back as «65 negocios por 0,45 dólares», the same fact and a substring
-of nothing.
+**On each note:**
 
-**The extract step needs `max_output_tokens: 7000`**, not the 3500 it ran on before. The
-analysis grew `tensiones` and the free half went from three notes to five, each now carrying
-an `ancla`. At 3500 the answer was cut off mid-JSON and read as an invalid set — which is why
-the failure path logs the head of the raw answer: truncation and a missing `ancla` look
-identical from outside.
+- `anchorIsKnown` — a literal fragment of the scraped article (exact containment) **or** a
+  condensation of something the analysis listed (`sharesMark`: shared figure, shared
+  mid-sentence proper name, or four shared consecutive words). Checking only the analysis list
+  rejected good sets — the model writes from the whole article, not from the proofs it
+  enumerated. Exact containment alone is also wrong: a model condenses.
+- `hasRequiredMark` — **only `cifra` (a figure) and `caso` (a proper name), both verified
+  against the article.** Nothing else has a mechanical requirement.
+- `addsBeyondAnchor` — the note contributes at least six words the anchor didn't have.
+
+**Do not add a general "the note must carry its material" rule. It was tried and removed.**
+It fought `addsBeyondAnchor` head-on — carry the material literally enough to pass and you
+have added nothing of your own; rewrite it in your words and the carrying is gone — and since
+the model cannot see the rule, runs on the same article oscillated between the two failures.
+Everything unmeasurable belongs in the `hint`.
+
+**`anchorFailure` has two scopes and mixing them was a bug.** `fresh` is what this call just
+wrote and may judge; `all` is the nine, used only for the set-wide rules. The delivery step
+writes four but holds nine and no longer has the article text, so re-judging the five free
+ones there failed them against a narrower source of truth than the one that approved them.
+
+**The extract step needs `max_output_tokens: 7000`**, not the 3500 it ran on before, and a
+**strict JSON schema** (`extractSchema` / `writeSchema`). Asking for `ancla` in prose was not
+enough: the model returned valid JSON with the field missing, the set was rejected, and the
+retry is what pushed the endpoint past its time limit in production.
 
 The analysis carries **`tensiones`** — what the article sets up and doesn't close — and the
 four `mas-alla` notes anchor one each. Without it, "go past the article" is an invitation to

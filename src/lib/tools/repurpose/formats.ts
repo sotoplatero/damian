@@ -15,9 +15,8 @@
  * TWO FAMILIES, and the email gate falls on the seam between them.
  *
  *   'articulo'  — what the piece already says, re-cut. Each note is welded to a
- *                 concrete proof, scene or quote, and the server checks that the
- *                 proof survives INTO the text (`carriesAnchor`). This is the
- *                 half that is free: it is the visitor's own material.
+ *                 concrete proof, scene or quote. This is the half that is free:
+ *                 it is the visitor's own material.
  *   'mas-alla'  — what the piece opens and never closes. Each note is welded to
  *                 a named tension and reasons past the text. This is the emailed
  *                 half, because it is the half that isn't already theirs.
@@ -57,6 +56,22 @@ export type NoteFormat = {
 	hint: string;
 	example: string;
 	anchor: AnchorSource;
+	/**
+	 * A mechanical requirement the note must meet, checked server-side.
+	 *
+	 * ONLY WHERE IT IS CRISP, and only where the `hint` already demands it in
+	 * those words — «el número va dentro de la nota, escrito», «el nombre aparece
+	 * escrito». A model can see what "contains a figure" means and comply while
+	 * still writing its own sentence.
+	 *
+	 * A general "the note must carry its material" rule was tried and removed. It
+	 * fought `addsBeyondAnchor`: carry the material literally enough to pass, and
+	 * you have added nothing of your own; rewrite it in your words, and the
+	 * carrying is gone. The model cannot see the rule, so it oscillated between
+	 * the two failures. Scenes and lessons are left to their `hint`, which is
+	 * where an unmeasurable requirement belongs.
+	 */
+	requires?: 'figure' | 'name';
 	/** Only the quote note: its anchor is verified against the scraped text. */
 	needsQuote?: boolean;
 };
@@ -70,7 +85,8 @@ export const formats: NoteFormat[] = [
 		hint: 'Toma UN dato del artículo y escribe lo que ese dato deja ver. El número va dentro de la nota, escrito, no resumido en «muy barato» ni en «la mayoría». Si el dato necesita un segundo número al lado para entenderse, ponlo.',
 		example:
 			'Terminé el 10K en 58 minutos. Los cuatro primeros kilómetros los hice en 21 y los seis siguientes en 37. Todo lo que aprendí ese día cabe en esa diferencia.',
-		anchor: 'prueba'
+		anchor: 'prueba',
+		requires: 'figure'
 	},
 	{
 		id: 'escena',
@@ -90,7 +106,8 @@ export const formats: NoteFormat[] = [
 		hint: 'Elige un ejemplo del artículo que tenga nombre propio —una persona, un negocio, un sitio, una herramienta— y cuéntalo con sus datos. El nombre aparece escrito. Un caso sin nombre es una generalidad.',
 		example:
 			'Rosa entrena en el parque de al lado, tiene 61 años y corrió su primer 10K el mismo día que yo. Salió tres minutos más lenta en el kilómetro uno y entró cuatro minutos antes.',
-		anchor: 'prueba'
+		anchor: 'prueba',
+		requires: 'name'
 	},
 	{
 		id: 'leccion',

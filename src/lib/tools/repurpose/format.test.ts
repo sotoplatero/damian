@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { formats, freeFormats, gatedFormats, FREE_IDS, GATED_IDS, NOTE_MAX_CHARS } from './formats';
 import {
+	addsBeyondAnchor,
 	anchorIsKnown,
 	anchorsAreDistinct,
-	carriesAnchor,
+	duplicateNotes,
+	hasRequiredMark,
 	pieceContainsQuote,
 	pieceLinksToSource,
 	pieceUsesOnlySourceUrl,
@@ -45,27 +47,76 @@ describe('repurpose repertoire', () => {
 	});
 });
 
-describe('carriesAnchor', () => {
-	const piece = (id: string, text: string, ancla: string) => ({ id, text, ancla });
+describe('hasRequiredMark', () => {
+	const piece = (id: string, text: string) => ({ id, text, ancla: 'x' });
+	const article = 'Con Apify y 5 dólares salieron 65 negocios reales por 0.45. En Madrid apareció Mesón El Molinero con 917 reseñas.';
 
-	it('passes when a figure from the anchor survives into the text', () => {
-		expect(carriesAnchor(piece('cifra', 'Salieron 65 negocios por 0,45 dólares.', 'Con Apify y 5 dólares salieron 65 negocios reales por 0.45'))).toBe(true);
+	it('accepts a cifra carrying a figure that is in the article', () => {
+		expect(hasRequiredMark(piece('cifra', 'Salieron 65 negocios por 0,45 dólares.'), article)).toBe(true);
 	});
 
-	it('passes when a proper name from the anchor survives into the text', () => {
-		expect(carriesAnchor(piece('caso', 'En Madrid está el Mesón El Molinero, lleno y sin web.', 'En Madrid apareció Mesón El Molinero con 917 reseñas y cero página web'))).toBe(true);
+	it('rejects a cifra that writes around the number', () => {
+		expect(hasRequiredMark(piece('cifra', 'Una lista cruda cuesta centavos y casi nadie la cualifica.'), article)).toBe(false);
 	});
 
-	it('passes on four shared consecutive words', () => {
-		expect(carriesAnchor(piece('escena', 'Miré el reloj y supe que había salido al ritmo de otro.', 'En el kilómetro seis miró el reloj y supo que había salido al ritmo de otro'))).toBe(true);
+	/* Presence of a digit is not the rule: the figure has to be the article's. */
+	it('rejects a cifra whose number the article never had', () => {
+		expect(hasRequiredMark(piece('cifra', 'Salieron 900 negocios en una tarde.'), article)).toBe(false);
 	});
 
-	it('fails the note that writes around its material', () => {
-		expect(carriesAnchor(piece('cifra', 'Los leads que te venden caro salen de una lista que cuesta centavos.', 'Con Apify y 5 dólares salieron 65 negocios reales por 0.45'))).toBe(false);
+	it('accepts a caso carrying a name that is in the article', () => {
+		expect(hasRequiredMark(piece('caso', 'El Mesón El Molinero llena cada noche y no tiene web.'), article)).toBe(true);
 	});
 
-	it('does not hold the mas-alla family to it', () => {
-		expect(carriesAnchor(piece('consecuencia', 'Cualquier plan que convierta un tropiezo en fracaso se abandona por vergüenza.', 'el artículo no dice qué pasa cuando alguien falla un día'))).toBe(true);
+	it('rejects a caso with no name', () => {
+		expect(hasRequiredMark(piece('caso', 'Hay un restaurante de barrio que llena cada noche sin página.'), article)).toBe(false);
+	});
+
+	it('asks nothing of the formats that have no requirement', () => {
+		expect(hasRequiredMark(piece('escena', 'Miré el reloj y supe que había salido al ritmo de otro.'), article)).toBe(true);
+		expect(hasRequiredMark(piece('consecuencia', 'El negocio pasa a estar en saber decir que no.'), article)).toBe(true);
+	});
+});
+
+/* Both of these guard the OUTPUT. The anchor rules guard the input, and a model
+   can satisfy those and still hand the material straight back — measured on
+   8 August 2026, when `leccion` and `cita` came back byte-identical. */
+describe('duplicateNotes', () => {
+	it('catches two notes that say the same thing, whatever slot they came from', () => {
+		const text = 'Si hay gente buscando algo en Google, la demanda ya existe.';
+		expect(duplicateNotes([
+			{ id: 'leccion', text, ancla: 'a' },
+			{ id: 'cita', text, ancla: 'b' }
+		])).toEqual(['leccion', 'cita']);
+	});
+
+	it('catches one note swallowed whole by another', () => {
+		expect(duplicateNotes([
+			{ id: 'cifra', text: 'La demanda ya existe.', ancla: 'a' },
+			{ id: 'leccion', text: 'La demanda ya existe. Solo tienes que aparecer.', ancla: 'b' }
+		])).not.toBeNull();
+	});
+
+	it('leaves two different notes alone', () => {
+		expect(duplicateNotes([
+			{ id: 'cifra', text: '1.512 clics en 16 meses.', ancla: 'a' },
+			{ id: 'leccion', text: 'Mira las reseñas antes de vender la web.', ancla: 'b' }
+		])).toBeNull();
+	});
+});
+
+describe('addsBeyondAnchor', () => {
+	it('rejects the note that is its own anchor copied', () => {
+		const same = 'Si hay gente buscando algo en Google, la demanda ya existe.';
+		expect(addsBeyondAnchor({ id: 'cita', text: same, ancla: same })).toBe(false);
+	});
+
+	it('accepts the note that says something of its own', () => {
+		expect(addsBeyondAnchor({
+			id: 'cita',
+			text: '«La demanda ya existe.» Lo escribí después de cuatro meses aplicando a todo sin respuesta.',
+			ancla: 'La demanda ya existe.'
+		})).toBe(true);
 	});
 });
 

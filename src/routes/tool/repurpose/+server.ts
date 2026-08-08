@@ -1,13 +1,13 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { askJson } from '$lib/server/openai';
+import { askJson, type JsonSchema } from '$lib/server/openai';
 import { scrape, UnreadableError } from '$lib/server/scrape';
 import { subscribe, sendToolPiecesEmail } from '$lib/server/resend';
 import { isDisposable } from '$lib/server/email-validation';
 import { overLimit } from '$lib/server/rate-limit';
 import { normalizeQuoteText, unwrapQuotes, verifyQuote } from '$lib/tools/quotes';
-import { articleMessage, extractPrompt, writePrompt, type ArticleAnalysis } from '$lib/tools/repurpose/prompt';
-import { anchorIsKnown, carriesAnchor, collidingAnchors, pieceContainsQuote, pieceUsesOnlySourceUrl, readExactPieces, readOrder, toMarkdown } from '$lib/tools/repurpose/format';
+import { articleMessage, extractPrompt, extractSchema, writePrompt, writeSchema, type ArticleAnalysis } from '$lib/tools/repurpose/prompt';
+import { addsBeyondAnchor, anchorIsKnown, collidingAnchors, duplicateNotes, hasRequiredMark, pieceContainsQuote, pieceUsesOnlySourceUrl, readExactPieces, readOrder, toMarkdown } from '$lib/tools/repurpose/format';
 import { FREE_IDS, GATED_IDS } from '$lib/tools/repurpose/formats';
 import { buildManualPrompt } from '$lib/tools/repurpose/manual-prompt';
 import { cacheAudit, readAudit } from '$lib/server/audit-cache';
@@ -52,8 +52,8 @@ function cacheKey(kind: 'preview' | 'delivery', input: unknown): string | null {
 	return `repurpose:${kind}:${url.toString()}`;
 }
 
-async function ask(system: string, user: string, maxTokens: number): Promise<Record<string, unknown>> {
-	const data = await askJson({ model: MODEL, instructions: system, input: user, maxOutputTokens: maxTokens, tag: 'tool/repurpose' });
+async function ask(system: string, user: string, maxTokens: number, schema: JsonSchema): Promise<Record<string, unknown>> {
+	const data = await askJson({ model: MODEL, instructions: system, input: user, schema, maxOutputTokens: maxTokens, tag: 'tool/repurpose' });
 	if (!data) throw new Error('openai_failed');
 	return data;
 }
@@ -89,18 +89,37 @@ function anchorMaterial(article: ArticleAnalysis): string[] {
 }
 
 /**
- * The anchor gate. A set that fails any of these is a failed generation, not a
+ * The gate. A set that fails any of these is a failed generation, not a
  * delivery — the same call the newsletter tool makes on an unverifiable quote.
+ *
+ * TWO SCOPES, and mixing them was a bug worth remembering. `fresh` are the notes
+ * this call just wrote and is allowed to judge; `all` is the whole set of nine,
+ * used only for the rules that are about the set — no two on the same material,
+ * no two saying the same thing.
+ *
+ * The delivery step writes four notes but holds all nine, and it no longer has
+ * the article text. Re-judging the five free ones there marked them invalid
+ * against a narrower source of truth than the one that approved them: their
+ * anchors were verified against the scraped article in the free step, and by
+ * delivery only the analysis list survives.
  *
  * Returns the reason so the retry's log says which rule broke.
  */
-function anchorFailure(pieces: Piece[], material: string[]): string | null {
-	const collision = collidingAnchors(pieces);
+function anchorFailure(fresh: Piece[], all: Piece[], material: string[], articleText = ''): string | null {
+	const collision = collidingAnchors(all);
 	if (collision) return `dos notas sobre el mismo material (${collision.join(' y ')})`;
-	const unknown = pieces.find((piece) => !anchorIsKnown(piece, material));
+	const unknown = fresh.find((piece) => !anchorIsKnown(piece, material, articleText));
 	if (unknown) return `ancla que no está en el análisis (${unknown.id})`;
-	const empty = pieces.find((piece) => !carriesAnchor(piece));
-	if (empty) return `la nota no lleva su ancla dentro (${empty.id})`;
+	const vague = fresh.find((piece) => !hasRequiredMark(piece, articleText));
+	if (vague) return `la nota no trae la cifra o el nombre que pide su formato (${vague.id})`;
+
+	// The output-side rules. They come last because they only make sense once the
+	// set is otherwise well formed, and they are the ones that catch a model
+	// satisfying everything above by handing the material straight back.
+	const twin = duplicateNotes(all);
+	if (twin) return `dos notas que dicen lo mismo (${twin.join(' y ')})`;
+	const lazy = fresh.find((piece) => !addsBeyondAnchor(piece));
+	if (lazy) return `la nota es su propio material copiado, sin nada tuyo encima (${lazy.id})`;
 	return null;
 }
 
@@ -142,16 +161,28 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 				// `tensiones` list and the free half went from three notes to five,
 				// each now carrying its `ancla` as well as its text. At 3500 the
 				// answer was simply cut off mid-JSON and read as an invalid set.
-				const raw = await ask(extractPrompt() + (attempt === 2 ? `\n\nCORRECCIÓN OBLIGATORIA: ${lastFailure}. Cada nota se apoya en un material distinto del análisis y lo lleva escrito dentro.` : ''), input, 7000);
+				const raw = await ask(extractPrompt() + (attempt === 2 ? `\n\nCORRECCIÓN OBLIGATORIA: ${lastFailure}. Cada nota se apoya en un material distinto del análisis y lo lleva escrito dentro.` : ''), input, 7000, extractSchema());
 				article = readArticle(raw.article);
 				pieces = readExactPieces(raw, FREE_IDS);
 				confidence = raw.confidence === 'baja' ? 'baja' : 'alta';
 				if (!article || !pieces) {
 					lastFailure = 'el conjunto de notas venía incompleto o pasado de longitud';
-					// The head of the raw answer, because the two ways this fails look
-					// identical from outside: a JSON cut off mid-note by the token cap,
-					// and a model that skipped `ancla`. The first 600 chars tell them apart.
-					console.warn('[tool/repurpose] respuesta cruda:', JSON.stringify(raw).slice(0, 600));
+					// One line per note: which id, how long, whether it brought an
+					// anchor. `readExactPieces` returns a bare null and its three
+					// failure modes — wrong set, missing `ancla`, over the character
+					// cap — are indistinguishable from outside. Logging the head of the
+					// raw answer was tried and was useless: the article analysis fills
+					// it and the pieces never appear.
+					console.warn('[tool/repurpose] piezas recibidas:', JSON.stringify(
+						(Array.isArray(raw.pieces) ? raw.pieces : []).map((piece) => {
+							const note = piece as { id?: unknown; text?: unknown; ancla?: unknown };
+							return {
+								id: note?.id,
+								largo: typeof note?.text === 'string' ? note.text.length : null,
+								ancla: typeof note?.ancla === 'string' ? note.ancla.length : null
+							};
+						})
+					));
 					pieces = null;
 					continue;
 				}
@@ -162,7 +193,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 
 				if (!pieces.every((piece) => pieceUsesOnlySourceUrl(piece, page.finalUrl))) { lastFailure = 'una nota traía una URL que no es la del artículo'; pieces = null; continue; }
 
-				const failure = anchorFailure(pieces, anchorMaterial(article));
+				const failure = anchorFailure(pieces, pieces, anchorMaterial(article), page.text);
 				if (failure) { lastFailure = failure; pieces = null; continue; }
 				break;
 			}
@@ -202,7 +233,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 				const correction = attempt === 2
 					? `\n\nCORRECCIÓN OBLIGATORIA: ${lastFailure}. Devuelve exactamente los ${GATED_IDS.length} ids pedidos, cada uno anclado a una tensión distinta que ninguna otra nota use, todos por debajo de 700 caracteres.`
 					: '';
-				raw = await ask(writePrompt(GATED_IDS) + correction, articleMessage(article, sourceUrl), 5000);
+				raw = await ask(writePrompt(GATED_IDS) + correction, articleMessage(article, sourceUrl), 5000, writeSchema(GATED_IDS));
 				pieces = readExactPieces(raw, GATED_IDS);
 				if (!pieces) {
 					lastFailure = 'el conjunto venía incompleto o pasado de longitud';
@@ -215,7 +246,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 					pieces = null;
 					continue;
 				}
-				const failure = anchorFailure([...free, ...pieces], material);
+				const failure = anchorFailure(pieces, [...free, ...pieces], material);
 				if (failure) {
 					lastFailure = failure;
 					console.warn(`[tool/repurpose] entrega inválida en intento ${attempt}: ${lastFailure}`);

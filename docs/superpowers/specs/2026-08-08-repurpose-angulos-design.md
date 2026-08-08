@@ -104,9 +104,14 @@ construida, copiado de él.
    conjunto bueno: la nota de la cita se apoyaba en «La lista cruda cuesta centavos» y una de las
    tensiones repetía esa frase. Átomos distintos, palabras iguales. La repetición que importa es
    dentro de una ranura: dos notas peleándose una prueba, o dos de las cuatro tensiones siendo una.
-2. **El ancla se lleva puesta.** Las cinco de la primera familia tienen que contener, dentro del texto,
-   una marca de su ancla: un número, un nombre propio, o un tramo literal de cuatro palabras o más. Es
-   comprobable mecánicamente y es exactamente lo que faltaba.
+2. **Solo dos exigencias mecánicas, y en los dos sitios donde son nítidas**: `cifra` tiene que
+   contener un número del artículo y `caso` un nombre propio del artículo. Nada más.
+
+   La primera versión exigía a las cinco notas de la familia «artículo» llevar dentro una marca de
+   su ancla. **Se probó y se quitó**: chocaba de frente con la regla 5 —copia el material lo
+   bastante literal para aprobar y no has puesto nada tuyo; reescríbelo con tus palabras y la marca
+   desaparece— y como el modelo no puede ver la regla, las tiradas sobre el mismo artículo iban
+   alternando entre los dos fallos. Lo que no se puede medir vive en el `hint`.
 3. **El ancla existe.** Tiene que aparecer en el material del análisis, no inventarse.
 
 Las comprobaciones 2 y 3 corren sobre la misma noción de «comparten una marca»: una cifra, un
@@ -117,7 +122,13 @@ el modelo condensa, así que «…salieron 65 negocios reales por 0.45» vuelve 
 El paso gratuito necesita **7000 tokens de salida**, no los 3500 de antes: el análisis creció con
 `tensiones` y las notas pasaron de tres sin ancla a cinco con ella. A 3500 la respuesta se cortaba
 a mitad del JSON y se leía como conjunto inválido.
-4. **Las cuatro del correo van marcadas como interpretación**, con su tensión nombrada. Publicar la
+4. **Vigilar la salida, no solo la entrada.** Dos notas no pueden decir lo mismo (comparado sobre el
+   texto, sin lógica de ranuras) y ninguna puede ser su propia ancla copiada: tiene que aportar al
+   menos seis palabras que el material no traía. Sin esto, la forma más barata de aprobar las reglas
+   de ancla es devolver el material tal cual — y eso fue exactamente lo que pasó: `leccion` y `cita`
+   volvieron idénticas byte a byte.
+
+5. **Las cuatro del correo van marcadas como interpretación**, con su tensión nombrada. Publicar la
    inferencia de un modelo con tu nombre encima sin saber que es una inferencia es el fallo que hay
    que evitar; el correo lo dice en su encabezado de sección.
 
