@@ -10,12 +10,14 @@
 	 */
 	import { goto } from '$app/navigation';
 	import { tools } from '$lib/tools/list';
+	import { resources } from '$lib/resources/list';
 
 	let { open = $bindable(false) }: { open?: boolean } = $props();
 
 	const items = [
 		{ label: 'Inicio', href: '/' },
 		...tools.map((tool) => ({ label: tool.name, href: tool.href })),
+		...resources.map((resource) => ({ label: resource.name, href: resource.href })),
 		{ label: 'Colofón', href: '/colofon' }
 	];
 

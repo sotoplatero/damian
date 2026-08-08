@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { tools } from '$lib/tools/list';
+	import { resources } from '$lib/resources/list';
 	import PageMeta from '$lib/components/PageMeta.svelte';
 
 	/*
@@ -27,6 +28,12 @@
 	 * 2. LAS HERRAMIENTAS se editan en src/lib/tools/list.ts: añades un objeto
 	 *    y aparece sola. La sección no lleva título a propósito: "Herramientas"
 	 *    sobraba con el subtítulo diciendo "yo me construyo las mías".
+	 *
+	 *    LAS DESCARGAS son otra lista, src/lib/resources/list.ts, y otra sección
+	 *    debajo. No las mezcles: una herramienta se usa aquí y se acaba al
+	 *    cerrar la pestaña; una descarga te la llevas y pide el correo siempre.
+	 *    Metida entre las cuatro de arriba, una descarga se lee como una quinta
+	 *    herramienta que no funciona.
 	 *
 	 * 3. FALTAN PRUEBAS. Ni un cliente, ni una cifra. Una línea real —"esto se
 	 *    lo monté a un taller de Montevideo"— vale más que medio texto. Va justo
@@ -61,6 +68,11 @@
 
 	const toolsIntro =
 		'Estas son las que uso yo para trabajar. Las dejo aquí por si te sirven. La lista crece.';
+
+	// Las descargas. Lo de arriba se usa aquí y se acaba al cerrar la pestaña;
+	// esto te lo llevas y se queda contigo. Por eso van separadas.
+	const resourcesIntro =
+		'Y esto te lo llevas puesto. Te lo mando al correo y es tuyo, aunque te borres mañana.';
 
 	// #4 — the line that "knows" the time. Computed in the browser (local hour),
 	// so it always matches the visitor. Empty on the server to avoid a wrong guess.
@@ -112,6 +124,31 @@
 					<span class="box-title">{tool.name}</span>
 					<span aria-hidden="true" class="tool-arrow">↗</span>
 					<p class="box-text">{tool.blurb}</p>
+				</a>
+			</li>
+		{/each}
+	</ul>
+</section>
+
+<!-- The resources: what you take away, as against the tools, which you use here.
+     Its own section and its own list (src/lib/resources/list.ts) because mixed
+     into the four above, a download reads as a fifth tool that doesn't work.
+     It sits after them on purpose — the tools are the proof, and this is the
+     first thing asked of a visitor, so it goes once they have seen something. -->
+<section class="section" aria-label="Descargas">
+	<p class="section-intro">{resourcesIntro}</p>
+
+	<ul class="mt-6 space-y-3">
+		{#each resources as resource (resource.href)}
+			<li>
+				<a href={resource.href} class="box-link">
+					<!-- The tools number themselves 01, 02...; here the same slot says
+					     what the thing is. A second run of numbers starting back at 01
+					     right under theirs reads as a broken list. -->
+					<span class="tool-index">ZIP</span>
+					<span class="box-title">{resource.name}</span>
+					<span aria-hidden="true" class="tool-arrow">↓</span>
+					<p class="box-text">{resource.blurb}</p>
 				</a>
 			</li>
 		{/each}

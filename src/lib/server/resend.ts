@@ -9,6 +9,7 @@ import toolPostsTemplate from '../emails/tool-10-post-types.md?raw';
 import toolRepurposeTemplate from '../emails/tool-repurpose.md?raw';
 import toolSubstackAboutTemplate from '../emails/tool-substack-about.md?raw';
 import courseTemplate from '../emails/course.md?raw';
+import resourceCervantesTemplate from '../emails/resource-cervantes.md?raw';
 
 function client(): Resend {
 	const key = env.RESEND_API_KEY;
@@ -108,6 +109,30 @@ export async function sendToolPiecesEmail(to: string, piecesMarkdown: string, ma
 
 export async function sendSubstackAboutEmail(to: string, reportMarkdown: string): Promise<void> {
 	await sendToolEmail(toolSubstackAboutTemplate, 'REPORT', to, reportMarkdown);
+}
+
+/**
+ * Deliver Cervantes: the link to the ZIP, nothing generated.
+ *
+ * It takes the tools' shell even though there is no model output to carry —
+ * `{{DOWNLOAD}}` is a URL, not a report. That keeps the unsubscribe header, the
+ * one-click list header and the same styling as every other mail; a second
+ * sender written just for this would drift away from all three.
+ *
+ * The URL carries no version on purpose. Cervantes has no version marker by
+ * design — a newer one is a new folder the author moves into — so a link mailed
+ * months ago has to keep giving the latest. Publishing a new build is
+ * overwriting `static/cervantes.zip`.
+ *
+ * `origin` comes from the request and `PUBLIC_SITE_URL` only overrides it. The
+ * unsubscribe link can afford to trust that variable, because a broken one is
+ * visible the moment anyone reports it; a broken download link is the whole
+ * point of the mail, and the variable is NOT set in the local `.env` — the first
+ * test send went out pointing at `/cervantes.zip` with no host in front of it.
+ */
+export async function sendCervantesEmail(to: string, origin: string): Promise<void> {
+	const base = (publicEnv.PUBLIC_SITE_URL || origin).replace(/\/$/, '');
+	await sendToolEmail(resourceCervantesTemplate, 'DOWNLOAD', to, `${base}/cervantes.zip`);
 }
 
 /**

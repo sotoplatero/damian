@@ -1,4 +1,5 @@
 import { tools } from '$lib/tools/list';
+import { resources } from '$lib/resources/list';
 
 /**
  * What the card seen when sharing each page says.
@@ -27,22 +28,34 @@ const HOME_CARD: Card = {
 /**
  * A path reduced to its card slug.
  *
- * Both the `/tool/` prefix and a bare leading slash are stripped, because not
- * every tool lives under `/tool/`: `/postcard` is its own route segment, since what
- * follows it is a publication and not a tool name. Without stripping the bare
- * slash, `/postcard` asked for `/og//postcard.png` and got nothing.
+ * The `/tool/` and `/recursos/` prefixes and a bare leading slash are all
+ * stripped, because not every page lives under `/tool/`: `/postcard` is its own
+ * route segment, since what follows it is a publication and not a tool name.
+ * Without stripping the bare slash, `/postcard` asked for `/og//postcard.png`
+ * and got nothing. Stripping the section leaves a flat slug, which is what
+ * `/og/[slug].png` can serve — a nested one would never match that route.
  */
 function toSlug(path: string): string {
-	return path.replace(/^\/tool\//, '').replace(/^\//, '');
+	return path.replace(/^\/(tool|recursos)\//, '').replace(/^\//, '');
 }
 
-/** `home` for the front page; for a tool, its slug. Null when there isn't one. */
+/**
+ * `home` for the front page; for a tool or a resource, its slug. Null when there
+ * isn't one.
+ *
+ * The tag is what tells the two apart at a glance in a shared link: a tool is
+ * used on the site, a resource is downloaded.
+ */
 export function cardFor(slug: string): Card | null {
 	if (slug === 'home') return HOME_CARD;
 
 	const tool = tools.find((t) => toSlug(t.href) === slug);
-	if (!tool) return null;
-	return { title: tool.name, subtitle: tool.blurb, tag: 'herramienta gratis' };
+	if (tool) return { title: tool.name, subtitle: tool.blurb, tag: 'herramienta gratis' };
+
+	const resource = resources.find((r) => toSlug(r.href) === slug);
+	if (resource) return { title: resource.name, subtitle: resource.blurb, tag: 'descarga gratis' };
+
+	return null;
 }
 
 /** The slug of the card a given route gets. */

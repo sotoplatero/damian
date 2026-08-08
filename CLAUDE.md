@@ -332,6 +332,37 @@ Its shape, and why:
   the field as an array, got 0 everywhere and wrongly wrote them off; it is a number (see
   the comment on `ArchivePost.restacks`) and the card shows it when it is earned.
 
+### Resources (the downloads)
+
+`/recursos/<slug>` is a **file you take away**, as against a tool, which you use here and
+which ends when the tab closes. They are two lists and two sections on the home page —
+`src/lib/resources/list.ts` next to `src/lib/tools/list.ts` — because a download mixed in
+among the tools reads as a fifth tool that doesn't work. `og-cards.ts` reads both, so a new
+resource gets its share card from its own `name` and `blurb`; `toSlug` strips `/recursos/`
+as well as `/tool/`, since `/og/[slug].png` can only serve a flat slug.
+
+The segment is Spanish, against the rule that route segments are English (`tool`, `course`,
+`author`). **Damian's decision, 8 August 2026**, not a slip.
+
+There is no `capturesEmail` flag on a resource: every one of them asks for an address, which
+is what a resource IS here. The page says so **before the field** — «al descargarlo te
+suscribes» — not in the confirmation, where it no longer matters.
+
+**`/recursos/cervantes`** delivers Cervantes, a folder that opens in Claude Code, learns one
+author's voice from their published newsletter and writes their issues with them. It is
+built in a **separate repo** (`projects/cervantes`) and only distributed here.
+
+- The ZIP is `static/cervantes.zip`, **without a version in the URL on purpose**: Cervantes
+  carries no version marker by design (a newer one is a new folder the author moves into),
+  so a link mailed months ago has to keep giving the latest. Shipping a new build is
+  overwriting that file with `dist/cervantes-<v>.zip` from the other repo, by hand.
+- The endpoint is the gated half of a tool with the tool removed — nothing scraped, no model
+  call, nothing on screen. It reuses the `toolDelivery` limits rather than naming its own.
+- **`sendCervantesEmail` builds the link from the request origin**, and `PUBLIC_SITE_URL`
+  only overrides it. The unsubscribe link can trust that variable; this one can't, because a
+  broken download link is the entire mail — and the variable is not in the local `.env`, so
+  the first test send went out pointing at `/cervantes.zip` with no host in front of it.
+
 ### OpenAI
 
 **All model calls go through `src/lib/server/openai.ts`.** All three tools use it; none has its
