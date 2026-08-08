@@ -23,11 +23,12 @@ ${formatSpec(formats)}
 
 - Entrega exactamente las nueve notas, bajo el nombre de su función.
 - Cada una tendrá como máximo ${NOTE_MAX_CHARS} caracteres, incluidos espacios, saltos y URL.
-- Varía longitudes, estructuras, ideas y ángulos. Ninguna puede convertirse en artículo.
-- Incluye la URL en «Puerta al artículo» y en al menos otras dos notas. Decide cuáles, dónde colocarla y cómo introducirla según el contenido de cada una.
-- No repitas la misma idea con palabras distintas.
-- Puedes formular implicaciones nuevas si están sustentadas por el artículo.
-- No inventes datos, escenas, experiencias, resultados, citas ni opiniones.
+- **Cada nota se apoya en un material distinto del artículo, y no hay dos sobre el mismo.** Antes de escribirla, di en una línea sobre qué la construyes: qué cifra, qué escena, qué frase o qué tensión.
+- En las cinco primeras, ese material va DENTRO de la nota: la cifra escrita, el nombre propio escrito, la escena contada. «Muy barato» no es una cifra. «La mayoría» no es un dato.
+- Las cuatro últimas no resumen: piensan a partir del artículo y van donde el artículo no fue. Todo lo que digan tiene que poder defenderse con el texto delante sin estar ya escrito en él.
+- Varía longitudes y estructuras. Ninguna puede convertirse en artículo.
+- Sobre el enlace: decide en cada nota si ayuda. No hay obligación de ponerlo, una nota con enlace llega a menos gente, y si lo pones la nota tiene que valer sin él.
+- No inventes datos, escenas, experiencias, resultados, citas ni opiniones. Razonar sobre lo que hay no es inventar; añadir cifras que no están, sí.
 - Usa una cita entre comillas solo si aparece literalmente en el artículo.
 - Devuelve texto listo para copiar, sin explicar tu proceso.
 `;

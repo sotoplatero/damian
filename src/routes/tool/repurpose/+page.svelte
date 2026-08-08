@@ -3,7 +3,7 @@
 	import InlineForm from '$lib/components/InlineForm.svelte';
 	import ResultCard from '$lib/components/ResultCard.svelte';
 	import GateBox from '$lib/components/GateBox.svelte';
-	import { formats, freeFormats } from '$lib/tools/repurpose/formats';
+	import { FAMILY_LABEL, FAMILY_NOTE, formats } from '$lib/tools/repurpose/formats';
 	import { postTool, revealResult } from '$lib/tools/client';
 	import { toPlainText, type Piece } from '$lib/tools/repurpose/format';
 
@@ -15,16 +15,15 @@
 		urlWorking: 'Leyendo tu artículo...',
 		urlHint: 'El enlace de un artículo tuyo ya publicado.',
 		readLine: 'He leído {site}.',
-		resultTitle: 'Nueve notas para distribuir tu artículo',
+		resultTitle: 'Cinco notas sacadas de tu artículo',
 		lowConfidence:
 			'Eso no parece un artículo entero, así que he supuesto bastante. Prueba con el enlace del artículo, no con la portada.',
-		freeBadge: 'Gratis',
 		copyAction: 'Copiar',
 		copiedAction: 'Copiado',
 		restart: 'Probar con otro artículo',
-		gateTitle: 'Te quedan las seis con más recorrido',
+		gateTitle: 'Y ahora lo que tu artículo abre y no cierra',
 		gateBody:
-			'El detalle revelador, la historia, la consecuencia, la pregunta, la cita comentada y la puerta que lleva lectores al artículo. Dime a dónde te las mando y te llegan las nueve, más el prompt para repetirlo por tu cuenta.',
+			'Esas cinco salen de lo que ya escribiste. Quedan cuatro que no están ahí: la consecuencia que tu texto implica y no desarrolla, la objeción más fuerte que deja sin contestar, dónde deja de valer tu tesis, y la pregunta que queda abierta. Dime a dónde te las mando y te llegan las nueve, más el prompt para repetirlo por tu cuenta.',
 		gatePlaceholder: 'tu@email.com',
 		gateButton: 'Enviar',
 		gateUnlocking: 'Escribiendo y enviando...',
@@ -114,7 +113,7 @@
 
 <PageMeta
 	title="Distribuye tu artículo — Damian Soto"
-	description="Convierte un artículo en nueve notas breves, con distintas ideas, ángulos y extensiones, para seguir llevándole lectores."
+	description="Convierte un artículo en nueve notas breves: cinco con sus cifras, nombres y escenas, y cuatro que van a donde el artículo no llegó."
 />
 
 {#if !pieces.length}
@@ -122,8 +121,8 @@
 		<article class="prose prose-xl prose-neutral max-w-none">
 			<h1>Distribuye tu <strong>artículo</strong>.</h1>
 			<p>
-				<strong>Pega el enlace.</strong> Lo convierto en nueve notas breves, con distintas ideas,
-				ángulos y extensiones, para seguir llevándole lectores.
+				<strong>Pega el enlace.</strong> Saco nueve notas breves: cinco con las cifras, los nombres
+				y las escenas que ya escribiste, y cuatro que van a donde tu artículo no llegó.
 			</p>
 		</article>
 		{#if error}<p class="mt-6 text-sm text-error">{error}</p>{/if}
@@ -151,12 +150,20 @@
 		{#if lowConfidence}<p class="muted">{t.lowConfidence}</p>{/if}
 		{#if error}<p class="text-sm text-error">{error}</p>{/if}
 
+		<!-- The family heading and its line come from formats.ts, the same place the
+		     emailed report reads them: the screen and the email calling these two
+		     halves different things is how the warning on the other half stops
+		     being a warning. -->
+		<div>
+			<h2 class="letter-heading">{FAMILY_LABEL.articulo}</h2>
+			<p class="section-intro">{FAMILY_NOTE.articulo}</p>
+		</div>
+
 		{#each writtenFormats as format (format.id)}
 			{@const written = byId.get(format.id)}
 			{#if written}
 				<ResultCard
 					title={format.name}
-					badge={freeFormats.some((f) => f.id === format.id) ? t.freeBadge : ''}
 					note={format.bestFor}
 					copyText={toPlainText(written)}
 					copyLabel={t.copyAction}

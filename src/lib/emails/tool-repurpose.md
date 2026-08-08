@@ -4,7 +4,7 @@ subject: Nueve notas para distribuir tu artículo
 preheader: Las nueve notas y el prompt para repetirlo por tu cuenta.
 ---
 
-Aquí tienes las nueve notas. Distintas ideas, ángulos y tamaños para que el artículo siga encontrando lectores.
+Aquí tienes las nueve notas, en dos bloques: cinco salen de lo que tu artículo ya dice y cuatro van a donde tu artículo no fue.
 
 {{PIECES}}
 
@@ -14,7 +14,9 @@ Aquí tienes las nueve notas. Distintas ideas, ángulos y tamaños para que el a
 
 No hay una red ni un calendario obligatorio. Usa cada nota donde encaje.
 
-Algunas llevan el enlace porque lo necesitan. Otras aportan la idea completa y pueden circular solas. Esa diferencia es deliberada.
+Las cuatro del segundo bloque no están en tu artículo. Son una lectura suya: se sostienen en lo que escribiste, pero no lo escribiste tú. Léelas antes de publicarlas con tu nombre encima.
+
+Casi ninguna lleva enlace, y es a propósito. Una nota con enlace llega a menos gente, así que el clic tiene que sobrar: si alguien solo lee la nota, ya se ha llevado algo. Cuando quieras mandar tráfico, con enlazar una basta — o deja el enlace en el primer comentario.
 
 Relee cada una antes de publicarla. Conservan la voz del artículo, pero tu última edición sigue siendo la que manda.
 

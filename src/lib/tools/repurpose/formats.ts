@@ -1,91 +1,191 @@
+/**
+ * The nine notes, and the reason they are these nine.
+ *
+ * THE OLD REPERTOIRE WAS NINE WAYS OF SAYING THE THESIS. Idea central,
+ * contradicción, consecuencia, lección práctica — all of them "the article's
+ * point, tilted". Run against a real article that carried 65 businesses for
+ * $0.45, a restaurant with 917 reviews and no website, and 36% of Miami plumbers
+ * offline, it produced three notes with no number, no name and no scene in them.
+ * It extracted gold and then wrote about the gold in the abstract.
+ *
+ * So the unit changed. A note is now ONE ATOM of the article, not one view of
+ * the whole — the atomic-essay rule from Ship 30 for 30: break the topic into
+ * components and write one, rather than writing the summary N times.
+ *
+ * TWO FAMILIES, and the email gate falls on the seam between them.
+ *
+ *   'articulo'  — what the piece already says, re-cut. Each note is welded to a
+ *                 concrete proof, scene or quote, and the server checks that the
+ *                 proof survives INTO the text (`carriesAnchor`). This is the
+ *                 half that is free: it is the visitor's own material.
+ *   'mas-alla'  — what the piece opens and never closes. Each note is welded to
+ *                 a named tension and reasons past the text. This is the emailed
+ *                 half, because it is the half that isn't already theirs.
+ *
+ * `anchor` names which slot of the analysis a note draws from. It is what makes
+ * "nine different atoms" enforceable instead of merely requested: every note
+ * hands back the exact material it used, and no two may hand back the same one.
+ *
+ * ON THE MISSING TENTH: there is no `puerta-articulo` any more. Its whole job
+ * was to send the reader away, and it is the format that most reliably produced
+ * a link welded onto a sentence with no transition. Zero-click content (Amanda
+ * Natividad and Rand Fishkin) is the argument against it: a distributed piece
+ * has to stand alone and the click has to be additive, not required — platforms
+ * suppress link posts, and Meta reported that 97.3% of Facebook posts that get
+ * views carry no external link. `cifra` and `escena` make somebody want the
+ * article better than a door ever did.
+ *
+ * THE EXAMPLES ARE OURS AND THEY ARE ALL ONE OFF-TOPIC SUBJECT (a first 10K),
+ * the same rule as `10-post-types`: they read as "one topic, nine ways", they
+ * are far from any real user's subject so the model copies the shape and not the
+ * matter, and they are shown on the public page. Each one demonstrates its own
+ * anchor — the `cifra` example carries numbers, the `caso` example carries a
+ * name. An example that doesn't do its own job teaches the model nothing.
+ */
+
 export const NOTE_MAX_CHARS = 700;
+
+/** Which slot of the analysis a note's `ancla` has to come from. */
+export type AnchorSource = 'prueba' | 'escena' | 'frase' | 'tension';
 
 export type NoteFormat = {
 	id: string;
 	name: string;
+	/** Free half or emailed half. The gate falls on this boundary. */
+	family: 'articulo' | 'mas-alla';
 	bestFor: string;
 	hint: string;
 	example: string;
+	anchor: AnchorSource;
+	/** Only the quote note: its anchor is verified against the scraped text. */
 	needsQuote?: boolean;
 };
 
-export const FREE_IDS = ['idea-central', 'contradiccion', 'leccion-practica'] as const;
-
 export const formats: NoteFormat[] = [
 	{
-		id: 'idea-central',
-		name: 'Idea central',
-		bestFor: 'Hacer circular la tesis más fuerte',
-		hint: 'Expresa la tesis más fuerte como una nota autónoma. Elige la extensión y la estructura que la idea pida.',
-		example: 'El primer 10K no se prepara aprendiendo a sufrir más. Se prepara aprendiendo a salir más despacio.'
+		id: 'cifra',
+		name: 'La cifra',
+		family: 'articulo',
+		bestFor: 'Poner a circular un número del artículo y lo que significa',
+		hint: 'Toma UN dato del artículo y escribe lo que ese dato deja ver. El número va dentro de la nota, escrito, no resumido en «muy barato» ni en «la mayoría». Si el dato necesita un segundo número al lado para entenderse, ponlo.',
+		example:
+			'Terminé el 10K en 58 minutos. Los cuatro primeros kilómetros los hice en 21 y los seis siguientes en 37. Todo lo que aprendí ese día cabe en esa diferencia.',
+		anchor: 'prueba'
 	},
 	{
-		id: 'detalle-revelador',
-		name: 'Detalle revelador',
-		bestFor: 'Abrir el artículo desde un dato, ejemplo o escena pequeña',
-		hint: 'Aísla un dato, gesto, ejemplo o escena pequeña que deje ver una idea mayor sin resumir el artículo.',
-		example: 'En la cuarta semana dejé las zapatillas junto a la puerta. No para acordarme de correr. Para quitarme una excusa.'
+		id: 'escena',
+		name: 'La escena',
+		family: 'articulo',
+		bestFor: 'Distribuir un momento concreto tal y como ocurrió',
+		hint: 'Cuenta una escena que ya esté en el artículo, con su sitio, su momento y lo que se hizo. Conserva los hechos. No la cierres con una moraleja: la escena vale por lo que se ve en ella.',
+		example:
+			'En el kilómetro seis miré el reloj y supe que había salido al ritmo de otro. Los cuatro que quedaban los hice andando, adelantado por gente que había salido detrás de mí.',
+		anchor: 'escena'
 	},
 	{
-		id: 'contradiccion',
-		name: 'Contradicción',
-		bestFor: 'Mostrar lo que el artículo coloca al revés de lo esperado',
-		hint: 'Encuentra una expectativa que el artículo contradiga y haz visible la tensión sin forzar una fórmula de gancho.',
-		example: 'Pensaba que prepararme era correr cada vez más. Mejoré cuando empecé a terminar con ganas de seguir.'
+		id: 'caso',
+		name: 'El caso con nombre',
+		family: 'articulo',
+		bestFor: 'Enseñar la idea encarnada en un ejemplo concreto',
+		hint: 'Elige un ejemplo del artículo que tenga nombre propio —una persona, un negocio, un sitio, una herramienta— y cuéntalo con sus datos. El nombre aparece escrito. Un caso sin nombre es una generalidad.',
+		example:
+			'Rosa entrena en el parque de al lado, tiene 61 años y corrió su primer 10K el mismo día que yo. Salió tres minutos más lenta en el kilómetro uno y entró cuatro minutos antes.',
+		anchor: 'prueba'
 	},
 	{
-		id: 'historia',
-		name: 'Historia',
-		bestFor: 'Distribuir una escena o experiencia concreta',
-		hint: 'Cuenta una escena o experiencia que ya esté en el artículo. Conserva sus hechos y no la conviertas en una moraleja completa.',
-		example: 'En el kilómetro seis miré el reloj y supe que había salido al ritmo de otro. Los cuatro restantes los hice andando.'
+		id: 'leccion',
+		name: 'La lección con su prueba',
+		family: 'articulo',
+		bestFor: 'Dar algo aplicable sin que suene a consejo de manual',
+		hint: 'Una acción concreta, y pegada a ella el dato o la escena del artículo que la justifica. Sin la prueba es un consejo genérico, que es justo lo que sobra por ahí. No inventes un método ni añadas pasos por completar una lista.',
+		example:
+			'Haz la primera salida tan corta que te dé vergüenza contarla. Yo empecé con 12 minutos. A la cuarta semana seguía saliendo, que era lo único que había que conseguir.',
+		anchor: 'prueba'
 	},
 	{
-		id: 'consecuencia',
-		name: 'Consecuencia',
-		bestFor: 'Desarrollar una implicación sustentada por el texto',
-		hint: 'Desarrolla una consecuencia razonable de una idea del artículo. Tiene que poder defenderse con el texto aunque no aparezca escrita literalmente.',
-		example: 'Si cada entrenamiento termina al límite, faltar un día parece un fracaso. Y un plan que convierte cada tropiezo en fracaso dura poco.'
-	},
-	{
-		id: 'leccion-practica',
-		name: 'Lección práctica',
-		bestFor: 'Convertir una idea en algo que el lector pueda aplicar',
-		hint: 'Extrae una acción concreta sustentada por el artículo. No inventes un método ni añadas pasos por completar una lista.',
-		example: 'Haz la primera salida tan corta que te parezca ridícula. Lo difícil esta semana no es avanzar. Es volver a salir.'
-	},
-	{
-		id: 'pregunta',
-		name: 'Pregunta',
-		bestFor: 'Convertir una tensión real en conversación',
-		hint: 'Convierte una tensión verdadera del artículo en una pregunta que admita respuestas distintas. No la uses como cierre automático.',
-		example: '¿Qué te hace abandonar antes un plan: que sea difícil o que deje de ser nuevo?'
-	},
-	{
-		id: 'cita-comentada',
-		name: 'Cita comentada',
-		bestFor: 'Abrir una rendija al artículo con sus propias palabras',
-		hint: 'Usa la cita literal verificada y añade solo el contexto que la haga circular. Si no hay cita verificada, parafrasea sin comillas.',
-		example: '«El día de la carrera se cobra lo que hiciste en enero.»\n\nLa escribí después de gastar cuatro meses de trabajo en los tres primeros minutos.',
+		id: 'cita',
+		name: 'La frase del artículo',
+		family: 'articulo',
+		bestFor: 'Abrir una rendija al texto con sus propias palabras',
+		hint: 'Usa la frase literal verificada y añade solo lo que la haga circular: de dónde sale, qué pasó antes. Si no hay frase verificada, parafrasea sin comillas.',
+		example:
+			'«El día de la carrera se cobra lo que hiciste en enero.»\n\nLo escribí después de gastar cuatro meses de trabajo en los tres primeros minutos.',
+		anchor: 'frase',
 		needsQuote: true
 	},
 	{
-		id: 'puerta-articulo',
-		name: 'Puerta al artículo',
-		bestFor: 'Despertar curiosidad y llevar al texto completo',
-		hint: 'Abre una curiosidad real y conduce al artículo. Decide cómo introducir la URL según el tono de la nota; no anuncies contenido nuevo de forma genérica.',
-		example: 'La semana en que más gente abandona su primer 10K no es la más dura. Es la primera que resulta aburrida.\n\nHe escrito qué cambia ahí y cómo atravesarla:\nhttps://ejemplo.com/primer-10k'
+		id: 'consecuencia',
+		name: 'La consecuencia',
+		family: 'mas-alla',
+		bestFor: 'Llevar una idea del artículo hasta donde el artículo no la llevó',
+		hint: 'Si lo que dice el artículo es verdad, ¿qué más es verdad? Desarrolla una implicación de segundo orden que el texto sostenga pero no escriba. Tiene que poder defenderse con el artículo delante.',
+		example:
+			'Si cada entrenamiento acaba al límite, faltar un día se parece a un fracaso. Y un plan que convierte cada tropiezo en fracaso no se abandona por cansancio. Se abandona por vergüenza.',
+		anchor: 'tension'
+	},
+	{
+		id: 'objecion',
+		name: 'La objeción que no responde',
+		family: 'mas-alla',
+		bestFor: 'Adelantarse a quien va a discutirlo',
+		hint: 'Nombra la objeción más fuerte que el artículo deja sin contestar, en su versión buena, no en una versión de paja. Después contéstala o déjala abierta con honradez. Las dos salidas valen; fingir que no existe, no.',
+		example:
+			'Lo lógico sería decirme que hay gente que mejora entrenando siempre al límite. La hay. Suelen llevar años corriendo y tienen de dónde recuperar. Yo llevaba cuatro meses.',
+		anchor: 'tension'
+	},
+	{
+		id: 'limite',
+		name: 'Dónde deja de valer',
+		family: 'mas-alla',
+		bestFor: 'Decir para quién NO es esto',
+		hint: 'Marca la frontera de la tesis: a quién no le sirve, en qué caso deja de aplicar, qué haría falta saber para el otro lado. Decir que algo no vale para todo el mundo es lo que hace creíble que valga para alguien.',
+		example:
+			'Esto no le sirve a quien ya corre 10K y quiere bajar de 45 minutos. Ahí el problema deja de ser salir y pasa a ser cuánto aguantas. De eso yo no sé nada todavía.',
+		anchor: 'tension'
+	},
+	{
+		id: 'pregunta',
+		name: 'La pregunta abierta',
+		family: 'mas-alla',
+		bestFor: 'Convertir una tensión real en conversación',
+		hint: 'Toma una tensión que el artículo deja abierta y hazla pregunta. Tiene que admitir respuestas distintas y verdaderas; si solo admite la del artículo, es un cierre disfrazado. No la uses como coletilla final de otra idea.',
+		example: '¿Qué te hace abandonar antes un plan: que sea difícil o que deje de ser nuevo?',
+		anchor: 'tension'
 	}
 ];
 
-export const freeFormats = formats.filter(({ id }) =>
-	FREE_IDS.includes(id as (typeof FREE_IDS)[number])
-);
-export const gatedFormats = formats.filter(
-	({ id }) => !FREE_IDS.includes(id as (typeof FREE_IDS)[number])
-);
+/**
+ * The free half is the whole `articulo` family, and that is the point of the
+ * split: what a visitor sees for nothing is their own article re-cut, and what
+ * arrives by email is the half the article does not contain.
+ */
+export const freeFormats = formats.filter(({ family }) => family === 'articulo');
+export const gatedFormats = formats.filter(({ family }) => family === 'mas-alla');
+
+export const FREE_IDS = freeFormats.map(({ id }) => id);
 export const GATED_IDS = gatedFormats.map(({ id }) => id);
 
 export function findFormat(id: string): NoteFormat | undefined {
 	return formats.find((format) => format.id === id);
 }
+
+/**
+ * What each family is called, and the warning the second one carries.
+ *
+ * It lives here because the page and the emailed report both print it, and the
+ * two saying it differently is how a warning quietly stops being a warning.
+ *
+ * The `mas-alla` note is not decoration. Those four are the model reasoning past
+ * the article, and somebody is about to publish them under their own name. They
+ * have a right to know which four those are.
+ */
+export const FAMILY_LABEL: Record<NoteFormat['family'], string> = {
+	articulo: 'Lo que tu artículo ya dice',
+	'mas-alla': 'Lo que tu artículo abre y no cierra'
+};
+
+export const FAMILY_NOTE: Record<NoteFormat['family'], string> = {
+	articulo: 'Cada una lleva encima un dato, un nombre o una escena de tu texto.',
+	'mas-alla':
+		'Estas cuatro no están en tu artículo: son una lectura suya, sostenida en lo que escribiste pero no escrita por ti. Léelas antes de publicarlas con tu nombre.'
+};

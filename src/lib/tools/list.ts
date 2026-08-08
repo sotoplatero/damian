@@ -44,7 +44,7 @@ export const tools: Tool[] = [
 	{
 		name: 'Distribuye tu artículo',
 		href: '/tool/repurpose',
-		blurb: 'Convierte un artículo en nueve notas breves para seguir llevándole lectores.',
+		blurb: 'Nueve notas de un artículo tuyo: cinco con sus datos y cuatro que van más lejos que él.',
 		capturesEmail: true
 	},
 	{

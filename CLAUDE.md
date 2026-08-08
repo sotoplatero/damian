@@ -167,15 +167,65 @@ Shares `voice.ts` with the other tools. Lista and Práctico are the only types a
 line-separated items, and `format.ts` escapes leading markdown so those lines survive the
 email shell.
 
-**`/tool/repurpose`** takes an article URL and returns nine native pieces: three Substack
-notes, three X posts and three LinkedIn posts. One per channel is free on screen; the other
-six and a publication order are emailed. Its formats are ours and live in
-`src/lib/tools/repurpose/formats.ts`.
+**`/tool/repurpose`** takes an article URL and returns nine short notes, in **two families**
+split by the email gate (`src/lib/tools/repurpose/formats.ts`):
 
-The quote-based pieces stay behind the gate because their verbatim quote is verified after
-extraction. The shared guards live in `src/lib/tools/quotes.ts`: normalize the haystack with
-`normalizeQuoteText` before `verifyQuote`. Markdown escaping is shared in `markdown.ts`.
-Only `nota-teaser` may carry the article URL, which is validated again as http/https.
+- **`articulo`** — `cifra`, `escena`, `caso`, `leccion`, `cita`. What the piece already says,
+  re-cut. **Free on screen**, because it is the visitor's own material.
+- **`mas-alla`** — `consecuencia`, `objecion`, `limite`, `pregunta`. What the piece opens and
+  never closes. **Emailed**, because it is the half the article does not contain.
+
+**The old repertoire was nine ways of saying the thesis and it produced nine paraphrases.**
+Measured, August 2026: run on an article carrying 65 businesses for $0.45, a restaurant with
+917 reviews and no website, and 36% of Miami plumbers offline, it wrote three notes with no
+number, no name and no scene in them. The analysis was excellent and the writing ignored it.
+
+So a note is now **one atom of the article, not one view of the whole**, and that is enforced
+rather than requested. Each note returns an **`ancla`**: the exact material it stands on,
+copied from the analysis. The server checks three things and treats a failure as a failed
+generation, not a delivery (`format.ts`, all pure and tested):
+
+- `collidingAnchors` — no two notes stand on the same material, **compared within an anchor
+  slot, not across all nine**. Comparing everything against everything failed a good set
+  because the quote note stood on «La lista cruda cuesta centavos» and a tension quoted that
+  sentence back: different atoms, overlapping words. The repeat that matters is inside a slot
+  — two notes fighting over one proof, or two of the four tensions being one tension.
+- `anchorIsKnown` — the anchor came from the analysis, not from the model.
+- `carriesAnchor` — the `articulo` family must carry its anchor INTO the text. `mas-alla` is
+  exempt, or it would be pushed back into restating.
+
+Both of the last two run on `sharesMark`: a shared figure, a shared proper name (mid-sentence
+capitals only — every sentence starts with one), or four shared consecutive words. **Exact
+containment was tried first and was wrong**: a model condenses, so «…salieron 65 negocios
+reales por 0.45» comes back as «65 negocios por 0,45 dólares», the same fact and a substring
+of nothing.
+
+**The extract step needs `max_output_tokens: 7000`**, not the 3500 it ran on before. The
+analysis grew `tensiones` and the free half went from three notes to five, each now carrying
+an `ancla`. At 3500 the answer was cut off mid-JSON and read as an invalid set — which is why
+the failure path logs the head of the raw answer: truncation and a missing `ancla` look
+identical from outside.
+
+The analysis carries **`tensiones`** — what the article sets up and doesn't close — and the
+four `mas-alla` notes anchor one each. Without it, "go past the article" is an invitation to
+wander.
+
+**Do not reinstate the URL mandate.** The old design required the source link in ≥2 notes,
+had a `puerta-articulo` format whose only job was to send readers away, and force-appended
+the link (`ensureSourceLinks`) when the model declined. That is optimising against the reader
+and the algorithm both: zero-click content (Amanda Natividad, Rand Fishkin) says a
+distributed piece stands alone and the click is *additive, not required*, and Meta reported
+97.3% of Facebook posts that get views carry no external link. `pieceUsesOnlySourceUrl` stays
+— an alien URL is still a bug — and everything else about the link is the model's per-note
+call.
+
+**The `mas-alla` notes are labelled as the model's reading** on screen and in the email
+(`FAMILY_LABEL` / `FAMILY_NOTE`, read by both so they can't drift). Somebody is about to
+publish them under their own name; they have a right to know which four are inference.
+
+The quote note's verbatim quote is verified after extraction. The shared guards live in
+`src/lib/tools/quotes.ts`: normalize the haystack with `normalizeQuoteText` before
+`verifyQuote`. Markdown escaping is shared in `markdown.ts`.
 
 **`/tool/newsletter`** audits a Substack from what it shows publicly. **Unlisted while the
 judgement half is reworked.**
