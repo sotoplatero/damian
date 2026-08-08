@@ -202,8 +202,12 @@ generation, not a delivery (`format.ts`, all pure and tested):
   mid-sentence proper name, or four shared consecutive words). Checking only the analysis list
   rejected good sets — the model writes from the whole article, not from the proofs it
   enumerated. Exact containment alone is also wrong: a model condenses.
-- `hasRequiredMark` — **only `cifra` (a figure) and `caso` (a proper name), both verified
-  against the article.** Nothing else has a mechanical requirement.
+- `hasRequiredMark` — **only `cifra` (a figure) and `caso` (a proper name).** The rule is
+  KEEP THE MARK YOUR MATERIAL HAS: the mark must be in the note, in its anchor, and in the
+  article. **If the anchor has none, the requirement is waived** — some articles carry no
+  named example at all, and demanding one demands an invention. Measured: an article about a
+  method failed every attempt until the waiver existed. Nothing else has a mechanical
+  requirement.
 - `addsBeyondAnchor` — the note contributes at least six words the anchor didn't have.
 
 **Do not add a general "the note must carry its material" rule. It was tried and removed.**

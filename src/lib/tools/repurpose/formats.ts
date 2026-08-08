@@ -124,7 +124,10 @@ export const formats: NoteFormat[] = [
 		name: 'La frase del artículo',
 		family: 'articulo',
 		bestFor: 'Abrir una rendija al texto con sus propias palabras',
-		hint: 'Usa la frase literal verificada y añade solo lo que la haga circular: de dónde sale, qué pasó antes. Si no hay frase verificada, parafrasea sin comillas.',
+		// «Añade SOLO lo que la haga circular» decía antes, y se leía como «añade lo
+		// mínimo»: el modelo devolvía la frase pelada y el servidor la rechazaba por
+		// no aportar nada propio. El hint tiene que pedir el comentario, no tolerarlo.
+		hint: 'Pon la frase literal verificada y, debajo, una línea tuya que la sitúe: de dónde sale, qué pasó antes, por qué la escribiste. La frase sola no es una nota. Si no hay frase verificada, parafrasea sin comillas y coméntala igual.',
 		example:
 			'«El día de la carrera se cobra lo que hiciste en enero.»\n\nLo escribí después de gastar cuatro meses de trabajo en los tres primeros minutos.',
 		anchor: 'frase',

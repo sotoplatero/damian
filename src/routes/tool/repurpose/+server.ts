@@ -161,7 +161,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 				// `tensiones` list and the free half went from three notes to five,
 				// each now carrying its `ancla` as well as its text. At 3500 the
 				// answer was simply cut off mid-JSON and read as an invalid set.
-				const raw = await ask(extractPrompt() + (attempt === 2 ? `\n\nCORRECCIÓN OBLIGATORIA: ${lastFailure}. Cada nota se apoya en un material distinto del análisis y lo lleva escrito dentro.` : ''), input, 7000, extractSchema());
+				const raw = await ask(extractPrompt() + (attempt === 2 ? `\n\nCORRECCIÓN OBLIGATORIA, el intento anterior falló por esto: ${lastFailure}. Corrige exactamente eso y respeta todo lo demás.` : ''), input, 7000, extractSchema());
 				article = readArticle(raw.article);
 				pieces = readExactPieces(raw, FREE_IDS);
 				confidence = raw.confidence === 'baja' ? 'baja' : 'alta';

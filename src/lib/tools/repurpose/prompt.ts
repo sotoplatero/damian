@@ -135,8 +135,8 @@ Cada nota devuelve "ancla": el material exacto del análisis sobre el que está 
 
 - Las nueve anclas son DISTINTAS. Dos notas sobre el mismo material es una entrega inválida.
 - El ancla sale del análisis. No la inventes ni la reformules hasta que deje de reconocerse.
-- "cifra" tiene que contener un NÚMERO del artículo, escrito con sus dígitos. "Muy barato" no es una cifra y "la mayoría" no es un dato.
-- "caso" tiene que contener un NOMBRE PROPIO del artículo: una persona, un negocio, un sitio, una herramienta. "Un negocio local" no es un nombre.
+- "cifra": ancla en un material que tenga NÚMEROS y escríbelos con sus dígitos dentro de la nota. "Muy barato" no es una cifra y "la mayoría" no es un dato.
+- "caso": ancla en un material que tenga NOMBRE PROPIO —una persona, un negocio, un sitio, una herramienta— y escríbelo dentro de la nota. "Un negocio local" no es un nombre. Si el artículo no tiene ningún ejemplo con nombre, elige el ejemplo más concreto que haya y no te inventes uno.
 - En las notas ancladas a una TENSIÓN, no repitas la tensión: resuélvela, discútela o llévala más lejos.
 
 **LA NOTA NO ES EL MATERIAL. Es lo que haces con él.** Copiar el ancla y devolverla como nota es una entrega inválida, aunque cumpla todo lo anterior. Una cifra sin lo que esa cifra deja ver no es una nota. Una frase citada sin nada tuyo alrededor tampoco. Y dos notas no pueden decir lo mismo con otras palabras ni, mucho menos, con las mismas.`;

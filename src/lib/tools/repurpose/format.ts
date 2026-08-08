@@ -139,13 +139,19 @@ export function hasRequiredMark(piece: Piece, articleText: string): boolean {
 	const required = findFormat(piece.id)?.requires;
 	if (!required) return true;
 
-	if (required === 'figure') {
-		const inArticle = new Set(figures(articleText));
-		return figures(piece.text).some((figure) => inArticle.has(figure));
-	}
+	const from = required === 'figure' ? figures : names;
 
-	const inArticle = new Set(names(articleText));
-	return names(piece.text).some((name) => inArticle.has(name));
+	// The rule is KEEP THE MARK YOUR MATERIAL HAS, not "find one somewhere". An
+	// anchor with no proper name in it — and some articles have no named example
+	// at all — cannot yield a named note without inventing the name, which is the
+	// one thing this tool must never do. Measured: an article about a method,
+	// with no named case in it, failed every attempt until this waiver existed.
+	const inAnchor = from(piece.ancla);
+	if (!inAnchor.length) return true;
+
+	const inArticle = new Set(from(articleText));
+	const kept = new Set(from(piece.text));
+	return inAnchor.some((mark) => kept.has(mark) && inArticle.has(mark));
 }
 
 /**

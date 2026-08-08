@@ -48,33 +48,41 @@ describe('repurpose repertoire', () => {
 });
 
 describe('hasRequiredMark', () => {
-	const piece = (id: string, text: string) => ({ id, text, ancla: 'x' });
 	const article = 'Con Apify y 5 dólares salieron 65 negocios reales por 0.45. En Madrid apareció Mesón El Molinero con 917 reseñas.';
+	const figureAnchor = 'salieron 65 negocios reales por 0.45';
+	const nameAnchor = 'apareció Mesón El Molinero con 917 reseñas';
 
-	it('accepts a cifra carrying a figure that is in the article', () => {
-		expect(hasRequiredMark(piece('cifra', 'Salieron 65 negocios por 0,45 dólares.'), article)).toBe(true);
+	it('accepts a cifra that keeps its anchor’s figure', () => {
+		expect(hasRequiredMark({ id: 'cifra', text: 'Salieron 65 negocios por 0,45 dólares.', ancla: figureAnchor }, article)).toBe(true);
 	});
 
 	it('rejects a cifra that writes around the number', () => {
-		expect(hasRequiredMark(piece('cifra', 'Una lista cruda cuesta centavos y casi nadie la cualifica.'), article)).toBe(false);
+		expect(hasRequiredMark({ id: 'cifra', text: 'Una lista cruda cuesta centavos y casi nadie la cualifica.', ancla: figureAnchor }, article)).toBe(false);
 	});
 
-	/* Presence of a digit is not the rule: the figure has to be the article's. */
-	it('rejects a cifra whose number the article never had', () => {
-		expect(hasRequiredMark(piece('cifra', 'Salieron 900 negocios en una tarde.'), article)).toBe(false);
+	/* Presence of a digit is not the rule: it has to be the anchor's, and the
+	   article's. Otherwise "en 2 minutos" would pass for anything. */
+	it('rejects a cifra whose number neither the anchor nor the article had', () => {
+		expect(hasRequiredMark({ id: 'cifra', text: 'Salieron 900 negocios en una tarde.', ancla: figureAnchor }, article)).toBe(false);
 	});
 
-	it('accepts a caso carrying a name that is in the article', () => {
-		expect(hasRequiredMark(piece('caso', 'El Mesón El Molinero llena cada noche y no tiene web.'), article)).toBe(true);
+	it('accepts a caso that keeps its anchor’s name', () => {
+		expect(hasRequiredMark({ id: 'caso', text: 'El Mesón El Molinero llena cada noche y no tiene web.', ancla: nameAnchor }, article)).toBe(true);
 	});
 
-	it('rejects a caso with no name', () => {
-		expect(hasRequiredMark(piece('caso', 'Hay un restaurante de barrio que llena cada noche sin página.'), article)).toBe(false);
+	it('rejects a caso that drops the name it had', () => {
+		expect(hasRequiredMark({ id: 'caso', text: 'Hay un restaurante de barrio que llena cada noche sin página.', ancla: nameAnchor }, article)).toBe(false);
+	});
+
+	/* The waiver. Some articles have no named example at all, and demanding one
+	   is demanding an invention — the one thing this tool must never produce. */
+	it('asks for no name when the material has none', () => {
+		expect(hasRequiredMark({ id: 'caso', text: 'Un negocio de barrio que llena sin web.', ancla: 'los negocios que ya van llenos no necesitan web' }, article)).toBe(true);
 	});
 
 	it('asks nothing of the formats that have no requirement', () => {
-		expect(hasRequiredMark(piece('escena', 'Miré el reloj y supe que había salido al ritmo de otro.'), article)).toBe(true);
-		expect(hasRequiredMark(piece('consecuencia', 'El negocio pasa a estar en saber decir que no.'), article)).toBe(true);
+		expect(hasRequiredMark({ id: 'escena', text: 'Miré el reloj.', ancla: nameAnchor }, article)).toBe(true);
+		expect(hasRequiredMark({ id: 'consecuencia', text: 'Pasa a estar en saber decir que no.', ancla: nameAnchor }, article)).toBe(true);
 	});
 });
 
