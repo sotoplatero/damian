@@ -13,6 +13,24 @@ import { buildManualPrompt } from '$lib/tools/repurpose/manual-prompt';
 import { cacheAudit, readAudit } from '$lib/server/audit-cache';
 import type { Piece } from '$lib/tools/repurpose/format';
 
+/**
+ * WITHOUT THIS, THIS ENDPOINT 504s IN PRODUCTION AND THE PAGE SAYS "algo ha
+ * fallado por mi parte".
+ *
+ * Nothing in this repo ever set `maxDuration`, so every function ran on the
+ * platform default — measured at **10 seconds** on 8 August 2026, from the
+ * Vercel runtime log: `Task timed out after 10 seconds`. One call to a model
+ * does not fit in ten seconds, and this endpoint can make two.
+ *
+ * It fails invisibly: a 504 has no JSON body, so `postTool` falls through to the
+ * copy's `errorGeneric` and the visitor is told something vague. Nothing in the
+ * app logs, because the app never finished. Only Vercel knows.
+ *
+ * The local dev server has no such limit, which is why this passed every test
+ * here and broke there.
+ */
+export const config = { maxDuration: 60 };
+
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MODEL = 'gpt-5.4-mini';
 
