@@ -442,27 +442,42 @@ body { background: var(--color-paper); }
 	letter-spacing: -0.045em;
 }
 
+/*
+ * The highlight behind a marked phrase in a headline.
+ *
+ * It is drawn as the element's own BACKGROUND with `box-decoration-break: clone`,
+ * not as an absolutely positioned pseudo-element, and that is the whole point: a
+ * highlight has to survive the phrase wrapping onto a second line. The earlier
+ * version was `display: inline-block` plus an `::after` bar, and one box cannot
+ * describe two lines — the bar spanned the full width of the block and sat under
+ * the LAST line only, so the first line lost its highlight and the bar ran past
+ * the end of the text. `clone` repeats the background on every line fragment, so
+ * two lines get two bars, each as wide as its own line. This is also why the bar
+ * is no longer rotated: a rotation belongs to a box, and there is no longer one
+ * box to rotate.
+ *
+ * The bar is a flat two-stop gradient because only a background-IMAGE can be
+ * sized; a background-color would fill the whole fragment. Its offset is measured
+ * from the inline box (the font's content area — ascender plus descender, which
+ * is TALLER than the 0.96 line-height and reaches lower than the old
+ * inline-block did), which is why the offset is 0.20em: it puts the bar's bottom
+ * edge just under the baseline, where the old one sat.
+ */
 .prose h1 strong,
 .prose h1 mark {
-	display: inline-block;
-	position: relative;
-	z-index: 0;
 	font-weight: inherit;
 	color: inherit;
-	background: transparent;
-}
-.prose h1 strong::after,
-.prose h1 mark::after {
-	content: '';
-	position: absolute;
-	z-index: -1;
-	left: -.04em;
-	right: -.04em;
-	bottom: .06em;
-	height: .24em;
-	border-radius: .08em;
-	background: color-mix(in srgb, var(--color-signal) 68%, transparent);
-	transform: rotate(-1.2deg);
+	-webkit-box-decoration-break: clone;
+	box-decoration-break: clone;
+	padding-inline: .05em;
+	background-color: transparent;
+	background-image: linear-gradient(
+		color-mix(in srgb, var(--color-signal) 68%, transparent),
+		color-mix(in srgb, var(--color-signal) 68%, transparent)
+	);
+	background-repeat: no-repeat;
+	background-size: 100% .24em;
+	background-position: 0 calc(100% - .20em);
 }
 
 /*
