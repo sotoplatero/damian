@@ -1,7 +1,22 @@
 <script lang="ts">
-	import * as m from '$lib/paraglide/messages';
 	import { CheckCircle, XCircle, AlertCircle } from 'lucide-svelte';
 	import { enhance, deserialize } from '$app/forms';
+
+	/* La copia de la página.
+	 *
+	 * Estaba en `messages/{en,es}.json` y la servía Paraglide, porque esta
+	 * herramienta se escribió cuando el sitio iba a ser bilingüe. No lo es: todo lo
+	 * demás lleva su copia donde se usa, y esta era la única página que quedaba
+	 * atada al plugin. Al quitarlo, sus ocho cadenas se vienen aquí. */
+	const t = {
+		title: 'Evaluador de Google Places',
+		description: 'Analiza la calidad de tu perfil de negocio',
+		evaluate: 'Evaluar',
+		evaluating: 'Evaluando...',
+		results: 'Resultados de la evaluación',
+		score: 'Puntuación',
+		recommendation: 'Recomendación'
+	};
 
 	let { form } = $props();
 
@@ -76,16 +91,17 @@
 				console.log('[CLIENT] Deserialized result:', result);
 
 				if (result.type === 'success' && result.data) {
-					const data = result.data;
-					console.log('[CLIENT] Data:', data);
-
-					const newSuggestions = data.suggestions || [];
-					console.log('[CLIENT] newSuggestions:', newSuggestions);
+					// `deserialize` devuelve `Record<string, unknown>`: lo que venga de la
+					// acción no está tipado, así que la forma se declara aquí. Sin esto,
+					// `data.suggestions` es `{}` y asignarlo a `suggestions` era el único
+					// error que daba `pnpm check` en todo el repo.
+					const data = result.data as {
+						suggestions?: Array<{ description: string; place_id: string }>;
+					};
+					const newSuggestions = Array.isArray(data.suggestions) ? data.suggestions : [];
 
 					suggestions = newSuggestions;
-					showSuggestions = Array.isArray(newSuggestions) && newSuggestions.length > 0;
-
-					console.log('[CLIENT] showSuggestions:', showSuggestions);
+					showSuggestions = newSuggestions.length > 0;
 				} else {
 					suggestions = [];
 					showSuggestions = false;
@@ -123,8 +139,8 @@
 
 		<!-- Header -->
 		<div class="text-center space-y-2">
-			<h1 class="text-3xl font-bold">{m.places_evaluator_title()}</h1>
-			<p class="text-sm opacity-80">{m.places_evaluator_description()}</p>
+			<h1 class="text-3xl font-bold">{t.title}</h1>
+			<p class="text-sm opacity-80">{t.description}</p>
 		</div>
 
 		<!-- Search Form -->
@@ -148,7 +164,7 @@
 					<input
 						type="text"
 						name="search"
-						placeholder="Business name, Place ID, or Google Maps URL"
+						placeholder="Nombre del negocio, Place ID o URL de Google Maps"
 						class="input input-bordered"
 						required
 						bind:value={searchValue}
@@ -177,11 +193,11 @@
 							{/each}
 						</ul>
 					{/if}
-					<label class="label">
-						<span class="label-text-alt opacity-70">
-							e.g., "Starbucks Madrid" or paste Google Maps URL or Place ID
-						</span>
-					</label>
+					<!-- Nota, no <label>: no etiqueta ningún control (el campo ya tiene el
+					     suyo), y como <label> era un aviso de accesibilidad. -->
+					<p class="label-text-alt mt-1 opacity-70">
+						Por ejemplo «Starbucks Madrid», o pega la URL de Google Maps o el Place ID.
+					</p>
 				</div>
 
 				{#if form?.error}
@@ -191,7 +207,7 @@
 				{/if}
 
 				<button type="submit" class="btn btn-primary" disabled={loading}>
-					{loading ? m.evaluating() : m.evaluate()}
+					{loading ? t.evaluating : t.evaluate}
 				</button>
 			</div>
 		</form>
@@ -211,7 +227,7 @@
 								rel="noopener noreferrer"
 								class="link link-primary text-sm"
 							>
-								View on Google Maps
+								Ver en Google Maps
 							</a>
 						{/if}
 					</div>
@@ -220,7 +236,7 @@
 				<!-- Score -->
 				<div class="card bg-primary text-primary-content">
 					<div class="card-body items-center text-center">
-						<h3 class="text-lg font-semibold">{m.score()}</h3>
+						<h3 class="text-lg font-semibold">{t.score}</h3>
 						<div class="text-5xl font-bold">{form.evaluation.score}%</div>
 					</div>
 				</div>
@@ -228,22 +244,21 @@
 				<!-- Evaluation Results -->
 				<div class="card bg-base-200">
 					<div class="card-body">
-						<h3 class="card-title">{m.evaluation_results()}</h3>
+						<h3 class="card-title">{t.results}</h3>
 						<div class="space-y-4">
 							{#each form.evaluation.rules as { rule, result }}
+								{@const StatusIcon = getStatusIcon(result.status)}
 								<div class="border-l-4 pl-4 py-2 {getStatusClass(result.status)}">
 									<div class="flex items-start gap-3">
-										<svelte:component
-											this={getStatusIcon(result.status)}
-											size={20}
-											class="flex-shrink-0 mt-0.5"
-										/>
+										<!-- En modo runes un componente en una variable se usa directamente:
+										     <svelte:component> está obsoleto. -->
+										<StatusIcon size={20} class="flex-shrink-0 mt-0.5" />
 										<div class="flex-1">
 											<h4 class="font-semibold">{rule.name}</h4>
 											<p class="text-sm opacity-90">{result.message}</p>
 											{#if result.recommendation}
 												<div class="mt-2 text-sm opacity-80">
-													<strong>{m.recommendation()}:</strong>
+													<strong>{t.recommendation}:</strong>
 													{result.recommendation}
 												</div>
 											{/if}

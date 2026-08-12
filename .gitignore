@@ -35,9 +35,6 @@ Thumbs.db
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
-# Paraglide
-src/lib/paraglide
-
 .vercel
 
 # La auditoria de referencia de /tool/newsletter NO va al repo.
