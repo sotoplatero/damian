@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { walkArchive, readFeed, MAX_PAGES } from './substack-archive';
+import { walkArchive, readFeed, readPostBodies, MAX_PAGES } from './substack-archive';
 
 // `get` is the only thing that touches the network; mocked here to test pagination.
 vi.mock('./substack', async () => {
@@ -84,6 +84,103 @@ describe('walkArchive', () => {
 
 		const { posts } = await walkArchive('https://x.substack.com');
 		expect(posts).toHaveLength(0);
+	});
+});
+
+describe('readPostBodies', () => {
+	/** A post page, reduced to the one thing the body is read out of. */
+	function postPage(html: string): Response {
+		return new Response(
+			`<html><script>window._preloads = ${JSON.stringify({ post: { body_html: html } })};</script></html>`,
+			{ status: 200 }
+		);
+	}
+
+	const FAR = () => Date.now() + 30_000;
+
+	it('brings back a body per slug', async () => {
+		vi.mocked(get).mockImplementation((url) =>
+			Promise.resolve(postPage(`<p>Cuerpo de ${url.pathname}</p>`))
+		);
+
+		const { bodies, stoppedBy } = await readPostBodies(
+			'https://x.substack.com',
+			['uno', 'dos'],
+			FAR()
+		);
+
+		expect(bodies.get('uno')).toBe('<p>Cuerpo de /p/uno</p>');
+		expect(bodies.get('dos')).toBe('<p>Cuerpo de /p/dos</p>');
+		expect(stoppedBy).toBe('complete');
+	});
+
+	/**
+	 * The reason this function takes a deadline at all: a long archive will always
+	 * be able to outlast the function's own time limit, and stopping short with a
+	 * report is the only alternative to a 504 with no body.
+	 */
+	it('stops dead when the deadline has already passed, and says so', async () => {
+		vi.mocked(get).mockImplementation(() => Promise.resolve(postPage('<p>x</p>')));
+
+		const { bodies, stoppedBy } = await readPostBodies(
+			'https://x.substack.com',
+			['uno', 'dos', 'tres'],
+			Date.now() - 1
+		);
+
+		expect(bodies.size).toBe(0);
+		expect(stoppedBy).toBe('time');
+		expect(vi.mocked(get)).not.toHaveBeenCalled();
+	});
+
+	/**
+	 * MEASURED: Substack answers 429 at around 60-70 post pages per window, and the
+	 * first version kept firing anyway — 85 requests to a server that had already
+	 * said no, and a file that then blamed its own cap for the missing bodies.
+	 */
+	it('stops at the first 429 and keeps what it already had', async () => {
+		vi.mocked(get).mockImplementation((url) =>
+			url.pathname === '/p/tres'
+				? Promise.resolve(new Response('', { status: 429 }))
+				: Promise.resolve(postPage('<p>x</p>'))
+		);
+
+		const { bodies, stoppedBy } = await readPostBodies(
+			'https://x.substack.com',
+			['uno', 'dos', 'tres', 'cuatro', 'cinco'],
+			FAR()
+		);
+
+		expect([...bodies.keys()]).toEqual(['uno', 'dos']);
+		expect(stoppedBy).toBe('blocked');
+		// Nothing asked for after the refusal.
+		expect(vi.mocked(get)).toHaveBeenCalledTimes(3);
+	});
+
+	/** A Cloudflare block looks like a 403 and means the same thing. */
+	it('treats a 403 as a block too', async () => {
+		vi.mocked(get).mockImplementation(() => Promise.resolve(new Response('', { status: 403 })));
+		const { stoppedBy } = await readPostBodies('https://x.substack.com', ['uno', 'dos'], FAR());
+		expect(stoppedBy).toBe('blocked');
+		expect(vi.mocked(get)).toHaveBeenCalledTimes(1);
+	});
+
+	it('drops the post that fails and keeps the rest', async () => {
+		vi.mocked(get).mockImplementation((url) => {
+			if (url.pathname === '/p/roto') return Promise.reject(new Error('caído'));
+			if (url.pathname === '/p/404') return Promise.resolve(new Response('', { status: 404 }));
+			// A page that answers 200 with no body in its preloads.
+			if (url.pathname === '/p/vacio') return Promise.resolve(postPage(''));
+			return Promise.resolve(postPage('<p>bien</p>'));
+		});
+
+		const { bodies } = await readPostBodies(
+			'https://x.substack.com',
+			['roto', '404', 'vacio', 'bien'],
+			FAR()
+		);
+
+		expect([...bodies.keys()]).toEqual(['bien']);
 	});
 });
 

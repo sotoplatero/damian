@@ -374,6 +374,110 @@ export async function walkArchive(
 }
 
 /**
+ * Wait between post pages. Same manners as the walk above, and for the same
+ * reason: this is someone else's server and it didn't ask for any of this.
+ */
+const BODY_SPACING_MS = 100;
+
+/** Why the bodies stopped. */
+export type BodyStop =
+	/** Every slug asked for came back (or dropped out on its own). */
+	| 'complete'
+	/** The clock ran out. There are slugs left and the caller can ask again. */
+	| 'time'
+	/** **Substack said no.** See the header: 429, and it clears in seconds. */
+	| 'blocked';
+
+/**
+ * The bodies of the given posts, as markdown-ready HTML, until the clock or
+ * Substack says stop.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * MEASURED, 12 August 2026, AND THE FIRST MEASUREMENT WAS WRONG
+ *
+ * A body cannot come from the archive (`body_html` arrives empty) nor from
+ * `/api/v1/posts/by-slug/{slug}` (302s to the page): it has to download
+ * `/p/{slug}` and read `_preloads.post`. One request per post, so the cost is
+ * linear and a long archive can always outlast a serverless function.
+ *
+ * Substack throttles post pages with **429**, and it behaves like a big bucket
+ * that refills fast, NOT like a small quota:
+ *
+ *   - **200 unique pages in a row, no 429**, at 2.9/s from a rested bucket
+ *   - 201 in a row on another publication, also clean
+ *   - after deliberately emptying it: **8 of 8 pass again 31 s later**
+ *
+ * The first reading of this said the wall was 60-70 requests, because every run
+ * that hit it was made during a testing spree — 300 requests in the previous
+ * twenty minutes. **A drained bucket looks exactly like a small bucket.** That
+ * mistake set a cap of 50 bodies and shaped the whole tool around it; the numbers
+ * above are from rested buckets and unique URLs (repeats are served by the CDN and
+ * don't count the same).
+ *
+ * So there is no body cap any more. One batch per request, the caller asks again
+ * for the next, and a 429 is a pause of seconds rather than the end of anything.
+ * It stays sequential: 2.9/s is measured to be sustainable, and it is the same
+ * courtesy the archive walk above shows.
+ *
+ * A 429 (or a 403, which is what a Cloudflare block looks like) **stops the batch
+ * dead** rather than firing into a closed door — the first version kept going for
+ * 85 more requests — and is reported, so the caller can tell "that's all there
+ * was" from "come back in a moment".
+ *
+ * THE DEADLINE
+ *
+ * `deadline` is an absolute `Date.now()` value, and it is what makes a batch a
+ * batch. The alternative is a 504 with no body, which `postTool` can only report
+ * as "algo ha fallado por mi parte" — the invisible failure documented in
+ * `tool/repurpose/+server.ts`. It has to leave room for a request already in
+ * flight (`get` gives up at 10 s), so the caller sets it short of the real limit.
+ *
+ * `consumed` is how many slugs were taken off the front of the list, which is not
+ * `bodies.size`: a post that answers without a body drops out and must not be
+ * asked for again.
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+export async function readPostBodies(
+	origin: string,
+	slugs: string[],
+	deadline: number
+): Promise<{ bodies: Map<string, string>; stoppedBy: BodyStop; consumed: number }> {
+	const bodies = new Map<string, string>();
+	let base: URL;
+	try {
+		base = new URL(origin);
+	} catch {
+		return { bodies, stoppedBy: 'complete', consumed: slugs.length };
+	}
+
+	for (let index = 0; index < slugs.length; index++) {
+		if (Date.now() >= deadline) return { bodies, stoppedBy: 'time', consumed: index };
+		if (index > 0) await sleep(BODY_SPACING_MS);
+		const slug = slugs[index];
+
+		try {
+			const response = await get(new URL(`/p/${encodeURIComponent(slug)}`, base), 'text/html');
+			// The whole reason this returns a reason.
+			if (response.status === 429 || response.status === 403) {
+				return { bodies, stoppedBy: 'blocked', consumed: index };
+			}
+			if (response.ok) {
+				const post = (preloads(await readBody(response)).post ?? {}) as Record<string, unknown>;
+				const html = text(post.body_html);
+				// A post that comes back without a body drops out silently. It is
+				// still in the index with its figures; the export never fails over
+				// one post, and it is NOT asked for again — hence `consumed`.
+				if (html) bodies.set(slug, html);
+			}
+		} catch {
+			/* same: it drops out, it doesn't take the export down */
+		}
+	}
+
+	return { bodies, stoppedBy: 'complete', consumed: slugs.length };
+}
+
+/**
  * The fallback: RSS.
  *
  * Brings 20 items and only `title`, `description`, `link`, `pubDate` and

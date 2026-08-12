@@ -8,6 +8,7 @@ import toolNewsletterTemplate from '../emails/tool-newsletter.md?raw';
 import toolPostsTemplate from '../emails/tool-10-post-types.md?raw';
 import toolRepurposeTemplate from '../emails/tool-repurpose.md?raw';
 import toolSubstackAboutTemplate from '../emails/tool-substack-about.md?raw';
+import toolArchiveTemplate from '../emails/tool-archive.md?raw';
 import courseTemplate from '../emails/course.md?raw';
 import resourceCervantesTemplate from '../emails/resource-cervantes.md?raw';
 
@@ -57,20 +58,28 @@ export async function unsubscribe(email: string): Promise<void> {
  * frameworks already formatted as markdown; it replaces `{{COPIES}}` in
  * `src/lib/emails/tool-7-frameworks.md`.
  */
-type TextAttachment = { filename: string; content: string };
+/**
+ * A file to attach. `content` is text or raw bytes: `/tool/repurpose` sends a
+ * prompt as a string, `/tool/archive` sends a zip the browser built and posted
+ * back, and both end up as a Buffer here.
+ */
+type Attachment = { filename: string; content: string | Uint8Array };
 
-async function sendToolEmail(template: string, marker: string, to: string, markdown: string, attachment?: TextAttachment): Promise<void> {
+async function sendToolEmail(template: string, marker: string, to: string, markdown: string, attachment?: Attachment): Promise<void> {
 	const from = env.RESEND_FROM;
 	if (!from) throw new Error('RESEND_FROM no configurada');
 	const url = unsubscribeUrl(to);
 	const rendered = renderStandalone(template, url, { [marker]: markdown });
+
+	const bytes = (content: string | Uint8Array) =>
+		typeof content === 'string' ? Buffer.from(content, 'utf8') : Buffer.from(content);
 
 	const { error } = await client().emails.send({
 		from,
 		to,
 		subject: rendered.subject,
 		html: rendered.html,
-		...(attachment ? { attachments: [{ filename: attachment.filename, content: Buffer.from(attachment.content, 'utf8') }] } : {}),
+		...(attachment ? { attachments: [{ filename: attachment.filename, content: bytes(attachment.content) }] } : {}),
 		headers: {
 			'List-Unsubscribe': `<${url}>`,
 			'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
@@ -109,6 +118,22 @@ export async function sendToolPiecesEmail(to: string, piecesMarkdown: string, ma
 
 export async function sendSubstackAboutEmail(to: string, reportMarkdown: string): Promise<void> {
 	await sendToolEmail(toolSubstackAboutTemplate, 'REPORT', to, reportMarkdown);
+}
+
+/**
+ * Deliver the archive export: the zip goes ATTACHED, not linked.
+ *
+ * It is the only tool whose file this site never holds. The browser assembles it
+ * batch by batch and posts it back to be sent, so there is nothing to link TO —
+ * and that is also why the mail matters more here than anywhere else: it is the
+ * only copy that survives closing the tab.
+ */
+export async function sendArchiveEmail(
+	to: string,
+	summaryMarkdown: string,
+	attachment: { filename: string; content: Uint8Array }
+): Promise<void> {
+	await sendToolEmail(toolArchiveTemplate, 'RESUMEN', to, summaryMarkdown, attachment);
 }
 
 /**

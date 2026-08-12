@@ -32,6 +32,7 @@ const buckets = new Map<string, Map<string, Hit[]>>();
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const HOUR_MS = 60 * 60 * 1000;
+const MONTH_MS = 30 * DAY_MS;
 
 /**
  * The site's limits, together so they can be read at a glance.
@@ -66,7 +67,34 @@ export const LIMITS = {
 	 * exists to protect Substack, not the bill. Keyed by IP because there is no
 	 * email to ask for: it is the only tool with no gate.
 	 */
-	authorCard: { max: 20, windowMs: HOUR_MS }
+	authorCard: { max: 20, windowMs: HOUR_MS },
+
+	/**
+	 * The archive export: **one per address**, which is what the page promises.
+	 *
+	 * It is the most expensive thing here in requests to somebody else's server —
+	 * the walk plus up to 150 post pages — and it is a one-off by nature: you
+	 * download your archive, you keep the file. Three a day like the other tools
+	 * would be inviting someone to walk a big publication over and over.
+	 *
+	 * THE WINDOW IS A MONTH AND THAT IS NOT THE SAME AS FOREVER. The counter is in
+	 * this process's memory, so it dies with the instance and a redeploy is a clean
+	 * slate for everybody. "One per user" is enforced as far as an in-memory
+	 * counter can enforce anything; an exact one needs the shared store this file's
+	 * header already names. The month says what the intent is instead of pretending
+	 * a day is the whole story.
+	 *
+	 * It is checked with `remaining()` and only counted after the file is built, so
+	 * a download that fails doesn't burn somebody's only go — see the endpoint.
+	 */
+	archiveExport: { max: 1, windowMs: MONTH_MS },
+
+	/**
+	 * And a per-IP ceiling, because an address is cheap to get and this one costs
+	 * Substack real requests. Five a day from one IP still covers a household or an
+	 * office where two people find the tool the same afternoon.
+	 */
+	archiveExportPerIp: { max: 5, windowMs: DAY_MS }
 } as const;
 
 export type LimitName = keyof typeof LIMITS;

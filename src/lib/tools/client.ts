@@ -19,7 +19,13 @@ const CODE_KEYS: Record<string, string> = {
 	invalid_email: 'errorInvalidEmail',
 	disposable: 'errorDisposable',
 	send_failed: 'errorSendFailed',
-	rate_limit: 'errorRateLimit'
+	rate_limit: 'errorRateLimit',
+	/**
+	 * A limit of one, which is not the same thing as "you've been going too fast".
+	 * The archive export gives an address a single download, so telling somebody to
+	 * wait a while would be a lie: they need to know it is spent.
+	 */
+	already_used: 'errorAlreadyUsed'
 };
 
 /** Refinements of `unreadable`: why the page couldn't be read. */

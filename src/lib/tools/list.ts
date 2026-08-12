@@ -11,8 +11,9 @@
  *
  * Deliberately off the list, and why:
  *
- *   - `places-evaluator` — uses Paraglide and DaisyUI, so it doesn't fit with the
- *     rest yet. Getting it onto the home page means migrating it to the site theme.
+ *   - `places-evaluator` — plain DaisyUI, so it doesn't fit with the rest yet.
+ *     Getting it onto the home page means migrating it to the site theme. It also
+ *     used Paraglide until August 2026; that half is done, its copy is in the page.
  *   - `newsletter` — it works, but the report still doesn't deliver what it
  *     should. The judgement half is being rewritten and the reference it is
  *     measured against is a hand-written audit that is NOT in this repo (it names
@@ -40,6 +41,13 @@ export const tools: Tool[] = [
 		name: 'La postal de tu Substack',
 		href: '/postcard',
 		blurb: 'Pega tu dirección y llévate cuatro postales con tu historia, listas para compartir.'
+	},
+	{
+		name: 'Descarga el archivo de una newsletter',
+		href: '/tool/archive',
+		blurb:
+			'Pega la dirección de la que te interesa y llévate su archivo entero: el índice y sus posts en markdown.',
+		capturesEmail: true
 	},
 	{
 		name: 'Distribuye tu artículo',
