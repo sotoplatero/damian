@@ -483,7 +483,7 @@
 	     hace que la página parezca no haber entendido lo que acabas de pedirle. -->
 	{#if phase === 'form' || phase === 'starting'}
 		<article class="prose prose-xl prose-neutral max-w-none">
-			<h1>Llévate el archivo entero de <mark>la newsletter que te interesa</mark>.</h1>
+			<h1>Descarga el archivo de <mark>una newsletter de Substack</mark>.</h1>
 			<p>El índice de todo lo que ha publicado y sus posts en markdown, en un zip.</p>
 		</article>
 	{/if}
