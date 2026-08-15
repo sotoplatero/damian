@@ -27,5 +27,10 @@ export const resources: Resource[] = [
 		name: 'Cervantes, tu redactor de newsletter',
 		href: '/recursos/cervantes',
 		blurb: 'Una carpeta que aprende cómo escribes y te ayuda a sacar tu newsletter cada semana.'
+	},
+	{
+		name: 'Cómo analizar el archivo de un autor',
+		href: '/recursos/analisis-de-autor',
+		blurb: 'El método y los prompts, con dos casos hechos: Dan Koe y Hussain Ibarra, enteros.'
 	}
 ];

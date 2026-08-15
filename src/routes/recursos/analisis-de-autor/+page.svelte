@@ -5,10 +5,11 @@
 
 	/* The page's copy.
 	 *
-	 * The note under the field carries the two things somebody has a right to know
-	 * BEFORE handing over an address, not after: that this opens with Claude Code,
-	 * and that downloading it subscribes them. Putting either of them in the
-	 * confirmation would be telling them once it no longer matters. */
+	 * The note under the field carries what somebody has a right to know BEFORE
+	 * handing over an address, not after: what tool this needs (any AI that takes
+	 * a long text — unlike Cervantes, nothing to install) and that downloading it
+	 * subscribes them. In the confirmation it would arrive once it no longer
+	 * matters. */
 	const t = {
 		placeholder: 'tu@email.com',
 		button: 'Enviármelo',
@@ -33,7 +34,7 @@
 		busy = true;
 		error = '';
 		try {
-			await postTool('/recursos/cervantes/api', { email }, t);
+			await postTool('/recursos/analisis-de-autor/api', { email }, t);
 			sent = true;
 		} catch (caught) {
 			error = caught instanceof Error ? caught.message : t.errorOffline;
@@ -44,17 +45,17 @@
 </script>
 
 <PageMeta
-	title="Cervantes, tu redactor de newsletter — Damian Soto"
-	description="Una carpeta que aprende cómo escribes leyendo lo que ya publicaste, y redacta contigo cada número de tu newsletter."
+	title="Cómo analizar el archivo de un autor — Damian Soto"
+	description="El método, los prompts y dos análisis completos para reconstruir lo que un autor hizo de verdad, artículo por artículo."
 />
 
 <section class="screen-center">
 	<article class="prose prose-xl prose-neutral max-w-none">
-		<h1>Un redactor que ya ha leído <mark>todo lo que publicaste</mark></h1>
+		<h1>Olvida lo que dice que hay que hacer: <mark>¿qué hizo realmente?</mark></h1>
 		<p>
-			<strong>Cervantes es una carpeta.</strong> La abres, lee tu newsletter entera para aprender
-			cómo escribes, y a partir de ahí saca los números contigo: el gancho, la estructura, la
-			portada y el envío.
+			<strong>Un paquete para desmontar a un autor con su propio archivo.</strong> Dentro va el método
+			en trece pasos, los prompts ya escritos, y dos casos hechos enteros: todo lo que publicaron Dan
+			Koe y Hussain Ibarra, y el análisis que salió de cada uno.
 		</p>
 	</article>
 
@@ -82,14 +83,12 @@
 
 	<div class="mt-6">
 		<p class="muted">
-			Cervantes se abre con <a
+			Son cuatro ficheros de texto: se abren en cualquier sitio y los prompts valen para cualquier IA
+			que trague un documento largo. El archivo del autor que elijas tú lo bajas con <a
 				class="link"
-				target="_blank"
-				rel="noopener noreferrer"
-				href="https://claude.com/claude-code">Claude Code</a
-			>. No hace falta saber programar, pero sí tenerlo instalado. Y es para quien lee Objeto
-			Brillante: al descargarlo te suscribes. Si te canso, te borras en un clic desde cualquier
-			correo.
+				href="/tool/archive">esta otra herramienta</a
+			>, que es el paso 2 del método. Y es para quien lee Objeto Brillante: al descargarlo te
+			suscribes. Si te canso, te borras en un clic desde cualquier correo.
 		</p>
 	</div>
 </section>

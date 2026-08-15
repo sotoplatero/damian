@@ -11,6 +11,7 @@ import toolSubstackAboutTemplate from '../emails/tool-substack-about.md?raw';
 import toolArchiveTemplate from '../emails/tool-archive.md?raw';
 import courseTemplate from '../emails/course.md?raw';
 import resourceCervantesTemplate from '../emails/resource-cervantes.md?raw';
+import resourceAuthorAnalysisTemplate from '../emails/resource-analisis-de-autor.md?raw';
 
 function client(): Resend {
 	const key = env.RESEND_API_KEY;
@@ -137,17 +138,12 @@ export async function sendArchiveEmail(
 }
 
 /**
- * Deliver Cervantes: the link to the ZIP, nothing generated.
+ * Deliver a `/recursos/*` download: the link to the ZIP, nothing generated.
  *
  * It takes the tools' shell even though there is no model output to carry —
  * `{{DOWNLOAD}}` is a URL, not a report. That keeps the unsubscribe header, the
  * one-click list header and the same styling as every other mail; a second
  * sender written just for this would drift away from all three.
- *
- * The URL carries no version on purpose. Cervantes has no version marker by
- * design — a newer one is a new folder the author moves into — so a link mailed
- * months ago has to keep giving the latest. Publishing a new build is
- * overwriting `static/cervantes.zip`.
  *
  * `origin` comes from the request and `PUBLIC_SITE_URL` only overrides it. The
  * unsubscribe link can afford to trust that variable, because a broken one is
@@ -155,9 +151,34 @@ export async function sendArchiveEmail(
  * point of the mail, and the variable is NOT set in the local `.env` — the first
  * test send went out pointing at `/cervantes.zip` with no host in front of it.
  */
-export async function sendCervantesEmail(to: string, origin: string): Promise<void> {
+async function sendResourceEmail(template: string, to: string, origin: string, file: string): Promise<void> {
 	const base = (publicEnv.PUBLIC_SITE_URL || origin).replace(/\/$/, '');
-	await sendToolEmail(resourceCervantesTemplate, 'DOWNLOAD', to, `${base}/cervantes.zip`);
+	await sendToolEmail(template, 'DOWNLOAD', to, `${base}/${file}`);
+}
+
+/**
+ * Cervantes. The URL carries no version on purpose: Cervantes has no version
+ * marker by design — a newer one is a new folder the author moves into — so a
+ * link mailed months ago has to keep giving the latest. Publishing a new build
+ * is overwriting `static/cervantes.zip`.
+ */
+export async function sendCervantesEmail(to: string, origin: string): Promise<void> {
+	await sendResourceEmail(resourceCervantesTemplate, to, origin, 'cervantes.zip');
+}
+
+/**
+ * The author-archive analysis pack. Here the two names in the filename ARE the
+ * content — the pack ships one worked analysis per author — so unlike Cervantes
+ * this file is not overwritten in place: another pair of authors is another ZIP
+ * and another resource.
+ */
+export async function sendAuthorAnalysisEmail(to: string, origin: string): Promise<void> {
+	await sendResourceEmail(
+		resourceAuthorAnalysisTemplate,
+		to,
+		origin,
+		'paquete-analisis-dan-koe-hussain-ibarra.zip'
+	);
 }
 
 /**
