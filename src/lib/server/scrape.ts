@@ -13,7 +13,14 @@ import { isIP } from 'node:net';
 const TIMEOUT_MS = 8_000;
 const MAX_BYTES = 2 * 1024 * 1024;
 const MAX_REDIRECTS = 3;
-/** Suficiente para entender una oferta sin inflar la factura del modelo. */
+/**
+ * Suficiente para entender una oferta sin inflar la factura del modelo.
+ *
+ * Se puede subir por llamada, y `actionable` lo hace: para juzgar si un
+ * procedimiento está entero hay que llegar al final del texto, y un how-to serio
+ * se pasa de 6.000 caracteres con facilidad. Cortarlo por la mitad hace que el
+ * juicio sea sobre media página sin que nadie se entere.
+ */
 const MAX_CHARS = 6_000;
 /** Por debajo de esto la página no dice nada útil (SPA vacía, muro de Cloudflare...). */
 const MIN_USEFUL_CHARS = 180;
@@ -233,7 +240,7 @@ function attribute(tag: string, name: string): string {
 }
 
 /** Saca el texto que le importa a un lector, tirando todo lo que es maquinaria. */
-export function extractText(html: string): ScrapeResult {
+export function extractText(html: string, maxChars: number = MAX_CHARS): ScrapeResult {
 	const title = decodeEntities(html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] ?? '').trim();
 
 	let description = '';
@@ -248,6 +255,20 @@ export function extractText(html: string): ScrapeResult {
 	const text = html
 		.replace(/<!--[\s\S]*?-->/g, ' ')
 		.replace(/<(script|style|noscript|svg|iframe|template|head)\b[^>]*>[\s\S]*?<\/\1>/gi, ' ')
+		/*
+		 * La chatarra de navegación, que NO es texto que nadie lea.
+		 *
+		 * Medido en `actionable`: la página de precios de Baremetrics gastaba sus
+		 * primeros 900 caracteres en el menú del producto —cada integración, cada
+		 * plan— y el corte por caracteres se comía el final del artículo. El
+		 * modelo respondía que no estaba el procedimiento entero, y tenía razón:
+		 * no se lo habíamos enseñado. Wikipedia mete su índice, y un blog grande,
+		 * dos niveles de menú y el pie.
+		 *
+		 * `header` NO entra aquí: en media web es el menú, pero en la otra media
+		 * envuelve el h1 y la entradilla del artículo.
+		 */
+		.replace(/<(nav|footer|aside)\b[^>]*>[\s\S]*?<\/\1>/gi, ' ')
 		// los bloques se separan en líneas para no pegar frases que no van juntas
 		.replace(/<(?:br|\/p|\/div|\/li|\/h[1-6]|\/section|\/tr)[^>]*>/gi, '\n')
 		.replace(/<[^>]+>/g, ' ');
@@ -258,7 +279,7 @@ export function extractText(html: string): ScrapeResult {
 		.filter(Boolean)
 		.join('\n')
 		.replace(/\n{3,}/g, '\n\n')
-		.slice(0, MAX_CHARS);
+		.slice(0, maxChars);
 
 	return { title, description, text: clean };
 }
@@ -267,7 +288,10 @@ export function extractText(html: string): ScrapeResult {
  * Punto de entrada: normaliza la URL, descarga y limpia.
  * Lanza `UnreadableError` cuando la página no sirve; quien llama cae al modo manual.
  */
-export async function scrape(rawUrl: string): Promise<ScrapeResult & { finalUrl: string }> {
+export async function scrape(
+	rawUrl: string,
+	options: { maxChars?: number } = {}
+): Promise<ScrapeResult & { finalUrl: string }> {
 	const trimmed = rawUrl.trim();
 	if (!trimmed) throw new UnreadableError('invalid_url');
 
@@ -280,7 +304,7 @@ export async function scrape(rawUrl: string): Promise<ScrapeResult & { finalUrl:
 	}
 
 	const { html, finalUrl } = await fetchPage(url);
-	const result = extractText(html);
+	const result = extractText(html, options.maxChars ?? MAX_CHARS);
 
 	// Una SPA sin renderizar devuelve un <div id="app"></div> y poco más.
 	if (result.text.length + result.description.length < MIN_USEFUL_CHARS) {

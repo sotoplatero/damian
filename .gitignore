@@ -31,6 +31,12 @@ Thumbs.db
 !.env.example
 !.env.test
 
+# Las paginas descargadas por el banco de pruebas y sus informes. Se regeneran
+# solas y son megas de HTML ajeno: el repo guarda el corpus (las URLs y su
+# etiqueta), no las copias.
+evals/.cache/
+evals/.out/
+
 # Vite
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*

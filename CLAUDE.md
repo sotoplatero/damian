@@ -35,6 +35,13 @@ Tests cover the pure modules only — `src/lib/authors/*`, `src/lib/tools/archiv
 archive walk with `fetch` mocked. **145 tests in 12 files** as of August 2026; there are no
 component tests, because the DOM adds nothing here and would drag in jsdom for nothing.
 
+**`pnpm eval:actionable` is not a test and must never become one.** It judges twenty
+real pages with a real model over the real internet: it costs money and minutes.
+That is why it has its own config (`vitest.eval.config.ts`) and its own extension
+(`evals/*.eval.ts`) instead of a filename `pnpm test` could one day sweep up.
+`EVAL_RUNS=3` judges each page three times and reports the majority — read why
+under `/tool/actionable`.
+
 ## Tech Stack
 
 - **Framework**: SvelteKit (Svelte 5 with runes)
@@ -115,6 +122,7 @@ Every tool under `src/routes/tool/*` is reachable by URL; only the ones in
 | `repurpose` | Listed. Built on the site theme. |
 | `newsletter` | **Live by URL, unlisted.** Built on the site theme; pulled from the home page while the judgement half is reworked. See below. |
 | `places-evaluator` | Live by URL, unlisted. Predates the theme, still plain DaisyUI. |
+| `actionable` | **Live by URL, unlisted.** Judges an article, plans a tool, builds it behind a signed link. The generated tools live at `/tool/actionable/<token>`. See below. |
 
 `lyra`, `uuid-generator` and `character-counter` were removed.
 
@@ -330,6 +338,129 @@ is never the right one. Two traps recorded in its tests: matching the outer list
 MEASURED on three real bodies: the only named entities Substack emits are `&quot;` and
 `&amp;`, so `decode` needs no entity table. **Don't blacklist `pencraft`** — newer posts wrap
 ordinary paragraphs in it and it empties the body.
+**`/tool/actionable`** takes an article URL and turns it into a working tool, in three
+steps: **judge → plan → link**. Only generators, v1.
+
+**The judgment is the product; the generation is the easy half.** That framing is the
+brief's and it drives everything here: making a tool out of a spec gets easier every
+month, so the only defensible part is deciding what to refuse. A product that converts
+everything produces garbage. **The refusal is the feature, not the error state**, and
+the page is written that way.
+
+**The plan step is not optional and must not be skipped.** Nothing goes from URL to
+finished tool: the visitor sees the form we intend to build, with every field's
+`cambia` — what changes in the answer when that field changes — and edits or deletes it
+before anything exists. A plan nobody can touch is a slot machine with extra clicks, and
+whether people edit it is one of the two numbers worth watching (never edited = the step
+is theatre; always edited = the interpretation is bad).
+
+**A generated tool is DATA, not code** (`src/lib/tools/actionable/spec.ts`): a form
+(`campos`), the procedure in our own words (`reglas`), and the shape of the answer
+(`cuantos`, `variedad`). One generic page paints any of them, one endpoint runs them.
+Having the model write a page instead would mean storing and serving somebody else's
+markup on this domain, and it buys nothing a form and a prompt don't already do.
+
+**There is no database: the link IS the storage.** The spec travels inside the URL,
+deflated, base64url, with an HMAC after it (`src/lib/server/actionable-link.ts`). That
+is what makes a shared link survive a redeploy, a cold start and a second serverless
+instance — none of which the in-memory cache everything else here uses survives.
+
+- **The signature is not decoration.** Without it anyone could write their own spec into
+  a URL and run it: our OpenAI key, their prompt. The runtime only executes specs this
+  site produced. Secret: `ACTIONABLE_SECRET`, falling back to `UNSUBSCRIBE_SECRET`,
+  which is the one already configured in production. **With neither it refuses to build
+  a link** — an unsigned link is worse than no link.
+- **Deflate is load-bearing, measured.** The first plan built from a live article came to
+  ~2.700 characters raw and the build failed with an invisible `server_error`. Deflated
+  it is ~1.360.
+- **`toFieldId` must not be changed.** Ids are derived from the labels at READ time, so a
+  new slug rule silently renames the fields of every tool already shared. The signature
+  still checks out; the form just stops matching and a completely filled form comes back
+  `incomplete_form`. This was measured by moving a `.trim()` one line.
+
+**The email gate is on the GENERATED tool, not on Actionable.** Judging and building are
+free and ungated — a form in front of the judgment would charge for the part that has to
+earn trust. The tool the author then shares asks each reader for an address to run, and
+that address goes to the list. That is the business case, and it sits where the value
+already landed. Nothing is emailed: the results appear on screen, because a generated
+tool that made you check your inbox would be used exactly once.
+
+Run limits are keyed by **IP on the free counter**, not by email on the delivery one:
+three a day per address would make using the same generated tool twice impossible, and
+whether anyone does is the one number the brief calls the real signal.
+
+**The generated tool never reproduces the source's sentences** (`copiesSource`): eight
+consecutive words shared with the article is a paste, not a coincidence, and the plan is
+regenerated naming the lifted fragment. The brief asks for this from the start rather
+than retrofitted, and it also produces better tools — a model that cannot copy has to
+have understood.
+
+**Four axes, verified, then arithmetic.** The model never gives a verdict. It defends
+`procedimental`, `parametrizable`, `repetido` and `tedioso` one by one, each with a
+**verbatim quote checked server-side** against the page (`verifyQuote`, the same lock as
+the newsletter audit), and `verdictFor` in `judgment.ts` turns what survived into one of
+four outcomes. `otra-forma` — it converts, but into a shape v1 doesn't build — is a
+refusal on screen and **the most valuable line in the rejection log**, because it says
+which shape to build second. The log is `console.log` in the endpoint, one JSON line per
+judgment: there is no store here, and an empty database would have been worse than a grep.
+
+**The two axes that are not votes.** The brief holds all four in tension and counts them;
+measured, that let five of twenty through:
+
+- **`tareaDeTrabajo`** — a separate yes/no: is the reader's task work, done on a material
+  they make or manage? Paul Graham on what to work on defends all four axes honestly,
+  with real quotes, and no axis can see the problem. What sees it is that there is
+  nothing to put in. Asked as a narrow question because "be strict" is not a criterion.
+- **`procedimental`** is a gate, not a vote. Without a procedure there is nothing to
+  convert, and every false positive measured was three agreeable axes carrying a fourth
+  with nothing under it.
+
+**What the corpus caught, and none of it was a prompt-wording problem:**
+
+- **The nav menu was eating the budget.** Baremetrics spent its first 900 characters on
+  its own product menu and the character cap cut off the end of the article; the model
+  answered "the procedure isn't all there" and was right, we hadn't shown it. `scrape.ts`
+  now drops `<nav>`, `<footer>` and `<aside>` — **not `<header>`**, which holds the h1 on
+  half the web — and this tool reads 18.000 characters, not 6.000.
+- **The model translated its quotes.** On an English page the shared `voice.ts` won
+  ("todo en español") and every quote came back in beautiful Spanish, failed verification
+  at once, and good how-tos were refused. The instruction that fixed it lives in the
+  **schema's `description`**, not in the prompt.
+- **Property order in the schema is thinking order.** A model fills the JSON front to
+  back. `tarea` and `pasos` come before the axes so it has to enumerate the procedure
+  before claiming there is one, and `queHace` comes before `forma` — naming what comes
+  out of the tool and only then labelling it is what stopped nearly every page from being
+  filed as a `guia`, including six pages of copywriting formulas.
+- **Both guards leave the model's reason arguing the opposite of the mark**, so an axis we
+  overruled carries `descartado` and the page prints the check's line instead of the
+  model's. A tool whose pitch is showing its interpretation cannot contradict itself.
+
+**`pnpm eval:actionable` — twenty pages, ten that obviously convert and ten that
+obviously don't** (`evals/corpus.ts`, half Spanish and half English on purpose). The
+downloads are cached in `evals/.cache` so only the model is paid for on a re-run, and the
+full judgment of all twenty lands in `evals/.out/actionable.json`. **Read that file. The
+number is not the measure** — a run that sorts 20/20 with reasons nobody would sign is a
+failure with a nice score.
+
+**Where the judgment stands, measured 9 August 2026: 20/20 by majority of three passes,
+but six of the twenty change their answer between passes.** The API takes no temperature and the
+grey pages genuinely wobble — `sirve / sirve / no` on the same cached bytes. So a single
+pass is a coin flip reported as a measurement, `EVAL_RUNS=3` exists for that reason, and
+**the yes/no is what holds; the shape does not.** Every negative was stable except
+Notion's product page. Don't tune anything against a single run.
+
+**The wobbling shape is the argument FOR the plan step, not a bug to chase.** A page
+that comes back `generador` on one pass and `checklist` on the next is a page whose
+shape is genuinely arguable, and the visitor is a better judge of it than a second model
+call would be. That is also why the tool is unlisted: not because it is broken, but
+because whether people accept the plan or fight it is the thing left to find out.
+
+**One label in the corpus was wrong and got changed; that is allowed and the rule is
+written there.** `sive.rs/dj` was filed as "an anecdote with a moral" and the judgment
+kept converting it — correctly, because the page says "here's what I do and recommend"
+and enumerates ten rules. A label changes when the page isn't what you thought. It never
+changes because the judgment disagreed with you. Measuring coverage against a target
+until the target is hit is the exact mistake `/tool/newsletter` already made.
 
 **`/tool/newsletter`** audits a Substack from what it shows publicly. **Unlisted while the
 judgement half is reworked.**
