@@ -71,7 +71,7 @@ function summaryFrom(headers: Headers): string {
 	const whose = name ? ` de ${name}` : '';
 	return `**${posts} entradas** en el índice${whose}, y **${bodies} ${
 		bodies === 1 ? 'post entero' : 'posts enteros'
-	}** en markdown dentro de la carpeta \`posts/\`.`;
+	}** seguidos, todo en un solo archivo markdown.`;
 }
 
 export const POST: RequestHandler = async ({ request, getClientAddress }) => {

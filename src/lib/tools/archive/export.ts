@@ -2,12 +2,31 @@ import type { ArchivePost } from '$lib/server/substack-archive';
 import type { ZipEntry } from './zip';
 
 /**
- * The export, assembled: one README, one index and one markdown file per body.
+ * The export, assembled: **ONE markdown file with the whole archive in it.**
  *
  * Everything here is pure — posts and bodies in, the zip's entries out — so it
  * can be tested without the network, which is where every interesting decision
  * about this tool lives. The network half is `+server.ts`; it does the walking
  * and hands the result to `buildExport`.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ONE FILE, AND WHY IT USED TO BE MANY
+ *
+ * It was a `LEEME.md`, an `indice.csv` and a folder of one markdown file per post.
+ * Damian collapsed it on 14 August 2026: what people do with this is hand it to a
+ * model, and a folder of 150 files is something you have to reassemble first. So
+ * the index is a list at the top and the posts follow it, newest first, separated
+ * by rules.
+ *
+ * What that costs, so nobody re-discovers it as a bug: the CSV is gone, and with
+ * it opening the figures in Excel. What it must not cost is the honesty — the
+ * counts, what is missing and whose writing this is were sections of the README and
+ * are now the head of the file. A copy of somebody's archive that doesn't say whose
+ * it is, or claims to be complete when it isn't, is the one thing this file has
+ * always been written against.
+ *
+ * The zip stays for one reason: the email carries it as an attachment, Vercel cuts
+ * a request body at 4.5 MB, and markdown deflates to about a quarter.
  *
  * ─────────────────────────────────────────────────────────────────────────
  * WHAT THE EXPORT PROMISES, AND WHAT IT CAN'T
@@ -22,10 +41,10 @@ import type { ZipEntry } from './zip';
  * bounds the file is how long the tab stays open: the visitor's call, not a number
  * decided in here.
  *
- * **The README says the real number, not the intended one.** A file that claims
- * to be someone's whole archive and quietly isn't is worse than one that says
- * "these 43 of their 340 posts" — the second is usable, the first gets trusted
- * and then found out.
+ * **The head says the real number, not the intended one.** A file that claims to be
+ * someone's whole archive and quietly isn't is worse than one that says "these 43 of
+ * their 340 posts" — the second is usable, the first gets trusted and then found
+ * out.
  * ─────────────────────────────────────────────────────────────────────────
  */
 
@@ -71,6 +90,12 @@ export type ExportPub = {
 
 export type ExportInput = {
 	pub: ExportPub;
+	/**
+	 * The publication's slug, which names the file. Passed in rather than read off
+	 * `pub.origin` so the zip and the markdown inside it carry the same name even
+	 * for a publication on its own domain.
+	 */
+	slug: string;
 	/** Newest first, as the walk returns them. */
 	posts: ArchivePost[];
 	/** slug → body already converted to markdown. Missing slugs are index-only. */
@@ -169,93 +194,132 @@ function safeName(slug: string): string {
 	);
 }
 
-export function postFileName(post: ArchivePost): string {
-	const day = isoDay(post.date);
-	return `posts/${day ? `${day}-` : ''}${safeName(post.slug)}.md`;
-}
-
 function postUrl(origin: string, slug: string): string {
 	return `${origin}/p/${slug}`;
 }
 
+/** `gratis` / `pago`, never `everyone` / `only_paid`. */
+function audienceLabel(post: ArchivePost): string {
+	return post.audience === 'everyone' ? 'gratis' : 'pago';
+}
+
 /**
- * One CSV field. Quotes whenever the content could break the row, and doubles
- * any quote inside it — the two rules that are the whole format.
+ * What Substack calls an entry that isn't an issue, said in Spanish where there is
+ * a word for it and left alone where there isn't. `type` is a free string from
+ * their API, so an unknown value prints as it came rather than as a guess.
  */
-function cell(value: string | number): string {
-	const text = String(value ?? '');
-	return /[",\n\r;]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+const TYPE_LABEL: Record<string, string> = {
+	podcast: 'podcast',
+	thread: 'hilo',
+	video: 'vídeo'
+};
+
+/**
+ * The figures of a post, and only the ones it has.
+ *
+ * A zero is dropped rather than printed: from the RSS fallback every figure is
+ * zero because the feed doesn't carry them, and «0 likes · 0 comentarios» on 20
+ * posts reads as a publication nobody reads instead of as a missing source.
+ */
+function figures(post: ArchivePost): string[] {
+	const parts: string[] = [];
+	if (post.words) parts.push(`${post.words} palabras`);
+	if (post.reactions) parts.push(`${post.reactions} likes`);
+	if (post.comments) parts.push(`${post.comments} comentarios`);
+	if (post.restacks) parts.push(`${post.restacks} restacks`);
+	return parts;
 }
 
-const COLUMNS = [
-	'fecha',
-	'titulo',
-	'subtitulo',
-	'url',
-	'seccion',
-	'tipo',
-	'audiencia',
-	'palabras',
-	'likes',
-	'comentarios',
-	'respuestas',
-	'restacks',
-	'cuerpo'
-] as const;
-
-export function buildIndex(input: ExportInput): string {
-	const rows = input.posts.map((post) =>
-		[
-			post.date,
-			post.title,
-			post.subtitle,
-			post.slug ? postUrl(input.pub.origin, post.slug) : '',
-			post.sectionName,
-			post.type,
-			post.audience === 'everyone' ? 'gratis' : 'pago',
-			post.words,
-			post.reactions,
-			post.comments,
-			post.childComments,
-			post.restacks,
-			input.bodies.has(post.slug) ? postFileName(post).replace('posts/', '') : ''
-		]
-			.map(cell)
-			.join(',')
-	);
-
-	// The BOM is for Excel: without it, opening the file by double-click on
-	// Windows shows the accents as mojibake. Every other reader ignores it.
-	return `﻿${COLUMNS.join(',')}\n${rows.join('\n')}\n`;
+/** Link text can't carry brackets: they end the link early. */
+function linkText(title: string): string {
+	return title.replace(/[[\]]/g, '\\$&');
 }
 
-export function buildPostFile(post: ArchivePost, markdown: string, origin: string): string {
-	const front = [
-		'---',
-		`titulo: ${JSON.stringify(post.title)}`,
-		post.subtitle ? `subtitulo: ${JSON.stringify(post.subtitle)}` : '',
-		`fecha: ${post.date}`,
-		post.slug ? `url: ${postUrl(origin, post.slug)}` : '',
-		`audiencia: ${post.audience === 'everyone' ? 'gratis' : 'pago'}`,
-		post.sectionName ? `seccion: ${JSON.stringify(post.sectionName)}` : '',
-		`palabras: ${post.words}`,
-		`likes: ${post.reactions}`,
-		`comentarios: ${post.comments}`,
-		'---'
-	].filter(Boolean);
+/**
+ * The index: every entry the archive returned, one line each, newest first.
+ *
+ * It says which lines have their post below and which don't, because that is the
+ * question the index answers that the body list can't — a restack, a podcast or
+ * anything past where the download stopped is here with its date and its link and
+ * nothing else.
+ */
+export function buildIndexSection(input: ExportInput): string {
+	const lines = ['## Índice', ''];
 
-	const warning =
-		post.audience === 'everyone'
-			? ''
-			: '\n> Post de pago. De aquí solo se puede leer lo que se ve sin estar suscrito, así que este cuerpo puede estar cortado.\n';
+	for (const post of input.posts) {
+		const day = isoDay(post.date);
+		const title = post.slug
+			? `[${linkText(post.title)}](${postUrl(input.pub.origin, post.slug)})`
+			: linkText(post.title);
+		const parts = [audienceLabel(post), ...figures(post)];
+		if (post.type !== 'newsletter') parts.push(TYPE_LABEL[post.type] ?? post.type);
+		if (!input.bodies.has(post.slug)) parts.push('solo en el índice');
+		lines.push(`- ${day ? `**${day}** · ` : ''}${title} · ${parts.join(' · ')}`);
+	}
 
-	return `${front.join('\n')}\n\n# ${post.title}\n${
-		post.subtitle ? `\n_${post.subtitle}_\n` : ''
-	}${warning}\n${markdown}\n`;
+	return `${lines.join('\n')}\n`;
+}
+
+/**
+ * A body's own headings, pushed down under the post's `##`.
+ *
+ * In one file this matters: `html.ts` keeps whatever levels Substack's editor gave
+ * a post, `#` included, so a body would otherwise outrank the title of the document
+ * it is inside.
+ *
+ * **It skips fenced code, which is why this is a loop and not a `replace`.**
+ * `html.ts` turns `<pre>` into a ``` block, and a shell comment or a CSS id inside
+ * one starts with `#` without being a heading.
+ */
+export function demoteHeadings(markdown: string, by: number): string {
+	let fenced = false;
+
+	return markdown
+		.split('\n')
+		.map((line) => {
+			if (/^\s*```/.test(line)) {
+				fenced = !fenced;
+				return line;
+			}
+			if (fenced) return line;
+			const match = line.match(/^(#{1,6})\s/);
+			if (!match) return line;
+			return '#'.repeat(Math.min(match[1].length + by, 6)) + line.slice(match[1].length);
+		})
+		.join('\n');
+}
+
+/**
+ * One post, as a section of the whole. Opens with a rule, because that is what
+ * separates two posts in a file that has no folders left.
+ */
+export function buildPostSection(post: ArchivePost, markdown: string, origin: string): string {
+	const meta = [longDate(post.date), audienceLabel(post), ...figures(post)].filter(Boolean);
+	if (post.sectionName) meta.push(post.sectionName);
+	if (post.slug) meta.push(`[en Substack](${postUrl(origin, post.slug)})`);
+
+	const lines = ['---', '', `## ${post.title}`, ''];
+	if (post.subtitle) lines.push(`_${post.subtitle}_`, '');
+	lines.push(meta.join(' · '), '');
+	if (post.audience !== 'everyone') {
+		lines.push(
+			'> Post de pago. De aquí solo se puede leer lo que se ve sin estar suscrito, así que este cuerpo puede estar cortado.',
+			''
+		);
+	}
+	lines.push(demoteHeadings(markdown, 2));
+
+	return `${lines.join('\n').trimEnd()}\n`;
 }
 
 function spanishDate(date: Date): string {
 	return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+/** A post's date as `10 de agosto de 2026`, or nothing when it is unusable. */
+function longDate(iso: string): string {
+	const at = Date.parse(iso);
+	return Number.isFinite(at) ? spanishDate(new Date(at)) : '';
 }
 
 function monthYear(iso: string): string {
@@ -305,7 +369,15 @@ export function minutesPhrase(count: number): string {
 	return minutes === 1 ? 'un minuto' : `unos ${minutes} minutos`;
 }
 
-export function buildReadme(input: ExportInput, summary: Summary): string {
+/**
+ * The head of the file: what it is, whose it is, and what is missing from it.
+ *
+ * This is what is left of the README, and it is deliberately short — three lines and
+ * a list that only appears when something really is missing. What was cut was the
+ * inventory («qué hay aquí dentro»), which described a folder that no longer exists,
+ * and the tally, which the index below now says line by line.
+ */
+export function buildHead(input: ExportInput, summary: Summary): string {
 	const { pub, bodies } = input;
 	const lines: string[] = [];
 
@@ -314,34 +386,18 @@ export function buildReadme(input: ExportInput, summary: Summary): string {
 	lines.push(
 		`Todo lo que ${pub.name} ha publicado en abierto, sacado de ${pub.origin} el ${spanishDate(
 			input.generatedAt
-		)}.`
+		)}. **${summary.total} ${summary.total === 1 ? 'entrada' : 'entradas'}** en el índice y **${
+			bodies.size
+		} ${bodies.size === 1 ? 'post entero' : 'posts enteros'}** debajo, del más reciente hacia atrás.`
 	);
 	lines.push('');
-	lines.push('## Qué hay aquí dentro');
-	lines.push('');
+	// Not a footnote: the usual reader of this file is holding somebody else's
+	// archive, which is what the tool is for.
 	lines.push(
-		`- **indice.csv** — las ${summary.total} entradas del archivo, con su fecha, su enlace, sus palabras, sus likes y sus comentarios. Se abre en Excel, en Numbers o en Google Sheets.`
+		`Lo escribió ${
+			pub.authorName || pub.name
+		} y sigue siendo suyo. Esto es una copia de lo que ya está publicado en abierto, para leerlo, buscarlo y guardarlo. No lo publiques como si fuera tuyo.`
 	);
-	lines.push(
-		`- **posts/** — ${bodies.size} ${
-			bodies.size === 1 ? 'post entero' : 'posts enteros'
-		} en markdown, del más reciente hacia atrás. Un archivo por post, con sus datos arriba.`
-	);
-	lines.push('');
-	lines.push('## Las cuentas');
-	lines.push('');
-	lines.push(`- Entradas en el archivo: **${summary.total}**`);
-	if (summary.free && summary.paid) {
-		lines.push(`- Gratis: **${summary.free}** · De pago: **${summary.paid}**`);
-	}
-	if (summary.other) {
-		lines.push(
-			`- De esas, **${summary.other}** no son números de la newsletter (podcasts o restacks). No llevan cuerpo.`
-		);
-	}
-	if (summary.from && summary.to) {
-		lines.push(`- Desde **${monthYear(summary.from)}** hasta **${monthYear(summary.to)}**`);
-	}
 	lines.push('');
 
 	// The honest half. Every one of these is a way the file is less than its
@@ -375,7 +431,7 @@ export function buildReadme(input: ExportInput, summary: Summary): string {
 	}
 	if (summary.paid) {
 		caveats.push(
-			'De los posts de pago solo se puede leer lo que Substack muestra sin suscripción, así que esos cuerpos pueden estar cortados. Cada uno lo dice en su archivo.'
+			'De los posts de pago solo se puede leer lo que Substack muestra sin suscripción, así que esos cuerpos pueden estar cortados. Cada uno lo dice encima del suyo.'
 		);
 	}
 	if (summary.importedDates) {
@@ -387,30 +443,40 @@ export function buildReadme(input: ExportInput, summary: Summary): string {
 		lines.push('## Lo que falta, y por qué');
 		lines.push('');
 		for (const caveat of caveats) lines.push(`- ${caveat}`);
-		lines.push('');
 	}
 
-	// Not a footnote: the usual reader of this file is downloading somebody else's
-	// archive, which is what the tool is for.
-	lines.push('## De quién es esto');
-	lines.push('');
-	lines.push(
-		`Lo que hay en \`posts/\` lo escribió ${
-			pub.authorName || pub.name
-		} y sigue siendo suyo. Esto es una copia de lo que ya está publicado en abierto, para leerlo, buscarlo y guardarlo. No lo publiques como si fuera tuyo.`
-	);
-	lines.push('');
-	lines.push('---');
-	lines.push('');
-	lines.push(
-		`Hecho con [el archivo de una newsletter](${input.siteOrigin}/tool/archive), una herramienta de Objeto Brillante.`
+	// Trimmed at the end because `buildArchive` puts the blank line between parts.
+	return `${lines.join('\n').trimEnd()}\n`;
+}
+
+/**
+ * The whole archive as one document: head, index, and every body it has, newest
+ * first. The last line is the only mention of this site, and it is the reason the
+ * tool travels — somebody who is handed one of these can go and make their own.
+ */
+export function buildArchive(input: ExportInput, summary: Summary): string {
+	const parts = [buildHead(input, summary), buildIndexSection(input)];
+
+	for (const post of input.posts) {
+		const markdown = input.bodies.get(post.slug);
+		if (!markdown) continue;
+		parts.push(buildPostSection(post, markdown, input.pub.origin));
+	}
+
+	parts.push(
+		`---\n\nHecho con [el archivo de una newsletter](${input.siteOrigin}/tool/archive), una herramienta de Objeto Brillante.\n`
 	);
 
-	return `${lines.join('\n')}\n`;
+	return parts.join('\n');
 }
 
 export function exportFileName(slug: string, at: Date): string {
 	return `archivo-${safeName(slug)}-${at.toISOString().slice(0, 10)}.zip`;
+}
+
+/** The one file inside, named after the zip around it. */
+export function archiveFileName(slug: string, at: Date): string {
+	return `archivo-${safeName(slug)}-${at.toISOString().slice(0, 10)}.md`;
 }
 
 /**
@@ -428,8 +494,8 @@ export function exportFileName(slug: string, at: Date): string {
 const MAX_BODY_CHARS = 12_000_000;
 
 /**
- * The bodies that fit in the budget, newest first. The count the README prints
- * comes from this, so what it says is what the zip has.
+ * The bodies that fit in the budget, newest first. The count the head prints comes
+ * from this, so what it says is what the file has.
  */
 function withinBudget(posts: ArchivePost[], bodies: Map<string, string>): Map<string, string> {
 	const kept = new Map<string, string>();
@@ -448,18 +514,11 @@ export function buildExport(raw: ExportInput): { entries: ZipEntry[]; summary: S
 	const input: ExportInput = { ...raw, bodies: withinBudget(raw.posts, raw.bodies) };
 	const summary = summarize(input.posts, input.pub.createdAt);
 	const entries: ZipEntry[] = [
-		{ name: 'LEEME.md', content: buildReadme(input, summary) },
-		{ name: 'indice.csv', content: buildIndex(input) }
+		{
+			name: archiveFileName(input.slug, input.generatedAt),
+			content: buildArchive(input, summary)
+		}
 	];
-
-	for (const post of input.posts) {
-		const markdown = input.bodies.get(post.slug);
-		if (!markdown) continue;
-		entries.push({
-			name: postFileName(post),
-			content: buildPostFile(post, markdown, input.pub.origin)
-		});
-	}
 
 	return { entries, summary };
 }

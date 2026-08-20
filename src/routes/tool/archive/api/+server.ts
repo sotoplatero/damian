@@ -206,10 +206,15 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 			// to come from Substack rather than from the request.
 			const snapshot = await snapshotFor(slug);
 
+			// The page slows itself down after a refusal and says so here. Bounded
+			// inside `readPostBodies`, which is where the floor and the ceiling live.
+			const spacing = Number(body.spacing);
+
 			const { bodies, stoppedBy, consumed } = await readPostBodies(
 				snapshot.pub.origin,
 				slugs,
-				started + BATCH_DEADLINE_MS
+				started + BATCH_DEADLINE_MS,
+				Number.isFinite(spacing) ? spacing : undefined
 			);
 
 			const markdown: Record<string, string> = {};

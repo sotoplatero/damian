@@ -48,7 +48,7 @@
 		   límite de una por dirección, que el tuyo lo exporta Substack, y de quién
 		   es lo que hay dentro— y sobraban ahí: la primera pantalla solo tiene que
 		   decir el precio. Lo demás vive donde importa: la propiedad, en el estado
-		   final y en el LEEME del zip; el límite, en su mensaje de error. */
+		   final y en la cabecera del markdown; el límite, en su mensaje de error. */
 		priceNote: 'Al dejar tu email te suscribes a Objeto Brillante, mi newsletter.',
 		ownership:
 			'Lo que hay dentro lo escribió quien lo escribió y sigue siendo suyo: no lo publiques como si fuera tuyo.',
@@ -61,35 +61,36 @@
 		capDownload: 'Descargar estos {done}',
 		capContinue: 'Seguir con los {rest} que faltan',
 
-		readingTitle: 'Bajando el archivo de {name}',
 		progress: '{done} de {total} posts',
 		progressNote:
 			'Cada post es una petición a Substack, así que esto va a su ritmo. **No cierres la pestaña**: lo que ya ha llegado vive aquí, y el zip se arma al final.',
 		eta: 'Le quedan unos {minutes} min',
 		etaSoon: 'Va a acabar enseguida',
 		pausedNote:
-			'Substack ha pedido una pausa (son demasiadas peticiones seguidas). Sigo solo en {seconds} s, no toques nada.',
+			'Substack ha pedido una pausa (son demasiadas peticiones seguidas). Sigo en {seconds} s y a partir de ahí voy más despacio, para no volver a chocarme. No toques nada.',
 		retryNote: 'Se ha atascado una tanda. Lo intento otra vez en {seconds} s.',
 		stop: 'Parar y descargar lo que llevo',
 		stopping: 'Acabando la tanda en curso...',
 		zipping: 'Armando el zip...',
 
 		doneTitle: 'Ya lo tienes',
-		doneBody: 'Se ha descargado {file}: {posts} entradas en el índice y {bodies} posts enteros dentro.',
+		doneBody:
+			'{file}: un solo markdown con el índice de las {posts} entradas y los {bodies} posts enteros seguidos.',
 		donePartial:
-			'Se ha descargado {file} con {bodies} de los {asked} posts. El índice va completo, con las {posts} entradas.',
-		doneNoAsk: 'Si tu navegador no ha preguntado nada, mira en tu carpeta de descargas.',
+			'{file}: un solo markdown con {bodies} de los {asked} posts. El índice va completo, con las {posts} entradas.',
+		doneSave: 'Guardar el zip',
+		doneNoAsk:
+			'Debería haberse descargado solo. Si tu navegador no ha preguntado nada y no aparece en tus descargas, dale al botón.',
 		mailSending: 'Te lo estoy mandando también por correo...',
 		mailSent: 'Y te lo he mandado por correo, adjunto: ahí lo tienes aunque pierdas el zip.',
 		mailTooBig:
 			'Por correo no cabe (el zip pasa de cuatro megas), así que esta descarga es la única copia. Guárdala.',
-		mailFailed:
-			'El correo no ha salido, pero el zip ya está en tus descargas. Es la copia que cuenta.',
+		mailFailed: 'El correo no ha salido, pero el zip lo tienes aquí. Es la copia que cuenta.',
 		cervantesTitle: 'Y ahora que tienes el texto',
 		cervantesBody:
-			'Cervantes es una carpeta que lee una newsletter entera para aprender cómo escribe y luego redacta contigo. Estos posts en markdown son justo lo que se come.',
+			'Cervantes es una carpeta que lee una newsletter entera para aprender cómo escribe y luego redacta contigo. Este markdown es justo lo que se come.',
 		cervantesLink: 'Descargar Cervantes',
-		doneNotes: 'Del contenido, que el LEEME.md de dentro explica largo:',
+		doneNotes: 'Del contenido, que la cabecera del propio markdown explica largo:',
 		noteFeed:
 			'El archivo completo no ha contestado, así que esto sale del RSS: solo los 20 posts más recientes, y sin likes ni comentarios.',
 		noteTruncated:
@@ -99,7 +100,7 @@
 		noteImported:
 			'Algunas entradas llevan fecha anterior a la propia publicación. Pasa cuando el archivo se importó de otro sitio: Substack les pone fecha de relleno.',
 		noteMissing:
-			'{missing} posts se quedaron sin cuerpo: están en el índice igual, con su fecha y su enlace. El LEEME de dentro dice por qué en cada caso.',
+			'{missing} posts se quedaron sin cuerpo: están en el índice igual, con su fecha y su enlace, marcados «solo en el índice».',
 		restart: 'Descargar otra',
 
 		errorUnreadable:
@@ -125,20 +126,41 @@
 	/**
 	 * How many slugs to offer per call.
 	 *
-	 * Not "as many as fit": the progress bar only moves when a batch returns, and a
-	 * batch that runs to the server's 40 s deadline leaves the number sitting still
-	 * for forty seconds. Measured, a batch of 150 consumed 116 of them in exactly
+	 * Not "as many as fit": the count on the button only moves when a batch returns,
+	 * and a batch that runs to the server's 40 s deadline leaves the number sitting
+	 * still for forty seconds. Measured, a batch of 150 consumed 116 of them in exactly
 	 * that time. Fifty comes back in about seventeen seconds, so the count keeps
 	 * moving and the cost is a few more round trips.
 	 */
 	const CHUNK = 50;
+	/**
+	 * The wait between post pages, asked of the server and DOUBLED EVERY TIME
+	 * SUBSTACK REFUSES.
+	 *
+	 * Coming back at the same rate after a 429 earns another 429: measured on an
+	 * 84-post publication, two pauses in a single download. Batch size is not the
+	 * lever — what Substack counts is requests per second, and a smaller batch only
+	 * means more round trips at the same pace. So the pace itself gives way: 100 ms
+	 * (the measured 2.9 posts/s), then 200, then 400, then 800, where the server
+	 * stops it. It never speeds back up: within one download, a bucket that was
+	 * empty once is not to be trusted twice.
+	 */
+	const SPACING_START_MS = 100;
+	const SPACING_MAX_MS = 800;
 	/** After a 429. Measured: capacity is back about 31 s after it runs out. */
 	const PAUSE_S = 40;
 	/** After a batch that simply failed. Shorter: this is a hiccup, not a refusal. */
 	const RETRY_S = 6;
 	const MAX_FAILURES = 3;
-	/** Measured: post pages come back at about 2.9 a second, sustained. */
-	const POSTS_PER_SECOND = 2.9;
+	/**
+	 * A post page's own round trip, without the wait around it.
+	 *
+	 * Measured: 2.9 posts a second sustained at 100 ms of spacing, so the request
+	 * itself costs the rest of those 345 ms. It is kept apart from the spacing
+	 * because the spacing changes underfoot, and an ETA computed off a fixed 2.9/s
+	 * would promise two minutes while the loop takes six.
+	 */
+	const BODY_TRIP_MS = 245;
 	/**
 	 * Por encima de esto no se intenta el correo. Vercel corta el cuerpo de una
 	 * petición en 4,5 MB y contesta 413 antes de que corra nuestro código, así que
@@ -166,7 +188,6 @@
 	let countdown = $state(0);
 	let stopAsked = $state(false);
 
-	let pubName = $state('');
 	/** Posts this publication has that are worth a body: the loop's whole job. */
 	let asked = $state(0);
 	/** Bodies in hand. */
@@ -189,6 +210,24 @@
 	);
 	/** Cómo ha ido el correo, que se manda después de la descarga y no la bloquea. */
 	let mail = $state<'sending' | 'sent' | 'too_big' | 'failed' | ''>('');
+	/**
+	 * El zip, vivo mientras se vea la pantalla final.
+	 *
+	 * LA DESCARGA AUTOMÁTICA NO SIEMPRE OCURRE, y es el navegador quien decide: el
+	 * click sale minutos después del último gesto de la persona, y Safari (iOS sobre
+	 * todo) no descarga sin activación del usuario. El fichero solo existe en esta
+	 * pestaña, así que si ese click se pierde no hay dónde volver a pedirlo. De ahí
+	 * el botón del estado final: un click de verdad sobre el mismo blob.
+	 */
+	let saveHref = $state('');
+	/**
+	 * The pace asked of the server, which only ever gets slower. See
+	 * `SPACING_START_MS`.
+	 *
+	 * Reactive because the ETA hangs off it: once the loop has slowed down, an
+	 * estimate at the old rate is a promise the download can't keep.
+	 */
+	let spacing = $state(SPACING_START_MS);
 
 	/**
 	 * The loop's own state, deliberately NOT reactive: it is read by `pump` and
@@ -202,9 +241,23 @@
 
 	const ready = $derived(url.trim().length > 0 && email.trim().length > 0);
 	const goal = $derived(Math.min(target, asked));
-	const percent = $derived(goal ? Math.round((fetched / goal) * 100) : 0);
-	const minutesLeft = $derived(Math.ceil((goal - attempted) / POSTS_PER_SECOND / 60));
+	const postsPerSecond = $derived(1000 / (spacing + BODY_TRIP_MS));
+	const minutesLeft = $derived(Math.ceil((goal - attempted) / postsPerSecond / 60));
 	const missing = $derived(asked - attempted);
+	/** Trabajando: el formulario sigue ahí, pero no se toca. */
+	const working = $derived(
+		phase === 'starting' || phase === 'reading' || phase === 'paused' || phase === 'zipping'
+	);
+	const showForm = $derived(phase === 'form' || working);
+	const buttonLabel = $derived(
+		phase === 'starting'
+			? t.starting
+			: phase === 'zipping'
+				? t.zipping
+				: working
+					? fill(t.progress, { done: fetched, total: goal })
+					: t.button
+	);
 
 	function fill(template: string, values: Record<string, string | number>): string {
 		return Object.entries(values).reduce(
@@ -263,7 +316,6 @@
 			return;
 		}
 
-		pubName = session.pub.name;
 		const candidates = bodyCandidates(session.posts);
 		asked = candidates.length;
 		queue = candidates.map((post) => post.slug);
@@ -290,6 +342,7 @@
 					slug: session.slug,
 					email,
 					pass: session.pass,
+					spacing,
 					// Never past the target: overshooting the cap would fetch posts
 					// nobody asked for and then throw them away.
 					slugs: queue.slice(0, Math.min(CHUNK, target - attempted))
@@ -324,11 +377,16 @@
 			attempted += consumed;
 			fetched = bodies.size;
 
-			if (batch.stoppedBy === 'blocked' && queue.length && !stopAsked && attempted < target) {
-				notice = '';
-				phase = 'paused';
-				await wait(PAUSE_S);
-				phase = 'reading';
+			if (batch.stoppedBy === 'blocked') {
+				// Slower from here on, whether or not there is anything left to wait
+				// for: the refusal is the measurement. See `SPACING_START_MS`.
+				spacing = Math.min(spacing * 2, SPACING_MAX_MS);
+				if (queue.length && !stopAsked && attempted < target) {
+					notice = '';
+					phase = 'paused';
+					await wait(PAUSE_S);
+					phase = 'reading';
+				}
 			}
 		}
 
@@ -354,6 +412,7 @@
 		const generatedAt = new Date();
 		const { entries, summary } = buildExport({
 			pub: start.pub,
+			slug: start.slug,
 			posts: start.posts,
 			bodies,
 			truncated: start.truncated,
@@ -378,9 +437,11 @@
 		document.body.append(link);
 		link.click();
 		link.remove();
-		// Revoked on a timer: revoking it straight away cancels the download in some
-		// browsers, the kind of bug that only shows up on somebody else's machine.
-		setTimeout(() => URL.revokeObjectURL(href), 10_000);
+		// NO se revoca aquí. Revocarlo en el acto cancela la descarga en algunos
+		// navegadores, y con un temporizador dejaría muerto el botón de la pantalla
+		// final justo cuando hace falta —cuando el click automático se ha perdido—.
+		// Vive hasta que se empieza otra descarga (`restart`).
+		saveHref = href;
 
 		done = {
 			file,
@@ -458,12 +519,15 @@
 		email = '';
 		done = null;
 		mail = '';
+		if (saveHref) URL.revokeObjectURL(saveHref);
+		saveHref = '';
 		error = '';
 		notice = '';
 		stopAsked = false;
 		session = null;
 		queue = [];
 		bodies = new Map();
+		spacing = SPACING_START_MS;
 		fetched = 0;
 		attempted = 0;
 		asked = 0;
@@ -478,10 +542,13 @@
 />
 
 <section class="screen-center">
-	<!-- El titular vive SOLO en el formulario. Bajando o ya descargado son estados
-	     distintos, y repetir «pega su dirección» encima de una barra de progreso
-	     hace que la página parezca no haber entendido lo que acabas de pedirle. -->
-	{#if phase === 'form' || phase === 'starting'}
+	<!-- BAJAR NO ES OTRA PANTALLA: es el mismo formulario con el botón girando.
+	     Hubo una caja aparte con barra de progreso y se fue — la barra solo se movía
+	     cuando volvía una tanda, así que pasaba diecisiete segundos quieta y parecía
+	     colgada. Un spinner no promete nada que no pueda cumplir. Lo que se sustituye
+	     de verdad son los dos estados en que ya no hay nada que pedir: el tope y el
+	     final. -->
+	{#if showForm}
 		<article class="prose prose-xl prose-neutral max-w-none">
 			<h1>Descarga el archivo de <mark>una newsletter de Substack</mark>.</h1>
 			<p>El índice de todo lo que ha publicado y sus posts en markdown, en un zip.</p>
@@ -490,7 +557,7 @@
 
 	{#if error}<p class="mt-6 text-sm text-error">{error}</p>{/if}
 
-	{#if phase === 'form' || phase === 'starting'}
+	{#if showForm}
 		<form onsubmit={handle} class="mt-8 space-y-3">
 			<label class="block">
 				<span class="eyebrow">{t.urlLabel}</span>
@@ -501,7 +568,7 @@
 					inputmode="url"
 					autocomplete="url"
 					required
-					disabled={phase === 'starting'}
+					disabled={working}
 					class="input input-bordered input-lg mt-1 w-full"
 				/>
 			</label>
@@ -514,24 +581,45 @@
 					inputmode="email"
 					autocomplete="email"
 					required
-					disabled={phase === 'starting'}
+					disabled={working}
 					class="input input-bordered input-lg mt-1 w-full"
 				/>
 			</label>
-			<button
-				type="submit"
-				disabled={phase === 'starting' || !ready}
-				class="btn btn-primary btn-lg"
-			>
-				{#if phase === 'starting'}
+			<!-- El botón ES el progreso: girando mientras trabaja y diciendo por dónde
+			     va. `aria-live` en el texto porque un botón deshabilitado que cambia de
+			     etiqueta no se anuncia solo. -->
+			<button type="submit" disabled={working || !ready} class="btn btn-primary btn-lg">
+				{#if working}
 					<span class="loading loading-spinner loading-sm" aria-hidden="true"></span>
 				{/if}
-				<span>{phase === 'starting' ? t.starting : t.button}</span>
+				<span aria-live="polite">{buttonLabel}</span>
 			</button>
 		</form>
 
-		<div class="mt-6">
-			<p class="muted">{t.priceNote}</p>
+		<div class="mt-6 space-y-2">
+			{#if phase === 'reading' || phase === 'paused'}
+				<p class="box-text">
+					{#if stopAsked}
+						{t.stopping}
+					{:else if phase === 'paused' && countdown > 0}
+						{notice
+							? fill(t.retryNote, { seconds: countdown })
+							: fill(t.pausedNote, { seconds: countdown })}
+					{:else if minutesLeft <= 1}
+						{t.etaSoon}
+					{:else}
+						{fill(t.eta, { minutes: minutesLeft })}
+					{/if}
+				</p>
+			{/if}
+			<p class="muted">{@html working ? bold(t.progressNote) : t.priceNote}</p>
+			{#if (phase === 'reading' || phase === 'paused') && !stopAsked}
+				<p>
+					<button type="button" class="link-quiet" onclick={() => (stopAsked = true)}>
+						{t.stop}
+					</button>
+				</p>
+			{/if}
 		</div>
 	{:else if phase === 'atCap'}
 		<!-- Stopped at `BODY_CAP` with posts left. Both answers are reasonable and
@@ -556,55 +644,6 @@
 			</div>
 			<p class="muted mt-4">{t.capWhy}</p>
 		</article>
-	{:else if phase === 'reading' || phase === 'paused' || phase === 'zipping'}
-		<article class="box mt-8">
-			<p class="eyebrow">{fill(t.readingTitle, { name: pubName })}</p>
-			<p class="mt-2 flex flex-wrap items-baseline gap-x-3">
-				<span class="box-title">{fill(t.progress, { done: fetched, total: goal })}</span>
-				<span class="box-text">
-					{#if phase === 'zipping'}
-						{t.zipping}
-					{:else if stopAsked}
-						{t.stopping}
-					{:else if minutesLeft <= 1}
-						{t.etaSoon}
-					{:else}
-						{fill(t.eta, { minutes: minutesLeft })}
-					{/if}
-				</span>
-			</p>
-
-			<!-- `.meter` styles its child directly (`.meter > *`), so the fill needs no
-			     class of its own — only a width. -->
-			<div
-				class="meter mt-4"
-				role="progressbar"
-				aria-valuenow={percent}
-				aria-valuemin="0"
-				aria-valuemax="100"
-			>
-				<div style="width: {percent}%"></div>
-			</div>
-
-			<div class="mt-4 space-y-2">
-				{#if phase === 'paused' && countdown > 0}
-					<p class="box-text">
-						{notice
-							? fill(t.retryNote, { seconds: countdown })
-							: fill(t.pausedNote, { seconds: countdown })}
-					</p>
-				{/if}
-				<p class="muted">{@html bold(t.progressNote)}</p>
-			</div>
-
-			{#if phase !== 'zipping' && !stopAsked}
-				<div class="mt-5 border-t border-line pt-4">
-					<button type="button" class="link-quiet" onclick={() => (stopAsked = true)}>
-						{t.stop}
-					</button>
-				</div>
-			{/if}
-		</article>
 	{:else if done}
 		<div class="box border-ink mt-8">
 			<p class="box-title">{t.doneTitle}</p>
@@ -618,13 +657,23 @@
 							posts: done.posts
 						})}
 			</p>
-			<p class="muted mt-2">
-				{#if mail === 'sending'}{t.mailSending}
-				{:else if mail === 'sent'}{t.mailSent}
-				{:else if mail === 'too_big'}{t.mailTooBig}
-				{:else if mail === 'failed'}{t.mailFailed}
-				{:else}{t.doneNoAsk}{/if}
-			</p>
+			<!-- El zip vive solo en esta pestaña, y el click automático de `finish` puede
+			     haberse perdido (ver `saveHref`). Este botón es la misma descarga con un
+			     gesto de verdad detrás. -->
+			{#if saveHref}
+				<p class="mt-5">
+					<a class="btn btn-primary btn-lg" href={saveHref} download={done.file}>{t.doneSave}</a>
+				</p>
+			{/if}
+			<p class="muted mt-3">{t.doneNoAsk}</p>
+			{#if mail}
+				<p class="muted mt-2">
+					{#if mail === 'sending'}{t.mailSending}
+					{:else if mail === 'sent'}{t.mailSent}
+					{:else if mail === 'too_big'}{t.mailTooBig}
+					{:else}{t.mailFailed}{/if}
+				</p>
+			{/if}
 
 			{#if done.notes.length}
 				<div class="mt-5 border-t border-line pt-4">

@@ -16,9 +16,9 @@ Va adjunto a este correo, en un zip.
 
 **Qué hay dentro**
 
-`indice.csv` lleva todas las entradas con su fecha, su enlace, sus palabras, sus likes y sus comentarios: se abre en Excel, en Numbers o en Google Sheets. `posts/` lleva un archivo markdown por post, con sus datos arriba y el texto debajo.
+Un solo archivo markdown: el índice de todo lo publicado, con la fecha, el enlace y las cifras de cada entrada, y debajo los posts enteros seguidos, del más reciente hacia atrás.
 
-`LEEME.md` dice exactamente qué falta y por qué, si falta algo.
+Su cabecera dice exactamente qué falta y por qué, si falta algo. Y si se lo das a un modelo, se lo das entero: es un fichero, no una carpeta.
 
 ---
 

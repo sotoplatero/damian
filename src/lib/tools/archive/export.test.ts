@@ -2,16 +2,18 @@ import { describe, it, expect } from 'vitest';
 import type { ArchivePost } from '$lib/server/substack-archive';
 import { DEEP_CREATED_AT, deepFixture } from '$lib/authors/fixtures';
 import {
+	archiveFileName,
 	bodyCandidates,
+	buildArchive,
 	buildExport,
-	buildIndex,
-	buildPostFile,
-	buildReadme,
+	buildHead,
+	buildIndexSection,
+	buildPostSection,
+	demoteHeadings,
 	exportFileName,
 	minutesFor,
 	minutesPhrase,
 	monthsCovered,
-	postFileName,
 	summarize,
 	type ExportInput
 } from './export';
@@ -52,6 +54,7 @@ const PUB = {
 function input(over: Partial<ExportInput> = {}): ExportInput {
 	return {
 		pub: PUB,
+		slug: 'ejemplo.substack.com',
 		posts: POSTS,
 		bodies: new Map([['el-mas-nuevo', 'El cuerpo del más nuevo.']]),
 		truncated: false,
@@ -76,7 +79,7 @@ describe('summarize', () => {
 	 * The trap this exists for: 435 of The Honest Broker's 1330 posts are dated
 	 * `2000-01-01` from an imported archive. A range built over those says the
 	 * newsletter started in the year 2000, which reads as a bug on the page and is
-	 * a lie in the README.
+	 * a lie in the file.
 	 */
 	it('keeps imported dates out of the range and counts them', () => {
 		const summary = summarize(deepFixture(), DEEP_CREATED_AT);
@@ -123,60 +126,112 @@ describe('bodyCandidates', () => {
 	});
 });
 
-describe('buildIndex', () => {
-	it('carries every post, whether its body is in the zip or not', () => {
-		const rows = buildIndex(input()).trim().split('\n');
-		expect(rows).toHaveLength(POSTS.length + 1);
-		expect(rows[0]).toContain('fecha,titulo');
-		// Only the one with a body names a file.
-		expect(rows[1].endsWith(',2026-08-10-el-mas-nuevo.md')).toBe(true);
-		expect(rows[2].endsWith(',')).toBe(true);
+describe('buildIndexSection', () => {
+	it('carries every post, whether its body is in the file or not', () => {
+		const lines = buildIndexSection(input()).trim().split('\n');
+		// The heading, its blank line, and one line per post.
+		expect(lines).toHaveLength(POSTS.length + 2);
+		expect(lines[0]).toBe('## Índice');
+		expect(lines[2]).toContain('[El más nuevo](https://ejemplo.substack.com/p/el-mas-nuevo)');
 	});
 
-	it('quotes a title with a comma and doubles its quotes', () => {
-		const csv = buildIndex(
-			input({
-				posts: [post({ date: '2026-08-10T06:00:00.000Z', title: 'Uno, dos y "tres"' })],
-				bodies: new Map()
-			})
-		);
-		expect(csv).toContain('"Uno, dos y ""tres"""');
-	});
-
-	it('opens with the BOM, or Excel shows the accents wrong', () => {
-		expect(buildIndex(input()).startsWith('﻿')).toBe(true);
+	/**
+	 * The index is the only place that says which entries have their post below and
+	 * which don't: a restack, a podcast, or anything past where the download stopped
+	 * is here with its date and its link and nothing else.
+	 */
+	it('marks the entries with no body, and names what they are', () => {
+		const lines = buildIndexSection(input()).trim().split('\n');
+		expect(lines[2]).not.toContain('solo en el índice');
+		expect(lines[3]).toContain('solo en el índice');
+		expect(lines.find((line) => line.includes('/p/ajeno'))).toContain('restack');
 	});
 
 	it('says gratis or pago, not everyone or only_paid', () => {
-		const csv = buildIndex(input());
-		expect(csv).toContain(',gratis,');
-		expect(csv).toContain(',pago,');
+		const section = buildIndexSection(input());
+		expect(section).toContain('· gratis ·');
+		expect(section).toContain('· pago ·');
+	});
+
+	/** A bracket in a title closes the link early and swallows the URL. */
+	it('escapes the brackets of a title', () => {
+		const section = buildIndexSection(
+			input({
+				posts: [post({ date: '2026-08-10T06:00:00.000Z', title: 'Uno [dos] tres' })],
+				bodies: new Map()
+			})
+		);
+		expect(section).toContain('[Uno \\[dos\\] tres]');
+	});
+
+	/**
+	 * From the RSS fallback every figure is zero, because the feed does not carry
+	 * them. Printing them says "nobody reads this" instead of "we could not see".
+	 */
+	it('leaves out a figure that is zero', () => {
+		const section = buildIndexSection(
+			input({
+				posts: [
+					post({
+						date: '2026-08-10T06:00:00.000Z',
+						words: 0,
+						reactions: 0,
+						comments: 0,
+						restacks: 0
+					})
+				],
+				bodies: new Map()
+			})
+		);
+		expect(section).not.toContain('0 likes');
+		expect(section).not.toContain('0 palabras');
 	});
 });
 
-describe('buildPostFile', () => {
-	it('puts the data above the post', () => {
-		const file = buildPostFile(POSTS[0], 'El cuerpo.', PUB.origin);
-		expect(file).toContain('titulo: "El más nuevo"');
-		expect(file).toContain('url: https://ejemplo.substack.com/p/el-mas-nuevo');
-		expect(file).toContain('audiencia: gratis');
-		expect(file).toContain('# El más nuevo');
-		expect(file.trimEnd().endsWith('El cuerpo.')).toBe(true);
+describe('demoteHeadings', () => {
+	it('pushes a body heading under the post it belongs to', () => {
+		expect(demoteHeadings('# Uno\n\ntexto\n\n### Tres', 2)).toBe('### Uno\n\ntexto\n\n##### Tres');
+	});
+
+	it('never goes past six', () => {
+		expect(demoteHeadings('##### Cinco\n###### Seis', 2)).toBe('###### Cinco\n###### Seis');
+	});
+
+	/** `html.ts` writes fenced blocks, and a shell comment inside one is not a heading. */
+	it('leaves alone what is inside fenced code', () => {
+		const fence = '```';
+		const body = `${fence}\n# no soy un título\n${fence}\n\n# sí lo soy`;
+		expect(demoteHeadings(body, 2)).toBe(`${fence}\n# no soy un título\n${fence}\n\n### sí lo soy`);
+	});
+
+	it('does not touch a hash that is not a heading', () => {
+		expect(demoteHeadings('el #1 del año\n#sinespacio', 2)).toBe('el #1 del año\n#sinespacio');
+	});
+});
+
+describe('buildPostSection', () => {
+	it('opens with a rule and puts the data over the post', () => {
+		const section = buildPostSection(POSTS[0], 'El cuerpo.', PUB.origin);
+		expect(section.startsWith('---\n')).toBe(true);
+		expect(section).toContain('## El más nuevo');
+		expect(section).toContain('10 de agosto de 2026 · gratis');
+		expect(section).toContain('[en Substack](https://ejemplo.substack.com/p/el-mas-nuevo)');
+		expect(section.trimEnd().endsWith('El cuerpo.')).toBe(true);
 	});
 
 	/** A paywalled body is whatever Substack shows without a subscription. */
 	it('warns that a paid post may be cut off', () => {
-		expect(buildPostFile(POSTS[1], 'Medio cuerpo.', PUB.origin)).toContain('cortado');
-		expect(buildPostFile(POSTS[0], 'Cuerpo.', PUB.origin)).not.toContain('cortado');
+		expect(buildPostSection(POSTS[1], 'Medio cuerpo.', PUB.origin)).toContain('cortado');
+		expect(buildPostSection(POSTS[0], 'Cuerpo.', PUB.origin)).not.toContain('cortado');
 	});
 });
 
-describe('buildReadme', () => {
+describe('buildHead', () => {
 	it('prints the number of bodies it really has, not the number asked for', () => {
 		const data = input();
-		const readme = buildReadme(data, summarize(data.posts, PUB.createdAt));
-		expect(readme).toContain('4 entradas');
-		expect(readme).toContain('1 post entero');
+		const head = buildHead(data, summarize(data.posts, PUB.createdAt));
+		expect(head).toContain('**4 entradas**');
+		expect(head).toContain('**1 post entero**');
 	});
 
 	it('says nothing about what is missing when nothing is', () => {
@@ -185,8 +240,7 @@ describe('buildReadme', () => {
 			bodies: new Map([['el-mas-nuevo', 'x']]),
 			bodiesStoppedBy: 'complete'
 		});
-		const readme = buildReadme(data, summarize(data.posts, PUB.createdAt));
-		expect(readme).not.toContain('Lo que falta');
+		expect(buildHead(data, summarize(data.posts, PUB.createdAt))).not.toContain('Lo que falta');
 	});
 
 	/**
@@ -197,11 +251,11 @@ describe('buildReadme', () => {
 	 */
 	it('says how many are missing when the download was stopped', () => {
 		const data = input({ bodiesStoppedBy: 'stopped' });
-		const readme = buildReadme(data, summarize(data.posts, PUB.createdAt));
-		expect(readme).toContain('Lo que falta');
+		const head = buildHead(data, summarize(data.posts, PUB.createdAt));
+		expect(head).toContain('Lo que falta');
 		// One body of the three posts that are newsletter issues.
-		expect(readme).toContain('**1** cuerpos de los 3');
-		expect(readme).toContain('El índice sí está completo');
+		expect(head).toContain('**1** cuerpos de los 3');
+		expect(head).toContain('El índice sí está completo');
 	});
 
 	/**
@@ -212,25 +266,56 @@ describe('buildReadme', () => {
 	 */
 	it('explains the cap as a choice, with the months it covers', () => {
 		const data = input({ bodiesStoppedBy: 'cap' });
-		const readme = buildReadme(data, summarize(data.posts, PUB.createdAt));
-		expect(readme).toContain('**1 más recientes**');
-		expect(readme).toContain('de agosto de 2026');
-		expect(readme).toContain('No es un límite técnico');
-		expect(readme).toContain('último año');
+		const head = buildHead(data, summarize(data.posts, PUB.createdAt));
+		expect(head).toContain('**1 más recientes**');
+		expect(head).toContain('de agosto de 2026');
+		expect(head).toContain('No es un límite técnico');
+		expect(head).toContain('último año');
 	});
 
 	it('warns about the feed and about a truncated walk', () => {
 		const data = input({ fromFeed: true, truncated: true });
-		const readme = buildReadme(data, summarize(data.posts, PUB.createdAt));
-		expect(readme).toContain('RSS');
-		expect(readme).toContain('más antiguos');
+		const head = buildHead(data, summarize(data.posts, PUB.createdAt));
+		expect(head).toContain('RSS');
+		expect(head).toContain('más antiguos');
 	});
 
-	it('names the author and links back to the tool', () => {
+	/**
+	 * NOT a footnote and not droppable: whoever holds this file is holding somebody
+	 * else's writing, which is what the tool is for.
+	 */
+	it('names the author and says the writing is theirs', () => {
 		const data = input();
-		const readme = buildReadme(data, summarize(data.posts, PUB.createdAt));
-		expect(readme).toContain('Damian');
-		expect(readme).toContain('https://ejemplo.com/tool/archive');
+		expect(buildHead(data, summarize(data.posts, PUB.createdAt))).toContain(
+			'Lo escribió Damian y sigue siendo suyo'
+		);
+	});
+});
+
+describe('buildArchive', () => {
+	it('lays out the head, then the index, then every body it has', () => {
+		const data = input({
+			bodies: new Map([
+				['el-mas-viejo', 'Cuerpo viejo.'],
+				['el-mas-nuevo', 'Cuerpo nuevo.']
+			])
+		});
+		const file = buildArchive(data, summarize(data.posts, PUB.createdAt));
+
+		expect(file.indexOf('# El archivo de Objeto Brillante')).toBeLessThan(
+			file.indexOf('## Índice')
+		);
+		expect(file.indexOf('## Índice')).toBeLessThan(file.indexOf('Cuerpo nuevo.'));
+		// The walk's order, newest first, which is the index's order too.
+		expect(file.indexOf('Cuerpo nuevo.')).toBeLessThan(file.indexOf('Cuerpo viejo.'));
+		expect(file).toContain('https://ejemplo.com/tool/archive');
+	});
+
+	it('leaves out the posts whose body never arrived', () => {
+		const file = buildArchive(input(), summarize(POSTS, PUB.createdAt));
+		expect(file).toContain('## El más nuevo');
+		// The rest are in the index and have no section of their own.
+		expect(file).not.toContain('## Un título cualquiera');
 	});
 });
 
@@ -267,35 +352,30 @@ describe('monthsCovered and minutesFor', () => {
 });
 
 describe('buildExport', () => {
-	it('lays out one readme, one index and one file per body', () => {
+	/** One file. It was a README, a CSV and a folder of posts until 14 August 2026. */
+	it('lays out a single markdown file, named after the zip around it', () => {
 		const { entries } = buildExport(input());
 		expect(entries.map((entry) => entry.name)).toEqual([
-			'LEEME.md',
-			'indice.csv',
-			'posts/2026-08-10-el-mas-nuevo.md'
+			'archivo-ejemplo-substack-com-2026-08-12.md'
 		]);
 	});
 
-	it('names a file after the date and the slug', () => {
-		expect(postFileName(POSTS[0])).toBe('posts/2026-08-10-el-mas-nuevo.md');
-	});
-
-	it('survives a post with an unusable date', () => {
-		expect(postFileName(post({ date: 'no es una fecha', slug: 'raro' }))).toBe('posts/raro.md');
-	});
-
-	it('names the zip after the publication and the day', () => {
-		expect(exportFileName('ejemplo.substack.com', new Date('2026-08-12T09:00:00.000Z'))).toBe(
+	it('names the zip and the file inside it the same, bar the extension', () => {
+		const at = new Date('2026-08-12T09:00:00.000Z');
+		expect(exportFileName('ejemplo.substack.com', at)).toBe(
 			'archivo-ejemplo-substack-com-2026-08-12.zip'
+		);
+		expect(archiveFileName('ejemplo.substack.com', at)).toBe(
+			'archivo-ejemplo-substack-com-2026-08-12.md'
 		);
 	});
 
 	/**
-	 * The README's count is what the zip has, not what the map was handed: the
-	 * byte budget drops bodies, and a README that says 150 while `posts/` holds 90
-	 * is exactly the kind of quiet lie this whole file is written against.
+	 * The head's count is what the file has, not what the map was handed: the byte
+	 * budget drops bodies, and a head that says 150 while the file holds 90 is
+	 * exactly the kind of quiet lie this whole module is written against.
 	 */
-	it('keeps the readme and the files agreeing after the byte budget bites', () => {
+	it('keeps the count and the bodies agreeing after the byte budget bites', () => {
 		const huge = 'x'.repeat(7_000_000);
 		const data = input({
 			posts: POSTS,
@@ -306,10 +386,9 @@ describe('buildExport', () => {
 			])
 		});
 		const { entries } = buildExport(data);
-		const files = entries.filter((entry) => entry.name.startsWith('posts/'));
-		expect(files).toHaveLength(1);
-		expect(entries[0].content).toContain('1 post entero');
+		expect(entries[0].content).toContain('**1 post entero**');
 		// The newest is the one kept.
-		expect(files[0].name).toContain('el-mas-nuevo');
+		expect(entries[0].content).toContain('## El más nuevo');
+		expect(entries[0].content).not.toContain('## Un título cualquiera');
 	});
 });

@@ -258,15 +258,26 @@ The quote note's verbatim quote is verified after extraction. The shared guards 
 `src/lib/tools/quotes.ts`: normalize the haystack with `normalizeQuoteText` before
 `verifyQuote`. Markdown escaping is shared in `markdown.ts`.
 
-**`/tool/archive`** takes a publication's address and hands back a zip of its whole public
-archive: `LEEME.md`, `indice.csv` with every post, and `posts/` with the newest bodies in
-markdown.
+**`/tool/archive`** takes a publication's address and hands back a zip holding **ONE markdown
+file**: a short head, the index of every entry, and the newest bodies one after another.
 
 **It is for reading SOMEBODY ELSE'S newsletter** — the one you want to study, keep, or hand to
 a model. Your own archive Substack exports for you, so the first version's copy («tu
 newsletter», «todo lo que has publicado») pointed people at a button they already had. The
-page says so out loud now, and the ownership line is not a footnote: `LEEME.md` names the
-author and says the writing is theirs.
+page says so out loud now, and the ownership line is not a footnote: the head of the file names
+the author and says the writing is theirs.
+
+**One file, since 14 August 2026 — it was `LEEME.md` + `indice.csv` + a `posts/` folder.**
+Damian collapsed it: what people do with this is hand it to a model, and a folder of 150 files
+has to be reassembled first. The CSV went with it, and with the CSV the figures in Excel; the
+index is now a line per entry (`buildIndexSection`), marked «solo en el índice» when the body
+isn't below. What must NOT go is the honesty the README carried — the real counts, what is
+missing and why, and whose writing this is. Those are the head of the file (`buildHead`), and
+the caveat list only appears when something really is missing. Bodies keep their own headings,
+pushed down two levels so they sit under their post (`demoteHeadings`), and that skips fenced
+code, because a shell comment inside one starts with `#`. **The zip stays** for the email: the
+attachment rides a request body Vercel cuts at 4.5 MB, and markdown deflates to about a
+quarter.
 
 **THE BROWSER DRIVES THE DOWNLOAD, and that is the whole architecture.** A body is one
 request to `/p/{slug}` (`body_html` arrives empty from the archive; `/api/v1/posts/by-slug/`
@@ -288,9 +299,14 @@ Two earlier shapes are recorded here because both looked right:
 
 Everything else that is unusual about it:
 
-- **The deliverable never touches an email.** Every other gated tool mails its expensive half.
-  Here the file is built in the tab from `buildExport` + `zip`, both pure and importable in the
-  browser. The email is still asked for and still subscribes; it just doesn't carry the goods.
+- **The deliverable is built in the tab**, from `buildExport` + `zip`, both pure and importable
+  in the browser. It is also mailed as an attachment afterwards, which is the copy, not the
+  delivery — and the delivery is the part that can fail: **a browser only guarantees a download
+  when a gesture of the visitor's is behind it**, and this click lands minutes after the last
+  one. Chrome's per-site "automatic downloads" permission blocks it silently too. So the blob
+  stays alive in `saveHref` (**not** revoked on a timer) and the final screen carries a
+  «Guardar el zip» button — a real click on the same file. Don't write copy that asserts the
+  download already happened.
 - **`batch` is signed, not sessioned.** `signPass`/`verifyPass` in `tokens.ts` bind a pass to
   `slug|email` with a timestamp inside the signature. Without it the expensive half would be
   reachable without ever handing over an address. There is no store, so a signature that
@@ -318,8 +334,23 @@ covered months on screen and in the README.
 **74 s including a 40 s pause** when Substack answered 429 mid-way — the pause is the design
 working, not a failure. The index walk is 21.5 s for The Honest Broker's 1333 posts, bodies come
 at **2.9/s sustained**, and zipping 167 entries takes **137 ms** in Chromium. A batch stops at
-`BATCH_DEADLINE_MS` (40 s) and `CHUNK` is 50 rather than "as many as fit", because the progress
-bar only moves when a batch returns and a full batch froze the count for forty seconds.
+`BATCH_DEADLINE_MS` (40 s) and `CHUNK` is 50 rather than "as many as fit", because the count
+only moves when a batch returns and a full batch froze it for forty seconds.
+
+**After a 429 the loop comes back SLOWER, and batch size is not the lever.** What Substack
+counts is requests per second, so a smaller `CHUNK` only buys more round trips at the same
+pace; the only number that changes anything is the wait between post pages. The page starts at
+`SPACING_START_MS` (100 ms, the measured 2.9/s), **doubles it on every refusal** up to 800 ms,
+never speeds back up within a download, and sends it to the server, which clamps it between
+`BODY_SPACING_MS` and `BODY_SPACING_MAX_MS` — a pace that arrives in a request body is bounded
+at both ends. Without it, an 84-post publication took two pauses in one download: coming back
+at the same rate after a refusal earns the same refusal. The ETA hangs off the current spacing
+for the same reason (`BODY_TRIP_MS`), or it promises two minutes and takes six.
+
+**There is no progress bar.** It only moved when a batch returned, so it sat still for
+seventeen seconds at a time and read as frozen. While it works, the FORM stays on screen with
+its fields disabled and the count inside the submit button — a spinner promises nothing it
+can't keep. Only the two states with nothing left to ask for (the cap, the end) replace it.
 
 `src/lib/tools/archive/zip.ts` is a hand-written zip writer — four record types, no zip64, and
 it throws rather than writing a silently wrong file. It compresses with `CompressionStream`

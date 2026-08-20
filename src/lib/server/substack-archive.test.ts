@@ -165,6 +165,27 @@ describe('readPostBodies', () => {
 		expect(vi.mocked(get)).toHaveBeenCalledTimes(1);
 	});
 
+	/**
+	 * The spacing arrives from the browser (the page doubles it after a 429), so it
+	 * is clamped rather than trusted. Without the ceiling this call would sit here
+	 * for a minute and a half and the test would time out — which is the point: a
+	 * batch has forty seconds and must not spend them asleep.
+	 */
+	it('never waits longer than the ceiling, whatever spacing it is handed', async () => {
+		vi.mocked(get).mockImplementation(() => Promise.resolve(postPage('<p>x</p>')));
+
+		const started = Date.now();
+		const { bodies } = await readPostBodies(
+			'https://x.substack.com',
+			['uno', 'dos'],
+			FAR(),
+			90_000
+		);
+
+		expect(bodies.size).toBe(2);
+		expect(Date.now() - started).toBeLessThan(4000);
+	});
+
 	it('drops the post that fails and keeps the rest', async () => {
 		vi.mocked(get).mockImplementation((url) => {
 			if (url.pathname === '/p/roto') return Promise.reject(new Error('caído'));

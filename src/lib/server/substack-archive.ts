@@ -376,8 +376,22 @@ export async function walkArchive(
 /**
  * Wait between post pages. Same manners as the walk above, and for the same
  * reason: this is someone else's server and it didn't ask for any of this.
+ *
+ * It is the FLOOR, not the rate: `readPostBodies` takes a spacing and the caller
+ * raises it after a refusal. See `BODY_SPACING_MAX_MS`.
  */
-const BODY_SPACING_MS = 100;
+export const BODY_SPACING_MS = 100;
+
+/**
+ * The slowest this will go, about one page a second.
+ *
+ * There is a ceiling because the pace is asked for by the browser, and a number
+ * that arrives from outside has to be bounded on both ends: too low and the tool
+ * hammers a stranger's server on request, too high and a batch spends its forty
+ * seconds sleeping. From here on the honest answer is the pause, not more waiting
+ * between requests.
+ */
+export const BODY_SPACING_MAX_MS = 1000;
 
 /** Why the bodies stopped. */
 export type BodyStop =
@@ -424,6 +438,16 @@ export type BodyStop =
  * 85 more requests — and is reported, so the caller can tell "that's all there
  * was" from "come back in a moment".
  *
+ * THE PACE IS THE CALLER'S, AND IT IS MEANT TO GET SLOWER
+ *
+ * `spacingMs` exists because coming back at the same rate after a refusal earns
+ * the same refusal: measured on an 84-post publication, two pauses in one
+ * download. The rate that matters is requests per second at Substack, so the only
+ * lever that changes anything is this wait — a smaller batch changes how often the
+ * browser calls back and nothing about the pace. The page starts at the measured
+ * `BODY_SPACING_MS` and doubles it each time it is blocked, so a drained bucket
+ * costs one pause and then a slower, quieter read instead of pause after pause.
+ *
  * THE DEADLINE
  *
  * `deadline` is an absolute `Date.now()` value, and it is what makes a batch a
@@ -440,9 +464,15 @@ export type BodyStop =
 export async function readPostBodies(
 	origin: string,
 	slugs: string[],
-	deadline: number
+	deadline: number,
+	spacingMs: number = BODY_SPACING_MS
 ): Promise<{ bodies: Map<string, string>; stoppedBy: BodyStop; consumed: number }> {
 	const bodies = new Map<string, string>();
+	// Clamped here rather than trusted: this number comes off a request body.
+	const spacing = Math.min(
+		Math.max(Math.round(spacingMs) || BODY_SPACING_MS, BODY_SPACING_MS),
+		BODY_SPACING_MAX_MS
+	);
 	let base: URL;
 	try {
 		base = new URL(origin);
@@ -452,7 +482,7 @@ export async function readPostBodies(
 
 	for (let index = 0; index < slugs.length; index++) {
 		if (Date.now() >= deadline) return { bodies, stoppedBy: 'time', consumed: index };
-		if (index > 0) await sleep(BODY_SPACING_MS);
+		if (index > 0) await sleep(spacing);
 		const slug = slugs[index];
 
 		try {
