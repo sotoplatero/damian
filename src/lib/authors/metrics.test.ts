@@ -15,6 +15,7 @@ import {
 	topHour,
 	aggregates,
 	computeMetrics,
+	monthlyEngagement,
 	WORDS_PER_NOVEL
 } from './metrics';
 
@@ -247,5 +248,77 @@ describe('computeMetrics', () => {
 		expect(m!.mostLiked?.post.reactions).toBe(8854);
 		expect(m!.aggregates.words).toBeGreaterThan(0);
 		expect(m!.years.length).toBe(1);
+	});
+});
+
+describe('monthly engagement', () => {
+	/** A post in `month`, carrying `likes` and nothing else. */
+	const on = (month: string, day: string, likes: number) => ({
+		...deep[0],
+		slug: `${month}-${day}`,
+		date: `${month}-${day}T12:00:00.000Z`,
+		reactions: likes,
+		comments: 0,
+		childComments: 0,
+		restacks: 0
+	});
+
+	const NOW = new Date('2026-08-20T18:00:00.000Z');
+
+	it('does not pad a young publication with months it did not exist in', () => {
+		// MEASURED on sotoplatero.substack.com: 11 posts from June 2026 on came
+		// back as ten empty bars and two with height.
+		const posts = [on('2026-06', '10', 34), on('2026-07', '02', 8), on('2026-08', '15', 10)];
+		const months = monthlyEngagement(posts, NOW).map((m) => m.month);
+		expect(months).toEqual(['2026-06', '2026-07', '2026-08']);
+	});
+
+	it('takes in the month in progress only when the closed ones are too few', () => {
+		// June and July alone are two bars, under MIN_BARS, so August joins them
+		// and its posts stop being invisible.
+		const young = monthlyEngagement([on('2026-06', '10', 34), on('2026-07', '02', 8)], NOW);
+		expect(young.map((m) => m.month)).toContain('2026-08');
+
+		// With a year behind it the partial month stays out: it is a fraction of
+		// a month drawn against full ones and reads as a collapse.
+		const old = monthlyEngagement(
+			['2025-06', '2025-09', '2025-12', '2026-03', '2026-07'].map((m) => on(m, '05', 10)),
+			NOW
+		);
+		expect(old.map((m) => m.month)).not.toContain('2026-08');
+		expect(old.at(-1)!.month).toBe('2026-07');
+	});
+
+	it('never runs longer than the window, however old the publication', () => {
+		const posts = ['2019-01', '2023-04', '2026-01', '2026-07'].map((m) => on(m, '05', 5));
+		const months = monthlyEngagement(posts, NOW);
+		expect(months.length).toBe(12);
+		expect(months[0].month).toBe('2025-08');
+		expect(months.at(-1)!.month).toBe('2026-07');
+	});
+
+	it('keeps the silent months INSIDE the window, which are a real silence', () => {
+		const posts = [on('2026-05', '01', 20), on('2026-07', '01', 4)];
+		const months = monthlyEngagement(posts, NOW);
+		expect(months.map((m) => m.month)).toEqual(['2026-05', '2026-06', '2026-07']);
+		expect(months[1].likes).toBe(0);
+	});
+
+	it('crosses the year without inventing a month 13', () => {
+		const posts = [on('2025-11', '10', 6), on('2025-12', '10', 6), on('2026-01', '10', 6)];
+		const months = monthlyEngagement(posts, new Date('2026-02-10T00:00:00.000Z'));
+		expect(months.map((m) => m.month)).toEqual(['2025-11', '2025-12', '2026-01']);
+	});
+
+	it('sums the three series into the month the post was published', () => {
+		const posts = [
+			{ ...on('2026-06', '10', 30), comments: 4, childComments: 2, restacks: 5 },
+			on('2026-07', '02', 8),
+			on('2026-08', '15', 10)
+		];
+		const june = monthlyEngagement(posts, NOW)[0];
+		expect(june.likes).toBe(30);
+		expect(june.comments).toBe(6);
+		expect(june.restacks).toBe(5);
 	});
 });

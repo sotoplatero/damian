@@ -398,22 +398,61 @@ export function recentPosts(posts: ArchivePost[], limit = 6): ArchivePost[] {
 export type MonthEngagement = { month: string; likes: number; comments: number; restacks: number };
 
 /**
- * Reactions by publish month: the card's chart. The last `months` CLOSED
- * calendar months, oldest first, zeros kept — a publication that started six
- * months ago shows its take-off, not a shorter chart. The month in progress is
- * excluded: it always looks like a collapse. The card sums the three series
+ * A chart of one or two bars is not a chart, it is a pair of sticks. Below
+ * this many months the window takes in the month in progress to reach it.
+ */
+export const MIN_BARS = 3;
+
+/** `2026-08` as a comparable integer, so month arithmetic never touches Date. */
+function monthIndex(key: string): number {
+	return Number(key.slice(0, 4)) * 12 + Number(key.slice(5, 7)) - 1;
+}
+
+function monthKey(index: number): string {
+	const year = Math.floor(index / 12);
+	const month = (index % 12) + 1;
+	return `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}`;
+}
+
+/**
+ * Reactions by publish month: the card's chart. At most `months` CLOSED
+ * calendar months, oldest first, zeros kept. The card sums the three series
  * into one «interacciones» figure per month.
+ *
+ * **The window never starts before the publication's first post.** It used to
+ * be a fixed twelve months and that is wrong for anything young: MEASURED on
+ * sotoplatero.substack.com (11 posts, all of them from June 2026 on), the
+ * chart came out as ten empty bars and two with height. Padding a two-month-old
+ * publication out to a year does not show its take-off, it shows ten months of
+ * a silence that never happened — on a postcard that is a gift, no less.
+ *
+ * **The month in progress is normally excluded**: it is a partial month against
+ * full ones and always reads as a collapse. But that rule was calibrated on
+ * publications with a year of bars behind them, where dropping it costs a
+ * twelfth. On the same sotoplatero it cost August, 3 of its 11 posts and its
+ * whole most recent month — a third of the publication's life, invisible. So
+ * when the closed months alone don't reach `MIN_BARS`, the month in progress
+ * comes in: for a publication this young, partial and present beats absent.
  *
  * Engagement accrues to the month the post was PUBLISHED, which is the only
  * date the archive has. Imported posts fall outside the window on their own.
  */
 export function monthlyEngagement(posts: ArchivePost[], now: Date, months = 12): MonthEngagement[] {
+	const current = now.getUTCFullYear() * 12 + now.getUTCMonth();
+	const published = posts.map((p) => p.date).filter(Boolean).sort();
+
+	// The last closed month, and no earlier than the month they started in.
+	let last = current - 1;
+	let firstShown = last - months + 1;
+	if (published.length) firstShown = Math.max(firstShown, monthIndex(published[0].slice(0, 7)));
+	// Too young for a chart of closed months alone: take in the one in progress.
+	if (last - firstShown + 1 < MIN_BARS) last = current;
+	firstShown = Math.min(firstShown, last);
+
 	const buckets = new Map<string, MonthEngagement>();
 	const keys: string[] = [];
-	for (let i = months; i >= 1; i--) {
-		const key = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, 1))
-			.toISOString()
-			.slice(0, 7);
+	for (let i = firstShown; i <= last; i++) {
+		const key = monthKey(i);
 		keys.push(key);
 		buckets.set(key, { month: key, likes: 0, comments: 0, restacks: 0 });
 	}

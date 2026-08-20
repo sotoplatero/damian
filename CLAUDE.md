@@ -31,9 +31,9 @@ to: `src/lib/paraglide/` was written by a Vite plugin and gitignored, so a clean
 reported errors that weren't real. **Paraglide was removed in August 2026** and with it that
 whole trap — see Language below.
 
-Tests cover the pure modules only — `src/lib/authors/*`, `src/lib/tools/archive/*` and the
-archive walk with `fetch` mocked. **145 tests in 12 files** as of August 2026; there are no
-component tests, because the DOM adds nothing here and would drag in jsdom for nothing.
+Tests cover the pure modules only — `src/lib/authors/*`, `src/lib/tools/archive/*`,
+`src/lib/tools/actionable/*` and the archive walk with `fetch` mocked. **185 tests in 14
+files** as of 20 August 2026; there are no component tests, because the DOM adds nothing here and would drag in jsdom for nothing.
 
 **`pnpm eval:actionable` is not a test and must never become one.** It judges twenty
 real pages with a real model over the real internet: it costs money and minutes.
@@ -626,6 +626,19 @@ Its shape, and why:
   needs ≥50% in a three-hour window, the free/paid split needs both sides present. The same
   rule shapes `postcardData`: a zero figure is dropped and the stat grids flex — no
   consolation cells on a gift nobody asked for.
+- **The chart's window is the publication's life, capped at twelve closed months — it is NOT
+  a fixed twelve.** `monthlyEngagement` never starts before the first post, and it takes in
+  the month in progress when the closed months alone don't reach `MIN_BARS` (3). Both halves
+  were MEASURED on sotoplatero.substack.com, 11 posts from June 2026 on: the fixed window drew
+  **ten empty bars and two with height**, and excluding the month in progress hid August — 3
+  of its 11 posts and its whole most recent month. The in-progress month stays out for anyone
+  older, where it is a partial month against full ones and reads as a collapse; that rule was
+  calibrated on publications with a year of bars behind them, and it costs them a twelfth
+  rather than a third. Leading empty months are not honesty: they are ten months of a silence
+  that never happened.
+- **`BAR_MAX_WIDTH` (120) exists because the bar count now varies.** The columns are `flex: 1`,
+  so twelve bars land around 67px and the cap never bites — a twelve-bar card renders exactly
+  as it did. Three bars without it are 330px slabs: not a chart, a flag.
 - **The subscriber count is only shown if its author allows it.** The payload carries it
   either way; since 2026 the explicit `hide_subscriber_count` setting DOES come through and
   it wins when present (`subscriberMagnitude` in `substack-archive.ts`, shown as Substack's

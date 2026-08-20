@@ -347,15 +347,43 @@ function avatarCircle(
 	);
 }
 
+/**
+ * How wide a single bar may get, whatever room its column has.
+ *
+ * The columns are `flex: 1`, so the chart used to assume twelve of them — at
+ * that count each bar lands around 70px and nothing needed a cap. The window
+ * is no longer fixed at twelve (see `monthlyEngagement`), and a publication
+ * three months old was drawing three 330px slabs: not a chart, a flag. The cap
+ * leaves every twelve-bar card byte-identical and only bites when the bars are
+ * few, where it keeps their shape and spreads them evenly instead.
+ */
+const BAR_MAX_WIDTH = 120;
+
 /** One bar column; label optional (biolink and cartel label outside the bars). */
 function barColumn(bar: PostcardBar, maxHeight: number, dim: string, label?: Node): Node {
 	const height = Math.max(4, Math.round(bar.share * maxHeight));
 	const children: Node[] = [
-		div({ background: bar.solid ? ORANGE : dim, height, borderRadius: '4px 4px 0 0' }, [])
+		div(
+			{
+				background: bar.solid ? ORANGE : dim,
+				height,
+				borderRadius: '4px 4px 0 0',
+				width: '100%',
+				maxWidth: BAR_MAX_WIDTH
+			},
+			[]
+		)
 	];
 	if (label) children.push(label);
 	return div(
-		{ flex: 1, flexDirection: 'column', justifyContent: 'flex-end', height: '100%', gap: 8 },
+		{
+			flex: 1,
+			flexDirection: 'column',
+			justifyContent: 'flex-end',
+			alignItems: 'center',
+			height: '100%',
+			gap: 8
+		},
 		children
 	);
 }
