@@ -661,6 +661,55 @@ Its shape, and why:
   the field as an array, got 0 everywhere and wrongly wrote them off; it is a number (see
   the comment on `ArchivePost.restacks`) and the card shows it when it is earned.
 
+### The skill (`skill/`, served at `/skill`)
+
+`skill/damiansoto/` is a **Claude Code skill** that carries four of the tools into somebody
+else's terminal. `/skill` hands over `static/damiansoto-skill.zip`, which unzips into
+`~/.claude/skills/`.
+
+**IT DOES NOT REIMPLEMENT THE TOOLS. IT CALLS THEM.** `scripts/damiansoto.mjs` is an HTTP
+client of `/tool/repurpose`, `/tool/10-post-types` and `/tool/substack-about/api` — the same
+two-step protocol `src/lib/tools/client.ts` speaks from the browser. **So the email gate stays
+exactly where it was**: the free step prints in the terminal, `unlock` takes the address,
+subscribes it and mails the other half. The paid half never reaches the terminal, because
+`unlock` answers `{ok:true}` and nothing else.
+
+**The first version did the opposite and it was wrong three times over.** It ported the
+prompts, the nine note formats, the ten post types and the voice rules into markdown inside
+the skill and wrote the notes with the user's own model. It worked, and: it captured no
+address at all, which empties the reason the gate exists; it was a second copy of every prompt
+with nothing to stop the two drifting; and it redistributed the real posts by Naval Ravikant,
+Lara Acosta and Neal O'Grady that six of the ten types anchor on — fed to the model in the
+site, never rendered, but a skill is unzipped and opened in an editor. **Don't port a prompt
+into the skill.**
+
+- **`/tool/archive` is the one exception, and it is local.** Its work is hundreds of requests
+  to Substack and none to the model, so routing it through the server would spend bandwidth
+  for nothing and inherit the 150-body cap the web has only because a tab has to stay open.
+  `scripts/archivo.mjs` does the whole walk on the user's machine: no address, no cost, and
+  `--todo` reaches the full 1.300. Measured against kloshletter (174 posts) and
+  honest-broker.com (1345, of which 436 carry imported dates).
+- **It is ONE skill with a router `SKILL.md` and one file per job under `reference/`**, not
+  five skills. Those files describe the request and response SHAPE, not the content — so
+  **changing the body an `unlock` expects breaks the skill silently, with an error that reads
+  like the user's fault** (`incomplete_article`).
+- **`/skill` asks for no address**, and that is not a hole: the gate is still in each endpoint,
+  so a form in front of the download would charge twice for the same thing. That is also what
+  keeps it out of `/recursos/`, where every download asks.
+- **The zip has no version in its URL**, same reason as `cervantes.zip`. Shipping a version is
+  `node --experimental-strip-types skill/build.mjs`; the flag is there because the builder
+  imports `src/lib/tools/archive/zip.ts` rather than carrying a second zip writer.
+- `DAMIANSOTO_URL` points the client somewhere else. That is how it is tested against
+  `localhost:5173`.
+- `src/routes/skill/+layout.svelte` exists for the same reason `/postcard`'s did: outside
+  `/tool/` and `/recursos/` it inherits no shell, and without `ToolShell` its front door reads
+  as a different site. Its page also learned that **`.steps` is DaisyUI's** — the class name
+  collides and lays the list out in columns — and that `.box-text` clamps to two lines, so it
+  is card vocabulary and not body copy.
+- **It is not on the home page yet.** It is neither a tool (nothing is pasted in) nor a
+  resource by this site's definition (it asks for no address), so which list it belongs in is
+  still Damian's call.
+
 ### Resources (the downloads)
 
 `/recursos/<slug>` is a **file you take away**, as against a tool, which you use here and
