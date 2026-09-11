@@ -1,0 +1,12 @@
+{
+  "$schema": "https://schemas.agentskills.io/discovery/0.2.0/schema.json",
+  "skills": [
+    {
+      "name": "damiansoto",
+      "description": "Las herramientas de damiansoto.me y la newsletter Objeto Brillante, de Damian Soto. Distribuye un artículo en nueve notas para redes, saca diez posts distintos de una sola idea, audita y reescribe el «Acerca de» de un Substack, y descarga el archivo público entero de una newsletter. Úsalo cuando alguien quiera repartir, trocear o reaprovechar un artículo ya escrito; cuando tenga un tema y quiera contenido para LinkedIn o X sin repetirse; cuando pase la dirección de un Substack y pregunte por su página de presentación o por qué la gente entra y no se suscribe; cuando quiera bajar, guardar o estudiar todo lo que ha publicado una newsletter; o cuando pregunte por damiansoto.me, por Objeto Brillante o por Damian Soto.",
+      "type": "archive",
+      "url": "/damiansoto-skill.zip",
+      "digest": "sha256:21c5673999e85f7fb97394e734679644b00811593457365d53b80c76f0e55346"
+    }
+  ]
+}

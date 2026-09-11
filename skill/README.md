@@ -1,10 +1,43 @@
 # El skill de damiansoto.me
 
-`damiansoto/` es el skill que se distribuye en <https://damiansoto.me/skill>. Se instala
-descomprimiendo la carpeta dentro de `~/.claude/skills/`.
+`damiansoto/` es el skill que se distribuye en <https://damiansoto.me/skill>. Se instala así:
 
-Publicar una versión nueva es volver a comprimirlo encima de `static/damiansoto-skill.zip`,
-igual que se hace con `cervantes.zip`:
+```
+npx skills add https://damiansoto.me/skill
+```
+
+## Lo que hace falta para que esa línea funcione, medido contra el CLI de verdad
+
+`skill/build.mjs` genera las tres cosas. Ninguna es opcional y las tres se descubrieron
+fallando:
+
+1. **Un índice en `/skill/.well-known/agent-skills/index.json` Y otro en la raíz.** El CLI
+   (vercel-labs/skills) descubre por `.well-known` antes de plantearse descargar la URL, pero
+   **con una URL que lleva ruta no cae al índice de la raíz**: «Not falling back to the root
+   skills index because that would install every skill the host publishes». El de la raíz
+   sirve para `npx skills add https://damiansoto.me` a secas.
+2. **El `digest`, que es el sha256 del zip, y el CLI lo comprueba.** Por eso el índice se
+   genera y no se escribe a mano: un zip nuevo con el digest viejo hace fallar la instalación
+   de todo el mundo, y el error que sale no menciona el digest.
+3. **El zip va PLANO, con `SKILL.md` en la raíz.** Tras comprobar el digest el CLI hace
+   `files.get("SKILL.md")` sobre lo extraído y devuelve null si no está ahí. Con todo dentro
+   de `damiansoto/` la instalación fallaba con un «No matching skills» que no dice nada de
+   esto. La contrapartida es que descomprimirlo a mano necesita carpeta de destino:
+   `unzip -d ~/.claude/skills/damiansoto`.
+
+El `name` y la `description` del índice salen del propio `SKILL.md`, porque son los que el
+CLI enseña al instalar y tenerlos en dos sitios es tenerlos distintos. El nombre tiene que
+casar con `^[a-z0-9-]+$` y la descripción no puede pasar de 1024 caracteres; `build.mjs`
+comprueba las dos cosas antes de escribir nada.
+
+**`claude skill add` no existe.** En Claude Code 2.1.268 hay `claude plugin`, no
+`claude skill`: la instalación desde una URL la hace `npx skills add`, o se descomprime el
+zip a mano.
+
+## Publicar una versión
+
+Es volver a comprimirlo encima de `static/damiansoto-skill.zip`, igual que con
+`cervantes.zip`. **Regenera también los dos índices, así que no lo hagas a mano:**
 
 ```
 node --experimental-strip-types skill/build.mjs
