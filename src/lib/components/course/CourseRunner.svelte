@@ -174,8 +174,10 @@
 <!-- ──────────────────────────────── Cover ──────────────────────────────── -->
 {#if index === -1}
 	<section class="screen-center">
-		<h1 class="section-title">{course.title}</h1>
-		<p class="section-intro">{course.tagline}</p>
+		<article class="prose prose-xl prose-neutral max-w-none">
+			<h1>{course.title}</h1>
+			<p>{course.tagline}</p>
+		</article>
 
 		<div class="box mt-8">
 			<p class="eyebrow">{t.disclaimerLabel}</p>

@@ -15,7 +15,7 @@
 		urlPlaceholder: 'https://tublog.com/tu-articulo',
 		/** El nombre accesible del campo: el placeholder es un ejemplo, no una etiqueta. */
 		urlFieldLabel: 'La dirección del artículo',
-		urlButton: 'Enviar',
+		urlButton: 'Juzgar el artículo',
 		urlWorking: 'Leyendo la página...',
 		urlHint: 'El enlace de un artículo que explique cómo se hace algo.',
 		readLine: 'He leído {site}.',

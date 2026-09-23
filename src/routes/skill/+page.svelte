@@ -80,7 +80,7 @@
 		<p class="section-intro">Son 22 KB. Ni instalador, ni dependencias, ni cuenta.</p>
 
 		<div class="mt-6">
-			<a class="btn btn-lg" href={ZIP} download>{t.download}</a>
+			<a class="btn btn-primary btn-lg" href={ZIP} download>{t.download}</a>
 		</div>
 
 		<p class="body-text mt-6">
@@ -91,13 +91,13 @@
 		<div class="mt-3 space-y-2">
 			<div class="cmd">
 				<code>{unix}</code>
-				<button type="button" class="btn btn-sm" onclick={() => copy(unix, 'unix')}>
+				<button type="button" class="btn btn-primary btn-sm" onclick={() => copy(unix, 'unix')}>
 					{copied === 'unix' ? t.copied : t.copy}
 				</button>
 			</div>
 			<div class="cmd">
 				<code>{win}</code>
-				<button type="button" class="btn btn-sm" onclick={() => copy(win, 'win')}>
+				<button type="button" class="btn btn-primary btn-sm" onclick={() => copy(win, 'win')}>
 					{copied === 'win' ? t.copied : t.copy}
 				</button>
 			</div>
@@ -106,7 +106,7 @@
 
 	<section class="section">
 		<h2 class="letter-heading">Lo que sabe hacer</h2>
-		<ul class="mt-6 space-y-3">
+		<ul class="abilities mt-6">
 			<li class="box">
 				<p class="box-title">Distribuir un artículo</p>
 				<p class="box-text mt-1">
@@ -156,7 +156,7 @@
 		align-items: center;
 		gap: 0.5rem;
 		border: 1px solid var(--color-line);
-		border-radius: 0.5rem;
+		background: var(--color-sheet);
 		padding: 0.5rem 0.75rem;
 	}
 	.cmd code {
@@ -167,11 +167,24 @@
 		font-size: 0.875rem;
 	}
 	/* La de instalar pesa más que las otras dos: es la que hay que ver primero. */
+	/* The install command is the page's one action, so it wears the site's ink
+	   frame: the same 4px edge every form on the site has. */
 	.cmd-lead {
-		border-color: var(--color-ink);
-		padding: 0.75rem 0.75rem 0.75rem 1rem;
+		border: 4px solid var(--color-ink);
+		padding: 0.6rem 0.6rem 0.6rem 1rem;
+	}
+	/* What it can do: hairline rows, the site's unit of a list — not a stack of
+	   boxes, which is the card the redesign took out. */
+	.abilities {
+		border-top: 3px solid var(--color-ink);
+	}
+	.abilities :global(li.box) {
+		border: 0;
+		border-bottom: 1px solid var(--color-line);
+		background: transparent;
+		padding: 1.1rem 0;
 	}
 	.cmd-lead code {
-		font-size: 1rem;
+		font-size: 1.125rem;
 	}
 </style>

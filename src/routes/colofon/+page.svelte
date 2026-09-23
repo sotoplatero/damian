@@ -19,7 +19,7 @@
 		Esta página está hecha a mano. Sin plantilla, sin tema comprado, sin página de «sobre mí» con
 		foto de brazos cruzados.
 	</p>
-	<p>Una sola columna, dos tamaños de letra y una regla: si algo no ayuda a leer, sobra.</p>
+	<p>Una retícula, una sola letra, un color y una regla: si algo no ayuda a leer, sobra.</p>
 	<p>
 		Las herramientas que ves aquí me las hice porque las necesitaba y no existían. Las dejo
 		abiertas por si te sirven. La lista crece casi cada semana.

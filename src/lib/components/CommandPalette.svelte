@@ -189,15 +189,19 @@
 		gap: 0.75rem;
 		padding: 0.5rem 0.6rem;
 		border: 0;
-		border-radius: 0.4rem;
 		background: transparent;
 		font: inherit;
 		text-align: left;
 		color: var(--color-soft);
 		cursor: pointer;
 	}
+	/* The row you are on wears the mango, the same marker a headline's phrase
+	   does: ink on mango is 11.28:1. */
 	.palette-active {
-		background: color-mix(in srgb, var(--color-ink) 5%, transparent);
+		background: var(--color-signal);
+		color: var(--color-ink);
+	}
+	.palette-active :global(.tool-index) {
 		color: var(--color-ink);
 	}
 	.palette-keys {
@@ -207,12 +211,11 @@
 		margin-top: 0.9rem;
 		padding-top: 0.75rem;
 		border-top: 1px solid var(--color-line);
-		font-size: 0.8125rem;
+		font-size: 0.875rem;
 		color: var(--color-muted);
 	}
 	.palette-keys kbd {
 		border: 1px solid var(--color-line);
-		border-radius: 0.3rem;
 		padding: 0.05rem 0.3rem;
 		font: inherit;
 		color: var(--color-ink);
