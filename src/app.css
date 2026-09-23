@@ -2,200 +2,206 @@
 @plugin '@tailwindcss/typography';
 @plugin 'daisyui';
 
-/* One family for text and interface, self-hosted and stable across systems. */
+/*
+ * One family for everything: Schibsted Grotesk, self-hosted, Latin subset
+ * (fontsource, SIL OFL 1.1).
+ *
+ * THE PRELOADS IN `app.html` MUST NAME FILES DECLARED HERE. This comment lives in
+ * this file because `app.html` deliberately carries none — a comment in there is
+ * a payload that ships in the HTML of every page on every request. 400 and 900 are
+ * preloaded: 400 is every paragraph, 900 is every headline and the headline is
+ * the largest thing painted. 500 and 700 swap in.
+ *
+ * The subset has no arrows, which is why the arrow is drawn (`Arrow.svelte`),
+ * like the mark (`Mark.svelte`).
+ *
+ * `public-sans-*` and `source-serif-*` are still in `static/fonts/` and are
+ * referenced by nothing; a file nobody requests is never sent.
+ */
 @font-face {
-	font-family: 'Public Sans';
-	src: url('/fonts/public-sans-400.woff2') format('woff2');
+	font-family: 'Schibsted Grotesk';
+	src: url('/fonts/schibsted-grotesk-400.woff2') format('woff2');
 	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
 }
 @font-face {
-	font-family: 'Public Sans';
-	src: url('/fonts/public-sans-600.woff2') format('woff2');
-	font-weight: 600;
+	font-family: 'Schibsted Grotesk';
+	src: url('/fonts/schibsted-grotesk-500.woff2') format('woff2');
+	font-weight: 500 600;
 	font-style: normal;
 	font-display: swap;
 }
 @font-face {
-	font-family: 'Public Sans';
-	src: url('/fonts/public-sans-700.woff2') format('woff2');
-	font-weight: 700;
+	font-family: 'Schibsted Grotesk';
+	src: url('/fonts/schibsted-grotesk-700.woff2') format('woff2');
+	font-weight: 700 800;
+	font-style: normal;
+	font-display: swap;
+}
+@font-face {
+	font-family: 'Schibsted Grotesk';
+	src: url('/fonts/schibsted-grotesk-900.woff2') format('woff2');
+	font-weight: 900;
 	font-style: normal;
 	font-display: swap;
 }
 
-
 /*
- * The site's theme.
+ * THE PALETTE. One ink, two greys, a line, a paper and a lighter paper, the
+ * mango, and Substack's blue.
  *
- * The whole palette is one black, two greys and a line. If a shade needs
- * changing it changes here, not in forty places. Tailwind generates the
- * utilities on its own: text-ink, text-soft, text-muted, border-line...
+ * The world is a Swiss poster: one grotesque set very large on a grid, one colour
+ * owning whole fields. The mango is the hero's ground and the close's accent, and
+ * that is the only place it is a field; elsewhere it is a highlighter.
  */
 @theme {
-	--font-sans: 'Public Sans', ui-sans-serif, system-ui, sans-serif;
-	--font-serif: 'Public Sans', ui-sans-serif, system-ui, sans-serif;
-	/* Nothing downloaded: the JetBrains that used to load was used by nothing. */
+	--font-sans: 'Schibsted Grotesk', ui-sans-serif, system-ui, sans-serif;
+	--font-serif: 'Schibsted Grotesk', ui-sans-serif, system-ui, sans-serif;
 	--font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
 
-	--color-ink: #171717; /* main text */
-	--color-soft: #525252; /* secondary text */
-	--color-muted: #737373; /* notes, footnotes, things that don't ask for attention */
-	--color-line: #e5e5e5; /* borders and separators */
-
-	/* Substack's blue. Signing up happens in their embedded form, so the site
-	   uses their own accent to stop the two looking like two products. */
-	--color-brand: #0076ff;
-	--color-paper: #f7f6f2;
-	--color-signal: #ff4d00;
+	--color-ink: #161514;
+	--color-soft: #4d4b47; /* read at length: 7.77:1 on paper */
+	/*
+	 * Notes, the footer, what doesn't ask for attention. MEASURED against the paper:
+	 * 4.96:1 (5.46:1 on the sheet), over the 4.5:1 WCAG AA asks of normal text — `.muted` carries the line
+	 * under every form that says handing over an address subscribes you, so it is
+	 * not decoration. Don't lighten it.
+	 */
+	--color-muted: #6b6862;
+	--color-line: #d8d5cc; /* a stroke, never a fill */
+	--color-paper: #f4f2ec;
+	--color-sheet: #fffdf8; /* lighter than paper: the downloads band, fields, results */
+	/*
+	 * MANGO, chosen by Damian on 23 September 2026 over the signal orange, the
+	 * almendrón turquoise and the Amazon green: the mango and the Havana façades,
+	 * and the colour that literally shines — «Objeto Brillante».
+	 *
+	 * IT IS A FIELD AND A HIGHLIGHTER, NEVER TEXT ON THE PAPER. MEASURED: mango on
+	 * the paper is 1.44:1, so it cannot carry a letter there. Where it is text, it
+	 * is on ink (11.28:1); on the light grounds it sits BEHIND ink text as a marker,
+	 * and any accent that must be read (a hover, an arrow) uses `signal-deep`.
+	 */
+	--color-signal: #ffc21a;
+	--color-signal-deep: #7a5800; /* 5.82:1 on paper, 6.41:1 on the sheet */
+	/*
+	 * Substack's blue: a button only, and only when pressing it puts you on the
+	 * list. MEASURED: their own #0076ff carries white text at 4.17:1, under AA for
+	 * an 18px label, so the button runs one step darker — 4.99:1, still their blue
+	 * to anyone looking.
+	 */
+	--color-brand: #006ae6;
 }
 
-/*
- * The site is pinned to DaisyUI's light theme (see +layout.svelte), customised
- * here into the site's own theme: the palette above mapped onto DaisyUI's
- * semantic slots. Components keep DaisyUI's structure (`badge`, `btn`,
- * `text-error`...) and pick the site's colours up on their own — no
- * site-specific utility classes needed in the markup.
- */
 [data-theme='light'] {
-	--color-primary: #0076ff;
+	--color-primary: #006ae6;
 	--color-primary-content: #ffffff;
-	--color-neutral: #171717;
+	--color-neutral: #161514;
 	--color-neutral-content: #ffffff;
-	--color-error: #ff4d00;
+	--color-error: #c23a00;
 	--color-error-content: #ffffff;
+	--color-base-100: #fffdf8;
+	--radius-field: 0;
+	--radius-selector: 0;
+	--radius-box: 0;
 }
 
 /*
- * The site's vocabulary. Everything is painted with these classes: the home page
- * and the tools use the same ones. Before adding a new one, check whether an
- * existing one already does the job.
+ * The site's vocabulary. Tool pages, results and the home page all paint with
+ * these. Check here before adding a class.
  *
- * THERE ARE ONLY TWO FONT SIZES:
- *   body  1.25rem  (the letter's own, prose-xl) -> .body-text and anything read
- *   note  0.875rem                             -> .muted, footnotes, warnings
- * Hierarchy comes from colour (ink > soft > muted), not from size. If you catch
- * yourself writing text-base or text-lg in the markup, a class is missing here.
+ * TWO READING SIZES: body `1.25rem` inside `.prose` / `1.125rem` everywhere else,
+ * and the note at `0.875rem`. Hierarchy comes from weight and colour; the display
+ * sizes belong to headlines only. `text-base` or `text-lg` in markup means a class
+ * is missing here.
  */
 @layer components {
-	/* Spacing between large blocks. One single measure across the whole site. */
 	.section {
 		@apply mt-20;
 	}
 	.section-title {
 		@apply text-2xl font-bold;
+		letter-spacing: -0.02em;
 	}
 
 	/*
-	 * The heading of a section of the home letter.
-	 *
-	 * Body size, not a size up: it separates two stretches of the letter without
-	 * turning them into a product page's sections. The hierarchy is weight and
-	 * colour — bold ink over the soft intro right under it — which is the same
-	 * rule as everywhere else here.
-	 *
-	 * `.section-title` is NOT this. That one is a size larger and names a card
-	 * or a panel (the gate, a course step); used on the home it would announce
-	 * the letter's own paragraphs as if they were products.
+	 * A heading inside a page column, at the body's size. The second selector is
+	 * not redundant: Typography wraps its selectors in `:where()`, so both tie and
+	 * the LAYER decides — `@plugin` writes into utilities, which beats this layer.
+	 * `.prose .letter-heading` is (0,2,0) and wins outright.
 	 */
-	.letter-heading {
+	.letter-heading,
+	.prose .letter-heading {
 		@apply text-lg font-bold leading-snug;
+		color: var(--color-ink);
 	}
 
 	.section-intro {
 		@apply mt-2 text-lg leading-relaxed text-soft;
 	}
 
-	/* Body text outside .prose: the same size as the letter. */
 	.body-text {
 		@apply text-lg leading-relaxed;
 	}
 
-	/* Text that doesn't ask for attention: footnotes, notes, warnings. */
+	/* `pretty` pulls up the orphan these three-line notes all end with. */
 	.muted {
 		@apply text-sm text-muted;
+		text-wrap: pretty;
 	}
 
-	/* A quiet link: back home, start again, try another site. */
 	.link-quiet {
 		@apply text-sm text-muted underline underline-offset-4 transition-colors hover:text-ink;
 	}
 
-	/* A bordered box: the site's visual unit. A tool, a generated text, a block
-	   of content. */
+	/*
+	 * A result: a generated text, a gate, a course step. One edge, the border,
+	 * and a sheet lighter than the paper. No radius: nothing else on this site
+	 * has a rounded corner, so a rounded box reads as a component from elsewhere.
+	 */
 	.box {
-		@apply rounded-lg border border-line p-5;
-		background: color-mix(in srgb, white 82%, transparent);
-		box-shadow: 0 1px 0 rgba(23, 23, 23, 0.04), 0 12px 35px rgba(23, 23, 23, 0.025);
+		@apply border border-line p-5;
+		background: var(--color-sheet);
 	}
-	/* A box that is also a link: the border asserts itself on hover. */
-	.box-link {
-		@apply relative grid rounded-lg border border-line p-5 transition-all;
-		grid-template-columns: 2rem minmax(0, 1fr) auto;
-		background: rgba(255,255,255,.58);
-		box-shadow: 0 1px 0 rgba(23,23,23,.03);
-		transition-duration: 220ms;
-	}
-	.box-link:hover {
-		border-color: var(--color-ink);
-		background: white;
-		transform: translateY(-2px);
-		box-shadow: 0 14px 40px rgba(23,23,23,.07);
-	}
-
-	/* Title and body inside a box. */
 	.box-title {
 		@apply text-lg font-bold;
 	}
-	/* A card's subtitle. Clamped to two lines: if the text runs on, the card
-	   grows and the list stops being readable at a glance. */
+	/* Clamped so a long blurb can't grow its card; four lines on a phone, where
+	   the column fits 35 characters (MEASURED: two cut six of seven mid-word). */
 	.box-text {
 		@apply col-start-2 mt-2 line-clamp-2 text-lg leading-relaxed text-soft;
 	}
 
-	/* The tool layout takes care of vertical centring. */
 	.screen-center {
 		@apply flex flex-col;
 	}
 
-	/* A small uppercase label above a block of text. */
 	.eyebrow {
-		@apply text-xs font-semibold tracking-wide text-muted uppercase;
+		@apply text-xs font-bold tracking-wide text-muted uppercase;
 	}
 
-	/* A bar: serves both a score and a locked finding. The fill is a child with
-	   its own width, so the bar knows nothing about what it measures. */
 	.meter {
-		@apply h-1.5 overflow-hidden rounded-full bg-line;
+		@apply h-1.5 overflow-hidden bg-line;
 	}
 	.meter > * {
-		@apply block h-full rounded-full bg-ink;
+		@apply block h-full bg-ink;
 	}
 
-	/* A finding's severity label. Its colour is decided by whoever paints it. */
 	.chip {
-		@apply inline-block rounded px-1.5 py-0.5 text-xs font-semibold tracking-wide uppercase;
+		@apply inline-block px-1.5 py-0.5 text-xs font-bold tracking-wide uppercase;
 	}
 
 	/*
-	 * /postcard: the downloadable images, staged as the posters they are. The
-	 * page shows the PNGs themselves — the figures live inside — so this only
-	 * frames them.
+	 * /postcard's images, staged as the objects they are. The one real shadow on
+	 * the site: a printed card photographed on a page, with a real offset.
 	 */
 	.poster {
-		@apply mt-2 w-full rounded-2xl border border-line;
+		@apply mt-2 w-full border border-line;
 		height: auto;
-		box-shadow: 0 24px 70px rgba(23, 23, 23, 0.16);
+		box-shadow: 0 24px 70px rgba(22, 21, 20, 0.16);
 	}
 
-	/*
-	 * The postcard slider: a scroll-snap rail. The snap IS the swipe on touch —
-	 * no dependency, no JS in the gesture path; the arrows and the dots ride ON
-	 * the image, and all of them read/write the same scroll position. The dots
-	 * sit in a dark pill so they survive every postcard background (dark,
-	 * paper, orange).
-	 */
+	/* The postcard slider: a scroll-snap rail. The snap IS the swipe on touch. */
 	.slider-frame {
 		@apply relative;
 	}
@@ -212,9 +218,8 @@
 		scroll-snap-align: center;
 	}
 	.slider-arrow {
-		@apply absolute top-1/2 flex h-11 w-11 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-line text-lg text-ink transition-all;
-		background: rgba(255, 255, 255, 0.88);
-		box-shadow: 0 4px 14px rgba(23, 23, 23, 0.18);
+		@apply absolute top-1/2 flex h-11 w-11 -translate-y-1/2 cursor-pointer items-center justify-center border-2 border-ink text-lg text-ink transition-all;
+		background: var(--color-sheet);
 	}
 	.slider-arrow-prev {
 		left: 0.9rem;
@@ -223,8 +228,8 @@
 		right: 0.9rem;
 	}
 	.slider-arrow:hover:not(:disabled) {
-		background: #ffffff;
-		border-color: var(--color-ink);
+		background: var(--color-ink);
+		color: var(--color-paper);
 	}
 	.slider-arrow:disabled {
 		opacity: 0;
@@ -232,8 +237,8 @@
 		pointer-events: none;
 	}
 	.slider-dots {
-		@apply absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-2.5 rounded-full px-3.5 py-2.5;
-		background: rgba(17, 16, 16, 0.55);
+		@apply absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-2.5 px-3.5 py-2.5;
+		background: rgba(22, 21, 20, 0.62);
 	}
 	.slider-dot {
 		@apply h-2 w-2 cursor-pointer rounded-full border-0 p-0;
@@ -246,222 +251,366 @@
 	}
 }
 
-html { scroll-behavior: smooth; }
+/* ─── Browser surfaces: selection, caret, focus. They ship with the design. ─── */
 
-body { background: var(--color-paper); }
+body {
+	background: var(--color-paper);
+	color: var(--color-ink);
+}
+::selection {
+	background: var(--color-ink);
+	color: var(--color-paper);
+}
+html {
+	caret-color: var(--color-ink);
+	accent-color: var(--color-ink);
+}
+/*
+ * ONE FOCUS RING, drawn from the palette, replacing three browsers' defaults.
+ * On the mango ground ink reads at 11.28:1, so the ring never changes colour.
+ */
+:focus-visible {
+	outline: 2px solid var(--color-ink);
+	outline-offset: 3px;
+}
+.input:focus-visible,
+.textarea:focus-visible,
+.frame-field:focus-visible {
+	outline: none;
+}
+.on-ink :focus-visible {
+	outline-color: var(--color-paper);
+}
 
-::selection { background: var(--color-ink); color: white; }
+/* ─── The shell: a full-width header and footer, and a column for pages. ─── */
 
 .site-shell {
-	background-color: var(--color-paper);
-	background-image:
-		radial-gradient(circle at 12% 4%, rgba(255,255,255,.95), transparent 28rem),
-		linear-gradient(rgba(23,23,23,.026) 1px, transparent 1px);
-	background-size: auto, 100% 32px;
+	display: flex;
+	min-height: 100dvh;
+	flex-direction: column;
+	background: var(--color-paper);
 }
 
-.site-column { position: relative; display: flex; min-height: 100dvh; flex-direction: column; }
-
-.site-column::before {
-	content: '';
-	position: absolute;
-	top: 0;
-	bottom: 0;
-	left: 0;
-	width: 1px;
-	background: rgba(23,23,23,.08);
+/* The poster's measure: 1320px of content, gutters that grow with the screen. */
+.wide {
+	width: 100%;
+	max-width: 1320px;
+	margin-inline: auto;
+	padding-inline: clamp(1rem, 3.2vw, 3rem);
+}
+.grid-12 {
+	display: grid;
+	grid-template-columns: repeat(12, minmax(0, 1fr));
+	column-gap: clamp(0.75rem, 1.8vw, 1.5rem);
 }
 
-.site-header {
+.label {
+	font-size: 0.78rem;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+
+.site-top {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
 	gap: 1rem;
-	margin-bottom: clamp(4rem, 10vw, 7rem);
-	font-size: .68rem;
-	font-weight: 700;
-	letter-spacing: .11em;
+	padding-block: 1.1rem;
+}
+.site-mark {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.6rem;
+}
+.site-symbol {
+	display: inline-flex;
+	width: 0.95rem;
+	height: 0.95rem;
+	color: var(--color-ink);
+	transform-origin: 50% 50%;
+	transition: color 220ms ease;
+}
+.site-symbol svg {
+	display: block;
+	width: 100%;
+	height: 100%;
+}
+.site-mark:hover .site-symbol {
+	color: var(--color-signal-deep);
+}
+.site-nav {
+	display: flex;
+	align-items: center;
+	gap: 1.6rem;
+}
+.site-nav a {
+	color: var(--color-soft);
+	transition: color 180ms ease;
+}
+.site-nav a:hover {
+	color: var(--color-ink);
+}
+/*
+ * The header's one call to action: an outlined box, not a blue button. Blue is
+ * Substack's and means «this puts you on the list»; this only takes you to the
+ * field that does.
+ */
+.site-nav a.site-join {
+	color: var(--color-ink);
+	border: 2px solid var(--color-ink);
+	padding: 0.6rem 0.9rem;
+	transition: background 180ms ease, color 180ms ease;
+}
+.site-nav a.site-join:hover {
+	background: var(--color-ink);
+	color: var(--color-paper);
+}
+/* Small caps are 12px tall; padding cancelled by negative margin makes each link
+   a ~38px target without moving the header's rhythm (WCAG 2.5.8). */
+.site-mark,
+.site-nav a:not(.site-join),
+.site-foot a {
+	padding-block: 0.55rem;
+	margin-block: -0.55rem;
 }
 
-.site-mark { display: inline-flex; align-items: center; gap: .6rem; }
-/* The mark is an inline SVG (see +layout.svelte): a true square whose star is
-   drawn around the exact centre of its viewBox, so rotation has no wobble. */
-.site-symbol { display: inline-flex; width: .9rem; height: .9rem; color: currentColor; transition: color 220ms ease; transform-origin: 50% 50%; }
-.site-symbol svg { display: block; width: 100%; height: 100%; }
-/* A small reward for hovering the mark: the star lights up. The spin lives in
-   the reduced-motion block below; the colour change works for everyone. */
-.site-mark:hover .site-symbol { color: var(--color-signal); }
-.site-mark .site-symbol { color: var(--color-ink); }
-.site-status { display: inline-flex; align-items: center; gap: .45rem; color: var(--color-muted); font-weight: 600; }
-.site-status .site-symbol { font-size: .78rem; }
-.site-build { display: inline-block; font-size: .9rem; transform-origin: 45% 70%; }
+/*
+ * The column every page except the home sits in. A tool page is Operate, not a
+ * poster: a reading measure, and the tool centred in whatever height is left.
+ */
+.page-column {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	width: 100%;
+	max-width: 46rem;
+	margin-inline: auto;
+	padding: clamp(2.5rem, 7vw, 5rem) 1.25rem clamp(3rem, 8vw, 5rem);
+}
+.tool-shell {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+}
+.tool-stage {
+	width: 100%;
+	margin-block: auto;
+}
 
-.tool-shell { display: flex; flex: 1; flex-direction: column; }
-.tool-stage { width: 100%; margin-block: auto; }
-
-/* The colophon line at the bottom: same small-caps voice as the header. */
-.site-footer {
+.site-foot {
+	margin-top: auto;
+	background: var(--color-ink);
+	color: #8d897f;
+}
+.site-foot .wide {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
 	gap: 1rem;
-	margin-top: clamp(4rem, 10vw, 6rem);
-	padding-top: 1.25rem;
-	border-top: 1px solid var(--color-line);
-	font-size: .68rem;
-	font-weight: 700;
-	letter-spacing: .11em;
-	color: var(--color-muted);
+	padding-block: 1.25rem;
 }
-.site-footer a { color: inherit; text-decoration: none; transition: color 180ms ease; }
-.site-footer a:hover { color: var(--color-ink); }
-/* The ⌘K hint: a real key, quietly drawn. */
+.site-foot a {
+	color: inherit;
+	transition: color 180ms ease;
+}
+.site-foot a:hover {
+	color: var(--color-paper);
+}
 .key-hint {
 	cursor: pointer;
-	border: 1px solid var(--color-line);
-	border-radius: .35rem;
-	padding: .15rem .45rem;
+	border: 1px solid #45423d;
+	padding: 0.3rem 0.5rem;
 	font: inherit;
 	color: inherit;
 	background: transparent;
 	transition: color 180ms ease, border-color 180ms ease;
 }
-.key-hint:hover { color: var(--color-ink); border-color: var(--color-ink); }
-
-.prose h1 { text-wrap: balance; }
-.prose > p:first-of-type {
-	max-width: 30rem;
-	margin-top: 1.35rem;
-	font-size: clamp(1.15rem, 3vw, 1.4rem);
-	font-weight: 500;
-	line-height: 1.35;
-	letter-spacing: -.018em;
-	color: var(--color-soft);
+/* ⌘K means nothing without a keyboard. */
+@media (pointer: coarse) {
+	.key-hint {
+		display: none;
+	}
 }
-.prose a, .link { text-decoration-color: color-mix(in srgb, var(--color-brand) 55%, transparent); text-underline-offset: .22em; }
+.key-hint:hover {
+	color: var(--color-paper);
+	border-color: var(--color-paper);
+}
+
+/* ─── Fields. One frame for every form on the site. ─── */
 
 /*
- * The lead treatment above styles the first paragraph after the headline. The
- * home letter is split in two by the tools section, so its second half starts
- * with a plain story paragraph that must NOT read as a lead: `prose-quiet`
- * puts that first paragraph back to the prose's own body style.
+ * THE FRAME: an ink bar that holds the field and its button, 4px of ink between
+ * them. Side by side from 640px, stacked below — measured at 390px, a side-by-side
+ * field was 200px wide and an address scrolled inside its own box.
  */
-.prose-quiet > p:first-of-type {
-	max-width: none;
-	margin-top: 1.2em;
-	font-size: 1.25rem;
-	font-weight: 400;
-	line-height: 1.8;
-	letter-spacing: 0;
-	color: var(--tw-prose-body);
+.frame {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	padding: 4px;
+	background: var(--color-ink);
 }
-
-.tool-index { grid-column: 1; padding-top: .35rem; font-size: .68rem; font-weight: 700; letter-spacing: .1em; color: var(--color-muted); }
-.tool-arrow { grid-column: 3; font-size: 1rem; color: var(--color-muted); transition: transform 220ms ease, color 220ms ease; }
-.box-link:hover .tool-arrow { color: var(--color-signal); transform: translate(2px,-2px); }
-.box-link .box-title { grid-column: 2; }
-
-.embed-shell { overflow: hidden; border: 1px solid var(--color-line); border-radius: .65rem; background: white; box-shadow: 0 16px 50px rgba(23,23,23,.055); }
-.embed-shell iframe { border: 0; background: white; }
-
-.input, .textarea {
-	background: rgba(255,255,255,.8);
-	box-shadow: inset 0 1px 0 rgba(23,23,23,.035);
-	transition: border-color 180ms ease, box-shadow 180ms ease, background 180ms ease;
-}
-.input:focus, .textarea:focus { background: white; border-color: var(--color-ink); box-shadow: 0 0 0 3px rgba(23,23,23,.07); outline: none; }
-.btn { letter-spacing: -.01em; transition: transform 160ms ease, box-shadow 160ms ease; }
-.btn:not(:disabled):active { transform: translateY(1px); }
-.btn-primary { box-shadow: 0 7px 18px rgba(0,118,255,.16); }
-
-@media (prefers-reduced-motion: no-preference) {
-	.site-header, .greeting, .prose, .embed-shell, .section { animation: reveal .6s both; }
-	.site-mark .site-symbol { animation: mark-pulse 2.8s ease-in-out infinite; }
-	/*
-	 * The spin is a TRANSITION, not a looping animation: half a turn in, half a
-	 * turn back out, both eased — so there is never a snap, whenever the cursor
-	 * leaves. The star's four-point symmetry makes the return read as another
-	 * spin rather than a rewind. Opacity pulse and rotation coexist because the
-	 * pulse no longer touches transform.
-	 */
-	.site-mark .site-symbol { transition: color 220ms ease, transform 700ms cubic-bezier(0.34, 1.2, 0.4, 1); }
-	.site-mark:hover .site-symbol { transform: rotate(180deg); }
-	.site-build { animation: building 1.35s ease-in-out infinite; }
-	.greeting { animation-delay: .06s; }
-	.prose { animation-delay: .12s; }
-	.embed-shell { animation-delay: .2s; }
-	.section { animation-delay: .28s; }
-	@keyframes reveal { from { opacity: 0; transform: translateY(9px); } to { opacity: 1; transform: none; } }
-	/* Opacity only: a scale here snapped to 1 the instant the hover spin took
-	   over the transform, and the handoff read as a jump. */
-	@keyframes mark-pulse {
-		0%, 100% { opacity: .58; }
-		50% { opacity: 1; }
-	}
-	@keyframes building {
-		0%, 100% { transform: rotate(-10deg) translateY(0); }
-		45% { transform: rotate(16deg) translateY(-1px); }
-		60% { transform: rotate(5deg) translateY(1px); }
+@media (min-width: 640px) {
+	.frame:not(.frame-stack) {
+		flex-direction: row;
 	}
 }
-
-@media (max-width: 460px) {
-	.site-status { display: none; }
-	.site-header { margin-bottom: 4.5rem; }
-	.box-link { grid-template-columns: 1.7rem minmax(0, 1fr) auto; }
+/* A textarea, or more than one field: stacked at every width. */
+.frame-area {
+	min-height: 9rem;
+	resize: vertical;
+	line-height: 1.45;
 }
-
-/* Text and interface share the same family. */
-.prose,
-.body-text,
-.section-intro,
-.box-text {
-	font-family: var(--font-serif);
+.frame-field {
+	flex: 1;
+	min-width: 0;
+	width: 100%;
+	border: 0;
+	padding: 1rem;
+	font: 500 1.125rem/1.3 var(--font-sans);
+	background: var(--color-sheet);
+	color: var(--color-ink);
+	transition: background 160ms ease;
+}
+.frame-field::placeholder {
+	color: var(--color-muted);
+	opacity: 1;
+}
+.frame-field:focus {
+	background: #ffffff;
+	box-shadow: inset 0 -3px 0 var(--color-ink);
+}
+.frame-field:disabled {
+	opacity: 0.7;
+}
+.frame-button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	min-height: 3.4rem;
+	border: 0;
+	padding: 0 1.6rem;
+	font: 700 1.125rem/1 var(--font-sans);
+	white-space: nowrap;
+	cursor: pointer;
+	background: var(--color-ink);
+	color: var(--color-paper);
+	transition: background 160ms ease, transform 120ms ease;
+}
+/* Blue only when pressing it puts you on the list (`variant="subscribe"`). */
+.frame-button.is-subscribe {
+	background: var(--color-brand);
+	color: #ffffff;
+}
+.frame-button.is-subscribe:hover:not(:disabled) {
+	background: #005bc8;
+}
+.frame-button:not(.is-subscribe):hover:not(:disabled) {
+	background: #2b2926;
+}
+.frame-button:active:not(:disabled) {
+	transform: translateY(1px);
+}
+.frame-button:disabled {
+	cursor: progress;
+	opacity: 0.8;
 }
 
 /*
- * The headline, at a fluid size.
- *
- * prose-xl leaves the h1 at a fixed 3.5rem. At 320px wide a long word
- * ("herramienta") measures more than the column, doesn't break, and gives the
- * WHOLE page a horizontal scrollbar: the h1's overflow pushes <main>.
- *
- * The clamp's minimum is set by the longest word in the headline: in a bold
- * sans-serif it takes about 6 times the font size, so the 288px column left at
- * 320px wide fits about 47px. 2.75rem (44px) fits with room to spare. And the
- * `overflow-wrap: break-word` below is the safety net for the day you write a
- * longer word.
- *
- * `.prose h1` beats the typography plugin, which uses :where() and therefore has
- * no specificity.
+ * DaisyUI's own fields, still used by hand-rolled forms on tool pages, brought
+ * into the same world: square, ink-edged, no glow.
+ */
+.input,
+.textarea {
+	border-radius: 0;
+	border: 2px solid var(--color-ink);
+	background: var(--color-sheet);
+	box-shadow: none;
+	transition: background 160ms ease, box-shadow 160ms ease;
+}
+.input:focus,
+.textarea:focus,
+.input:focus-within,
+.textarea:focus-within {
+	background: #ffffff;
+	border-color: var(--color-ink);
+	box-shadow: inset 0 -3px 0 var(--color-ink);
+	outline: none;
+}
+.btn {
+	border-radius: 0;
+	letter-spacing: -0.01em;
+	font-weight: 700;
+	box-shadow: none;
+	transition: transform 120ms ease, background 160ms ease;
+}
+.btn:not(:disabled):active {
+	transform: translateY(1px);
+}
+
+/* ─── The page column's type: every tool page's header runs through `.prose`. ─── */
+
+/*
+ * The letter's colours come from the palette, not the plugin's zinc. Unlayered,
+ * because `prose` sets these from the utilities layer.
+ */
+.prose {
+	--tw-prose-body: var(--color-soft);
+	--tw-prose-headings: var(--color-ink);
+	--tw-prose-lead: var(--color-soft);
+	--tw-prose-links: var(--color-ink);
+	--tw-prose-bold: var(--color-ink);
+	--tw-prose-counters: var(--color-muted);
+	--tw-prose-bullets: var(--color-line);
+	--tw-prose-hr: var(--color-line);
+	--tw-prose-quotes: var(--color-ink);
+	--tw-prose-quote-borders: var(--color-line);
+	--tw-prose-captions: var(--color-muted);
+	--tw-prose-code: var(--color-ink);
+	--tw-prose-th-borders: var(--color-line);
+	--tw-prose-td-borders: var(--color-line);
+}
+
+/*
+ * A tool page's headline: the poster's voice at a column's size. 900 and tight,
+ * `clamp` because at 320px the longest word has to fit (≈6× the size in this
+ * face), and `anywhere` below is the net for a longer one.
  */
 .prose h1 {
 	margin-bottom: 0;
-	font-size: clamp(2.35rem, 9vw, 4.4rem);
-	line-height: 0.96;
-	letter-spacing: -0.045em;
+	font-size: clamp(2.5rem, 8.4vw, 4.6rem);
+	font-weight: 900;
+	line-height: 0.9;
+	letter-spacing: -0.04em;
+	text-wrap: balance;
+}
+.prose > p:first-of-type {
+	max-width: 32rem;
+	text-wrap: balance;
+	margin-top: 1.4rem;
+	font-size: clamp(1.15rem, 2.4vw, 1.4rem);
+	font-weight: 500;
+	line-height: 1.32;
+	letter-spacing: -0.015em;
+	color: var(--color-soft);
+}
+.prose a,
+.link {
+	text-decoration-color: color-mix(in srgb, var(--color-ink) 35%, transparent);
+	text-underline-offset: 0.22em;
+	text-decoration-thickness: 1px;
+}
+.prose a:hover,
+.link:hover {
+	text-decoration-color: var(--color-signal-deep);
 }
 
 /*
- * The highlight behind a marked phrase in a headline.
- *
- * It is drawn as the element's own BACKGROUND with `box-decoration-break: clone`,
- * not as an absolutely positioned pseudo-element, and that is the whole point: a
- * highlight has to survive the phrase wrapping onto a second line. The earlier
- * version was `display: inline-block` plus an `::after` bar, and one box cannot
- * describe two lines — the bar spanned the full width of the block and sat under
- * the LAST line only, so the first line lost its highlight and the bar ran past
- * the end of the text. `clone` repeats the background on every line fragment, so
- * two lines get two bars, each as wide as its own line. This is also why the bar
- * is no longer rotated: a rotation belongs to a box, and there is no longer one
- * box to rotate.
- *
- * The bar is a flat two-stop gradient because only a background-IMAGE can be
- * sized; a background-color would fill the whole fragment. Its offset is measured
- * from the inline box (the font's content area — ascender plus descender, which
- * is TALLER than the 0.96 line-height and reaches lower than the old
- * inline-block did), which is why the offset is 0.20em: it puts the bar's bottom
- * edge just under the baseline, where the old one sat.
+ * The marked phrase of a headline: a mango highlighter drawn as the element's own
+ * background, cloned per line fragment, so a phrase that wraps gets one bar per
+ * line, each as wide as its own line.
  */
 .prose h1 strong,
 .prose h1 mark {
@@ -469,37 +618,595 @@ body { background: var(--color-paper); }
 	color: inherit;
 	-webkit-box-decoration-break: clone;
 	box-decoration-break: clone;
-	padding-inline: .05em;
+	padding-inline: 0.04em;
 	background-color: transparent;
-	background-image: linear-gradient(
-		color-mix(in srgb, var(--color-signal) 68%, transparent),
-		color-mix(in srgb, var(--color-signal) 68%, transparent)
-	);
+	background-image: linear-gradient(var(--color-signal), var(--color-signal));
 	background-repeat: no-repeat;
-	background-size: 100% .24em;
-	background-position: 0 calc(100% - .20em);
+	/* A marker stroke over the lower half of the x-height: mango is too light to
+	   be a thin rule on paper (1.44:1), and a highlighter is what it is anyway. */
+	background-size: 100% 0.42em;
+	background-position: 0 72%;
+}
+
+.prose img {
+	margin-block: 2rem 0.75rem;
+}
+
+.tool-index {
+	font-size: 0.78rem;
+	font-weight: 700;
+	letter-spacing: 0.1em;
+	color: var(--color-muted);
+	font-variant-numeric: tabular-nums;
+}
+
+.embed-shell {
+	overflow: hidden;
+	border: 1px solid var(--color-line);
+	background: white;
+}
+.embed-shell iframe {
+	border: 0;
+	background: white;
+}
+
+/* ─── The home page: the poster. ─── */
+
+.poster-hero {
+	background: var(--color-signal);
+	text-align: center;
+}
+.poster-hero .wide {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding-block: clamp(3.5rem, 9vw, 8rem) clamp(3.5rem, 8vw, 6.5rem);
+}
+/*
+ * THE ONE LUXURY: the headline, at poster size. The collision between it and the
+ * plain rows under it IS the design. Capped at 8.5rem, because past that the four
+ * lines stop fitting one laptop screen with the field under them.
+ */
+.poster-title {
+	max-width: 12ch;
+	font-size: clamp(3rem, 9vw, 8.5rem);
+	font-weight: 900;
+	line-height: 0.86;
+	letter-spacing: -0.04em;
+	text-wrap: balance;
+}
+.poster-lead {
+	margin-top: clamp(1.5rem, 3vw, 2.3rem);
+	max-width: 32rem;
+	font-size: clamp(1.25rem, 1.9vw, 1.6rem);
+	font-weight: 500;
+	line-height: 1.28;
+	letter-spacing: -0.015em;
+	text-wrap: balance;
+}
+.poster-hero .frame {
+	margin-top: clamp(1.75rem, 3.5vw, 2.5rem);
+	width: min(100%, 36rem);
+}
+/* Ink on mango, because a grey on a colour is a smudge (ink: 11.28:1 here). */
+.poster-note {
+	margin-top: 0.8rem;
+	max-width: 36rem;
+	font-size: 0.875rem;
+	font-weight: 500;
+	line-height: 1.45;
+	text-wrap: pretty;
+}
+.greeting {
+	min-height: 1.45rem;
+	margin-top: 1.4rem;
+	font-size: 1.125rem;
+	font-weight: 700;
+	color: var(--color-paper);
+}
+
+.band {
+	padding-block: clamp(3.5rem, 7vw, 7rem);
+}
+.band-sheet {
+	background: var(--color-sheet);
+	border-block: 1px solid var(--color-line);
+}
+.band-head {
+	align-items: end;
+	margin-bottom: clamp(1.5rem, 3vw, 2.5rem);
+	row-gap: 1rem;
+}
+.band-title {
+	grid-column: 1 / 8;
+	font-size: clamp(2.4rem, 5.2vw, 4.8rem);
+	font-weight: 900;
+	line-height: 0.92;
+	letter-spacing: -0.04em;
+	text-wrap: balance;
+}
+.band-intro {
+	grid-column: 8 / 13;
+	font-size: 1.125rem;
+	line-height: 1.45;
+	color: var(--color-soft);
+	text-wrap: pretty;
 }
 
 /*
- * Substack's iframe.
- *
- * Safari on iOS stretches iframes to their content's width and IGNORES the
- * `width` attribute, so it has to be forced in CSS. And since its content is on
- * another domain and cannot be measured, the container clips just in case.
+ * A DOOR: one row, one tool, one page behind it. The home page carries no tool
+ * fields — each tool's field lives on its own page — so a row has to say what
+ * goes in and what comes out, and be the whole click target.
  */
+.doors {
+	border-top: 3px solid var(--color-ink);
+}
+.door {
+	display: grid;
+	grid-template-columns: repeat(12, minmax(0, 1fr));
+	column-gap: clamp(0.75rem, 1.8vw, 1.5rem);
+	row-gap: 0.6rem;
+	align-items: baseline;
+	padding-block: clamp(1.35rem, 2.6vw, 2.1rem);
+	border-bottom: 1px solid var(--color-line);
+}
+.door-name {
+	grid-column: 1 / 7;
+	font-size: clamp(1.5rem, 2.9vw, 2.6rem);
+	font-weight: 900;
+	line-height: 1;
+	letter-spacing: -0.035em;
+	text-wrap: balance;
+	transition: color 200ms ease;
+}
+.door-give {
+	grid-column: 7 / 12;
+	font-size: 1.125rem;
+	line-height: 1.42;
+	color: var(--color-soft);
+}
+.door-takes {
+	display: block;
+	margin-top: 0.6rem;
+	color: var(--color-muted);
+}
+.door-takes b {
+	color: var(--color-ink);
+	font-weight: 700;
+}
+.door-go {
+	grid-column: 12 / 13;
+	justify-self: end;
+	align-self: center;
+	width: clamp(1.4rem, 2vw, 1.9rem);
+	transition: transform 350ms cubic-bezier(0.22, 1, 0.36, 1), color 200ms ease;
+}
+.door:hover .door-name,
+.door:focus-visible .door-name {
+	color: var(--color-signal-deep);
+}
+.door:hover .door-go,
+.door:focus-visible .door-go {
+	color: var(--color-signal-deep);
+	transform: translateX(6px);
+}
+
+/*
+ * THE WANTED ONE: the only reversed block INSIDE THE CONTENT (the close and the
+ * footer are ink bands that end the page, not blocks in it), because it is the
+ * only tool that does not exist yet. Its button is paper, not blue: it takes
+ * no address and subscribes nobody.
+ */
+.wanted {
+	margin-top: clamp(2.5rem, 4vw, 3.5rem);
+	padding: clamp(1.5rem, 3vw, 2.5rem);
+	background: var(--color-ink);
+	color: var(--color-paper);
+}
+.wanted .grid-12 {
+	align-items: end;
+	row-gap: 1.25rem;
+}
+.wanted-title {
+	grid-column: 1 / 7;
+	font-size: clamp(1.5rem, 2.9vw, 2.6rem);
+	font-weight: 900;
+	line-height: 0.96;
+	letter-spacing: -0.035em;
+	text-wrap: balance;
+}
+.wanted-body {
+	grid-column: 7 / 13;
+}
+.wanted-body > p {
+	margin-bottom: 1rem;
+	font-size: 1.125rem;
+	line-height: 1.42;
+	color: #d7d4cc; /* 12.3:1 on ink */
+}
+.wanted .frame {
+	background: var(--color-paper);
+}
+.wanted .frame-field {
+	background: var(--color-ink);
+	color: var(--color-paper);
+}
+.wanted .frame-field::placeholder {
+	color: #a29e94; /* 6.9:1 on ink */
+}
+.wanted .frame-field:focus {
+	background: #2b2926;
+}
+.wanted .frame-button {
+	background: var(--color-paper);
+	color: var(--color-ink);
+}
+.wanted .frame-button:hover:not(:disabled) {
+	background: #ffffff;
+}
+.wanted .muted {
+	color: #a29e94;
+}
+.wanted-sent {
+	font-size: 1.125rem;
+	line-height: 1.42;
+}
+.wanted-sent b {
+	color: var(--color-signal);
+}
+.on-ink .text-error,
+.wanted .text-error {
+	color: #ff8a5c;
+}
+
+/*
+ * THE DOWNLOADS, as objects. A download is a thing you take away, so it gets a
+ * cover. Its depth is a real shadow with a real offset — the same rule as
+ * `.poster`: an object on a page, not a surface of the interface.
+ */
+.files {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: clamp(0.75rem, 1.8vw, 1.5rem);
+}
+.file {
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr);
+	gap: clamp(1.2rem, 2.4vw, 2rem);
+	align-items: center;
+	padding-block: clamp(1.25rem, 2.4vw, 2rem);
+	border-top: 3px solid var(--color-ink);
+}
+.cover {
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	width: clamp(118px, 12vw, 156px);
+	aspect-ratio: 3 / 4;
+	padding: 0.95rem;
+	background: var(--color-ink);
+	color: var(--color-paper);
+	box-shadow: 0 18px 36px -12px rgba(22, 21, 20, 0.45);
+	transition: transform 350ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 350ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.cover.is-signal {
+	background: var(--color-signal);
+	color: var(--color-ink);
+}
+.cover-meta {
+	font-size: 0.62rem;
+	font-weight: 700;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	opacity: 0.78;
+}
+.cover-star {
+	display: block;
+	width: 1.35rem;
+	height: 1.35rem;
+	color: var(--color-signal);
+}
+.cover.is-signal .cover-star {
+	color: var(--color-ink);
+}
+.cover-title {
+	margin-top: 0.55rem;
+	font-size: clamp(1.2rem, 1.7vw, 1.6rem);
+	font-weight: 900;
+	line-height: 0.94;
+	letter-spacing: -0.035em;
+}
+.file-name {
+	font-size: clamp(1.5rem, 2.9vw, 2.6rem);
+	font-weight: 900;
+	line-height: 1.02;
+	letter-spacing: -0.035em;
+	text-wrap: balance;
+	transition: color 200ms ease;
+}
+.file-blurb {
+	margin-top: 0.6rem;
+	font-size: 1.125rem;
+	line-height: 1.42;
+	color: var(--color-soft);
+}
+.file-take {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	margin-top: 1rem;
+	padding-bottom: 0.15rem;
+	font-size: 1.125rem;
+	font-weight: 700;
+	border-bottom: 2px solid var(--color-ink);
+	transition: color 200ms ease, border-color 200ms ease;
+}
+.file-take .arrow {
+	width: 1rem;
+}
+.file:hover .file-name,
+.file:focus-visible .file-name,
+.file:hover .file-take {
+	color: var(--color-signal-deep);
+}
+.file:hover .file-take {
+	border-color: var(--color-signal-deep);
+}
+.file:hover .cover,
+.file:focus-visible .cover {
+	transform: translateY(-4px) rotate(-1.5deg);
+	box-shadow: 0 26px 44px -14px rgba(22, 21, 20, 0.5);
+}
+
+/* THE LETTER: who writes, and a reference to the newsletter — never a copy of it. */
+.letter .grid-12 {
+	row-gap: 2rem;
+	align-items: start;
+}
+.letter-quote {
+	grid-column: 1 / 7;
+	/* The band-title size, not the close's: at the close's size «herramientas,» is
+	   wider than six columns and its comma broke onto the next line (measured). */
+	font-size: clamp(2.4rem, 5.2vw, 4.8rem);
+	font-weight: 900;
+	line-height: 0.9;
+	letter-spacing: -0.04em;
+	text-wrap: balance;
+}
+.letter-quote span {
+	-webkit-box-decoration-break: clone;
+	box-decoration-break: clone;
+	padding-inline: 0.04em;
+	background-image: linear-gradient(var(--color-signal), var(--color-signal));
+	background-repeat: no-repeat;
+	background-size: 100% 0.42em;
+	background-position: 0 72%;
+}
+.letter-side {
+	grid-column: 8 / 13;
+}
+.letter-side > p {
+	font-size: 1.125rem;
+	line-height: 1.6;
+	color: var(--color-soft);
+}
+.letter-side > p + p {
+	margin-top: 1rem;
+}
+.letter-side strong {
+	color: var(--color-ink);
+	font-weight: 700;
+}
+.issues {
+	margin-top: 2.25rem;
+	border-top: 3px solid var(--color-ink);
+}
+.issues-title {
+	padding-block: 1rem 0.35rem;
+	font-size: 1.125rem;
+	font-weight: 900;
+	letter-spacing: -0.02em;
+}
+.issue {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 1rem;
+	padding-block: 0.9rem;
+	border-bottom: 1px solid var(--color-line);
+	font-size: 1.125rem;
+	font-weight: 700;
+	line-height: 1.25;
+	letter-spacing: -0.012em;
+}
+.issue-date {
+	flex-shrink: 0;
+	font-size: 0.875rem;
+	font-weight: 500;
+	color: var(--color-muted);
+	font-variant-numeric: tabular-nums;
+}
+.issue:hover .issue-title {
+	color: var(--color-signal-deep);
+}
+.issues-all {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.45rem;
+	margin-top: 1rem;
+	font-weight: 700;
+}
+.issues-all .arrow {
+	width: 0.95rem;
+	transition: transform 350ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.issues-all:hover {
+	color: var(--color-signal-deep);
+}
+.issues-all:hover .arrow {
+	transform: translateX(4px);
+}
+
+/* THE CLOSE: centred like the hero, on ink. The second ask, for whoever just
+   read the page. */
+.poster-close {
+	background: var(--color-ink);
+	color: var(--color-paper);
+	text-align: center;
+}
+.poster-close .wide {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding-block: clamp(3.5rem, 8vw, 7rem);
+}
+.poster-close h2 {
+	max-width: 14ch;
+	font-size: clamp(2.6rem, 6.2vw, 6rem);
+	font-weight: 900;
+	line-height: 0.88;
+	letter-spacing: -0.04em;
+	text-wrap: balance;
+}
+.poster-close h2 span {
+	color: var(--color-signal); /* 11.28:1 on ink */
+}
+.poster-close > .wide > p {
+	margin-top: 1.4rem;
+	max-width: 32rem;
+	font-size: 1.125rem;
+	line-height: 1.45;
+	color: #d7d4cc;
+	text-wrap: balance;
+}
+.poster-close .frame {
+	margin-top: 1.8rem;
+	width: min(100%, 36rem);
+	background: var(--color-paper);
+}
+.poster-close .poster-note {
+	color: #a29e94;
+}
+
+.arrow {
+	display: block;
+	height: auto;
+}
+
+/* ─── Motion: one authored moment and one entrance, both opt-in. ─── */
+
+/*
+ * THE MARK'S HOVER TURN is the site's authored moment: the square with the piece
+ * missing turns a quarter and lights up in mango, so the gap moves to where the
+ * cursor is — quintic ease-out, no overshoot, because a shape that settles back
+ * reads as a wobble, not a turn.
+ * The one entrance is the hero only, from 8px, already visible on the first
+ * frame's worth of distance. NOTHING LOOPS.
+ */
+@media (prefers-reduced-motion: no-preference) {
+	html {
+		scroll-behavior: smooth;
+	}
+	.site-mark .site-symbol {
+		transition: color 220ms ease, transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+	}
+	.site-mark:hover .site-symbol {
+		transform: rotate(90deg);
+	}
+	.poster-title,
+	.poster-lead,
+	.poster-hero .frame {
+		animation: rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+	}
+	.poster-lead {
+		animation-delay: 0.06s;
+	}
+	.poster-hero .frame {
+		animation-delay: 0.12s;
+	}
+	@keyframes rise {
+		from {
+			opacity: 0.001;
+			transform: translateY(8px);
+		}
+		to {
+			opacity: 1;
+			transform: none;
+		}
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.door-go,
+	.cover,
+	.issues-all .arrow {
+		transition: none;
+	}
+	.door:hover .door-go,
+	.door:focus-visible .door-go,
+	.file:hover .cover {
+		transform: none;
+	}
+}
+
+/* ─── Breakpoints: 900px folds the poster grid, 640px stacks fields. ─── */
+
+@media (max-width: 900px) {
+	.site-nav a:not(.site-join) {
+		display: none;
+	}
+	.band-title,
+	.band-intro,
+	.wanted-title,
+	.wanted-body,
+	.letter-quote,
+	.letter-side {
+		grid-column: 1 / -1;
+	}
+	.door-name {
+		grid-column: 1 / 12;
+	}
+	.door-go {
+		grid-column: 12 / 13;
+		grid-row: 1;
+	}
+	.door-give {
+		grid-column: 1 / -1;
+	}
+	.files {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+@media (max-width: 640px) {
+	.box-text {
+		-webkit-line-clamp: 4;
+	}
+	.frame-button {
+		width: 100%;
+	}
+}
+@media (max-width: 460px) {
+	.site-foot .wide {
+		flex-direction: column;
+		align-items: flex-start;
+	}
+	.file {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+
+.prose,
+.body-text,
+.section-intro,
+.box-text {
+	font-family: var(--font-sans);
+}
+
 iframe {
 	display: block;
 	max-width: 100%;
 }
 
-/*
- * No line may escape its column.
- *
- * `anywhere` and not `break-word`, and the difference matters: both break long
- * words, but only `anywhere` counts towards the element's intrinsic minimum
- * size. With `break-word` a long word can still widen its container (and the
- * page with it); with `anywhere` it cannot.
- */
+/* No line may escape its column: `anywhere` counts toward min-content, `break-word` doesn't. */
 .prose,
 .prose *,
 .body-text,
@@ -508,15 +1215,14 @@ iframe {
 .section-title,
 .letter-heading,
 .section-intro,
-.muted {
+.muted,
+.poster-title,
+.band-title,
+.door-name,
+.file-name,
+.letter-quote,
+.issue {
 	overflow-wrap: anywhere;
-}
-
-/* The family photo inside the letter: soft corners and air around it, with the
-   caption tucked underneath. */
-.prose img {
-	border-radius: 0.5rem;
-	margin-block: 2rem 0.75rem;
 }
 
 .prose img + p em,
@@ -525,4 +1231,40 @@ iframe {
 	font-size: 0.875rem;
 	font-style: normal;
 	color: var(--color-muted);
+}
+
+/* A door inside a page column (the 404): the name alone, at the column's size. */
+.door.is-compact .door-name {
+	grid-column: 1 / 12;
+	font-size: clamp(1.15rem, 2.4vw, 1.4rem);
+}
+
+/*
+ * DAISYUI'S PRIMARY BUTTON IS INK, NOT BLUE. Most of these on tool pages build,
+ * copy, send an idea or start a course — none of that puts anybody on a list,
+ * and Substack's blue means exactly that. A button that does subscribe opts back
+ * in with `.is-subscribe`. Unlayered, because DaisyUI writes `.btn-primary` into
+ * the utilities layer, which beats `@layer components` whatever the specificity.
+ */
+.btn-primary {
+	--btn-color: var(--color-ink);
+	--btn-fg: var(--color-paper);
+	background: var(--color-ink);
+	border-color: var(--color-ink);
+	color: var(--color-paper);
+}
+.btn-primary:hover:not(:disabled) {
+	background: #2b2926;
+	border-color: #2b2926;
+}
+.btn-primary.is-subscribe {
+	--btn-color: var(--color-brand);
+	--btn-fg: #ffffff;
+	background: var(--color-brand);
+	border-color: var(--color-brand);
+	color: #ffffff;
+}
+.btn-primary.is-subscribe:hover:not(:disabled) {
+	background: #005bc8;
+	border-color: #005bc8;
 }

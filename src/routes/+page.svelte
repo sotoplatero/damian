@@ -1,252 +1,372 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { tools } from '$lib/tools/list';
-	import { resources } from '$lib/resources/list';
+	import { resources, resourceHref } from '$lib/resources/list';
+	import { PUBLICATION_URL, subscribeUrl } from '$lib/publication';
+	import { GAP_MIN, GAP_MAX, isGapRequestValid } from '$lib/gap';
+	import { shortDate } from '$lib/issues';
+	import { postTool } from '$lib/tools/client';
 	import PageMeta from '$lib/components/PageMeta.svelte';
+	import InlineForm from '$lib/components/InlineForm.svelte';
+	import Arrow from '$lib/components/Arrow.svelte';
+	import Mark from '$lib/components/Mark.svelte';
+	import type { PageData } from './$types';
+
+	let { data }: { data: PageData } = $props();
 
 	/*
 	 * ── NOTAS PARA DAMIAN (editoriales, en español a propósito) ─────────────
 	 *
-	 * Todo el copy de la home vive en este componente, escrito como HTML normal.
-	 * Antes pasaba por src/lib/content/home.md + frontmatter + marked; se quitó
-	 * porque era demasiada maquinaria para una carta.
-	 *
 	 * 0. DATOS CONFIRMADOS POR TI (no los cambies sin querer): salida 6pm de
 	 *    Surinam, desembarco 9pm del día siguiente = 27 horas en el bote. Tres
 	 *    aviones hasta Porto Alegre y a Uruguay en auto. Un año hasta volver a
-	 *    estar con tus hijos. Ahora vives en Canadá: Uruguay fue el final de la
-	 *    travesía, no dónde acabaste.
+	 *    estar con tus hijos. Ahora vives en Canadá.
 	 *
-	 * 1. EL ALTA la hace el iframe de Substack: va directa allí y este repo no
-	 *    ve el email. No hay cron; los NN.md de src/lib/emails son borradores
-	 *    para posts de Substack (00.md es el correo de bienvenida que deberías
-	 *    pegar en los ajustes de Substack). El formulario propio y /api/subscribe
-	 *    se eliminaron en agosto 2026 por no usarse; están en el historial de git
-	 *    si el iframe cae. Las herramientas dan de alta en Resend directamente
-	 *    con subscribe() del servidor.
+	 * 1. EL CRITERIO (PRODUCT.md, 23 sep 2026): la carta cuenta la historia, el
+	 *    sitio hace el trabajo. Aquí no se copia ni se resume ningún envío: se
+	 *    enlazan los tres últimos por título y fecha, y se leen solos de Substack
+	 *    (+page.server.ts). Si Substack no responde, la lista no se pinta.
 	 *
-	 * 2. LAS HERRAMIENTAS se editan en src/lib/tools/list.ts: añades un objeto
-	 *    y aparece sola. La sección no lleva título a propósito: "Herramientas"
-	 *    sobraba con el subtítulo diciendo "yo me construyo las mías".
+	 * 2. LA HOME NO LLEVA CAMPOS DE HERRAMIENTAS. Cada herramienta y cada descarga
+	 *    tiene su página con su campo; aquí cada fila es una puerta y dice qué
+	 *    metes (`takes` en src/lib/tools/list.ts). Tres campos en toda la página:
+	 *    el alta de arriba, el hueco y el alta de abajo.
 	 *
-	 *    LAS DESCARGAS son otra lista, src/lib/resources/list.ts, y otra sección
-	 *    debajo. No las mezcles: una herramienta se usa aquí y se acaba al
-	 *    cerrar la pestaña; una descarga te la llevas y pide el correo siempre.
-	 *    Metida entre las cuatro de arriba, una descarga se lee como una quinta
-	 *    herramienta que no funciona.
+	 * 3. FALTAN PRUEBAS. Ni un cliente, ni una cifra inventada. Una línea real
+	 *    —"esto se lo monté a un taller de Montevideo"— vale más que medio texto.
 	 *
-	 * 2bis. LOS TRES TÍTULOS (herramientas / cosas que te llevas / quién te
-	 *    escribe) son <h2> de verdad, pero con `.letter-heading`, que los deja al
-	 *    tamaño del cuerpo. La jerarquía la hace la negrita sobre la entradilla
-	 *    en gris. NO uses `.section-title` aquí: es un cuerpo mayor y nombra una
-	 *    tarjeta o un panel, no un tramo de la carta.
+	 * 4. LAS DOS ALTAS van a la página de Substack con el correo relleno
+	 *    (`subscribeUrl`). La de abajo era el iframe de Substack; se cambió porque
+	 *    eran 320px de caja blanca ajena encima del cierre en tinta, y el alta es
+	 *    la misma: se confirma allí.
 	 *
-	 *    Y están escritos en primera persona a propósito. "Herramientas que
-	 *    estoy construyendo" dice algo; "Herramientas" solo etiqueta, y en
-	 *    cuanto etiquetas, la carta se parte en fichas de producto.
+	 * 5. «SIN DECÍRSELO A MIS AMIGOS», nunca «a nadie»: «a nadie» mete a tu mujer
+	 *    en el mismo saco. La versión corta de la historia aquí no lo cuenta; si
+	 *    vuelve la larga, esa frase va así.
 	 *
-	 * 3. FALTAN PRUEBAS. Ni un cliente, ni una cifra. Una línea real —"esto se
-	 *    lo monté a un taller de Montevideo"— vale más que medio texto. Va justo
-	 *    antes de "déjame tu email".
-	 *
-	 * 4. LA FOTO ya está optimizada: 1100x1100 WebP, 108 KB. El original está en
-	 *    src/lib/assets/los-sotos-original.jpg.
-	 *
-	 * 5. POR QUÉ ESTÁ ESCRITO ASÍ. Es "SIN DECÍRSELO A MIS AMIGOS", nunca "a
-	 *    nadie": "a nadie" mete a tu mujer en el mismo saco y la salida se lee
-	 *    como un abandono. Ella lo sabía. No lo toques. Y "no te cuento esto
-	 *    para que me tengas lástima" es la línea que salva la historia de sonar
-	 *    a queja: si la quitas, recorta la historia.
-	 *
-	 * 6. LA HOME ES "HACEDOR PRIMERO" PERO EL TITULAR HABLA DEL CLIENTE.
-	 *    "Me hago las herramientas que no encuentro" se probó y se descartó:
-	 *    hablaba de ti. El titular nombra SU problema y las herramientas de
-	 *    debajo son la réplica. El subtítulo tiene dos tiempos y los dos hacen
-	 *    falta: "yo me construyo las mías" (réplica, elegida por ti) y "tú
-	 *    puedes hacerte las tuyas" (la tesis que la historia demuestra). En
-	 *    afirmativo a propósito: en pregunta el lector no técnico se contesta
-	 *    "no" y se va. Sin "cada semana": sonaba a calendario.
+	 * 6. EL TITULAR HABLA DEL CLIENTE. «Me hago las herramientas que no encuentro»
+	 *    se descartó: hablaba de ti. La entradilla va en afirmativo y sin «cada
+	 *    semana» (sonaba a calendario); el ritmo lo dice la nota del alta.
 	 *
 	 * 7. TITULARES ALTERNATIVOS:
 	 *    - La herramienta que necesitas no existe.
 	 *    - Estás pagando por software que podrías hacerte en una tarde.
-	 *    - Cada semana me hago una herramienta. Te cuento cómo.
-	 *    - Me hago las herramientas que no encuentro. Y te las dejo aquí.  (descartado: habla de mí)
-	 *    - Desde el Amazonas hasta tu buzón.
+	 *    - Pega tu Substack. Mira lo que sale.
 	 * ─────────────────────────────────────────────────────────────────────────
 	 */
 
 	/*
-	 * El título y la entradilla de cada sección.
-	 *
-	 * El título es un <h2> de verdad, pero al tamaño del cuerpo (`.letter-heading`):
-	 * la jerarquía la hace la negrita sobre la entradilla en gris, no un cuerpo de
-	 * letra mayor. Y está escrito en primera persona, que es lo que lo separa de
-	 * un rótulo: "Herramientas que estoy construyendo" dice algo, "Herramientas"
-	 * solo etiqueta.
+	 * The two asks share their terms. `note` names Substack out loud because the
+	 * button leaves this site, and «te borras en un clic» is the same promise the
+	 * download pages make in `SUBSCRIBE_NOTE`, said the same way on purpose.
 	 */
-	const toolsIntro = {
-		title: 'Herramientas que estoy construyendo',
-		text: 'Las uso yo para trabajar y las dejo aquí por si te sirven. La lista crece.'
+	const t = {
+		placeholder: 'tu@email.com',
+		fieldLabel: 'Tu correo electrónico',
+		button: 'Apúntame',
+		note: 'Un correo a la semana con la herramienta nueva y cómo la hice. El alta se confirma en Substack, que es donde escribo. Te borras en un clic.'
 	};
 
-	// Las descargas. Lo de arriba se usa aquí y se acaba al cerrar la pestaña;
-	// esto te lo llevas y se queda contigo. El título dice justo esa diferencia.
-	const resourcesIntro = {
-		title: 'Cosas que te puedes llevar',
-		text: 'Te las mando al correo y son tuyas, aunque te borres mañana.'
+	let heroEmail = $state('');
+	let closeEmail = $state('');
+
+	/*
+	 * The gap's copy. It promises the letter and nothing else — no «te aviso»,
+	 * which nothing here could keep: no address is asked for and none is stored.
+	 */
+	const g = {
+		title: '¿Qué haces a mano cada semana?',
+		text: 'Dímelo. Si la construyo, aparece aquí y la cuento en la carta. No te pido el correo.',
+		placeholder: 'Cuadrar facturas a mano',
+		fieldLabel: 'La herramienta que te falta',
+		button: 'Mándalo',
+		busy: 'Mandando...',
+		sentTitle: 'Anotado.',
+		sentBody: 'Lo leo yo. Si construyo esa, la cuento en la carta.',
+		note: `Entre ${GAP_MIN} y ${GAP_MAX} caracteres.`,
+		errorLength: `Cuéntamelo un poco mejor: entre ${GAP_MIN} y ${GAP_MAX} caracteres.`,
+		errorRateLimit: 'Ya me has mandado unas cuantas hoy. Sigue mañana.',
+		errorGeneric: 'Algo ha fallado por mi parte. Inténtalo otra vez.',
+		errorOffline: 'No se pudo conectar. Revisa tu conexión.'
 	};
 
-	// #4 — the line that "knows" the time. Computed in the browser (local hour),
-	// so it always matches the visitor. Empty on the server to avoid a wrong guess.
+	let gapTool = $state('');
+	let gapBusy = $state(false);
+	let gapError = $state('');
+	let gapSent = $state(false);
+
+	async function sendGap() {
+		if (!isGapRequestValid(gapTool)) {
+			gapError = g.errorLength;
+			return;
+		}
+		gapBusy = true;
+		gapError = '';
+		try {
+			await postTool('/hueco', { tool: gapTool }, { ...g, errorGapLength: g.errorLength });
+			gapSent = true;
+		} catch (caught) {
+			gapError = caught instanceof Error ? caught.message : g.errorOffline;
+		} finally {
+			gapBusy = false;
+		}
+	}
+
+	/*
+	 * Hand the address to Substack's own subscribe page, prefilled. Another
+	 * origin, so `location.assign` and not `goto`.
+	 */
+	function subscribe(email: string) {
+		window.location.assign(subscribeUrl(email));
+	}
+
+	// The line that knows the hour. Computed in the browser so it matches the
+	// visitor; empty on the server rather than a wrong guess.
 	let greeting = $state('');
 
 	function timeGreeting(): string {
 		const h = new Date().getHours();
 		if (h < 6) return 'Las tantas de la madrugada y aquí sigues, dándole vueltas al negocio. Lo sé.';
 		if (h < 13) return 'Es por la mañana y ya andas buscando cómo quitarte trabajo de encima. Bien.';
-		if (h < 20) return 'Media tarde, y en vez de estar con el negocio, buscas cómo hacer que se lleve solo. Vas bien.';
+		if (h < 20) return 'Media tarde y, en vez de estar con el negocio, buscas cómo hacer que se lleve solo. Vas bien.';
 		return 'Es de noche y sigues pensando en el negocio. Lo sé.';
 	}
 
 	onMount(() => {
 		greeting = timeGreeting();
 
-		// A wink for whoever opens the console.
 		console.log(
-			'%cSi has abierto esto, tú y yo nos vamos a entender.%c\nResponde al primer correo que te mando y dime qué automatizarías.',
-			'font-size:14px;font-weight:700;color:#171717',
-			'font-size:13px;color:#737373'
+			'%cSi has abierto esto, tú y yo nos vamos a entender.%c\nEscribe damian.ayuda() y sigue tirando del hilo.',
+			'font-size:14px;font-weight:700;color:#161514',
+			'font-size:14px;color:#6b6862'
 		);
+
+		/*
+		 * THE CONSOLE IS A REAL DOOR, not a printed message. Somebody who opens dev
+		 * tools here is the audience mid-proof, so the functions WORK:
+		 * `damian.hueco('...')` posts to the same endpoint the wanted block does.
+		 */
+		Object.assign(window, {
+			damian: {
+				ayuda() {
+					console.log(
+						[
+							'damian.herramientas()  las que hay, con su enlace',
+							'damian.hueco(texto)    dime cuál te falta, va al mismo sitio que el hueco de la página',
+							'damian.carta()         te lleva a suscribirte',
+							'',
+							'Y en la página: ⌘K o ? abren el buscador.'
+						].join('\n')
+					);
+				},
+				herramientas() {
+					console.table(
+						[...tools, ...resources.map((r) => ({ name: r.name, href: resourceHref(r) }))].map(
+							(item) => ({ herramienta: item.name, dónde: item.href })
+						)
+					);
+				},
+				async hueco(text: string) {
+					if (!isGapRequestValid(text)) {
+						console.warn(`Entre ${GAP_MIN} y ${GAP_MAX} caracteres, y que sea de verdad.`);
+						return;
+					}
+					await postTool('/hueco', { tool: text }, { ...g, errorGapLength: g.errorLength });
+					console.log('Anotado. Si construyo esa, la cuento en la carta.');
+				},
+				carta: () => window.location.assign(subscribeUrl(''))
+			}
+		});
 	});
 </script>
 
 <PageMeta
 	title="Objeto Brillante — Damian Soto"
-	description="Un email a la semana con algo que he hecho con IA en un negocio real y que funciona. Sin cursos, sin tutoriales. Yo te cuento lo que hago."
+	description="Herramientas gratis para tu Substack, hechas por una persona sola. Úsalas aquí con lo tuyo, y cada semana una nueva y cómo la hice."
 />
 
-<!-- The line that knows the time. Reserves its height to avoid layout shift. -->
-<p class="greeting muted">{greeting}</p>
-
-<article class="prose prose-xl prose-neutral max-w-none">
-	<h1>Nadie va a construir la herramienta <mark>que te falta.</mark></h1>
-	<p>Yo me construyo las mías. Tú puedes hacerte las tuyas.</p>
-</article>
-
-<!-- The tools, right after the headline: the proof before the ask. The h2 names
-     the section and no aria-label is needed — a label would override it. -->
-<section class="section">
-	<h2 class="letter-heading">{toolsIntro.title}</h2>
-	<p class="section-intro">{toolsIntro.text}</p>
-
-	<ul class="mt-6 space-y-3">
-		{#each tools as tool, index (tool.href)}
-			<li>
-				<a href={tool.href} class="box-link">
-					<span class="tool-index">{String(index + 1).padStart(2, '0')}</span>
-					<span class="box-title">{tool.name}</span>
-					<span aria-hidden="true" class="tool-arrow">↗</span>
-					<p class="box-text">{tool.blurb}</p>
-				</a>
-			</li>
-		{/each}
-	</ul>
-</section>
-
-<!-- The resources: what you take away, as against the tools, which you use here.
-     Its own section and its own list (src/lib/resources/list.ts) because mixed
-     into the four above, a download reads as a fifth tool that doesn't work.
-     It sits after them on purpose — the tools are the proof, and this is the
-     first thing asked of a visitor, so it goes once they have seen something. -->
-<section class="section">
-	<h2 class="letter-heading">{resourcesIntro.title}</h2>
-	<p class="section-intro">{resourcesIntro.text}</p>
-
-	<ul class="mt-6 space-y-3">
-		{#each resources as resource (resource.href)}
-			<li>
-				<a href={resource.href} class="box-link">
-					<!-- The tools number themselves 01, 02...; here the same slot says
-					     what the thing is. A second run of numbers starting back at 01
-					     right under theirs reads as a broken list. -->
-					<span class="tool-index">ZIP</span>
-					<span class="box-title">{resource.name}</span>
-					<span aria-hidden="true" class="tool-arrow">↓</span>
-					<p class="box-text">{resource.blurb}</p>
-				</a>
-			</li>
-		{/each}
-	</ul>
-</section>
-
-<!-- The story, a credential now: it ends where the signup begins.
-     `prose-quiet` keeps its first paragraph as body text, not as a lead. -->
-<article class="prose prose-xl prose-neutral prose-quiet section max-w-none">
-	<!-- El h2 de la historia. Lleva `.letter-heading` para salirse del tamaño que
-	     `prose` le daría: los títulos de prose usan selectores sin especificidad,
-	     así que una clase normal les gana.
-	     La entradilla dice para qué está la historia aquí, que el formulario viene
-	     justo detrás. Va en su propio párrafo y no pegada al "En 2022 salí de
-	     Cuba", porque ese arranque no se toca (ver nota 5). -->
-	<h2 class="letter-heading">Quién te escribe esto</h2>
-	<p>Antes de que me dejes tu correo, sabe a quién se lo dejas.</p>
-	<p>
-		En 2022 salí de Cuba en un avión a Surinam. Solo. Sin decírselo a mis amigos. Dejando atrás a
-		mi mujer y a mis dos hijos.
-	</p>
-	<p>
-		Estuve en Amazonas en un bote junto a 24 cubanos por más de 27 horas escondido para llegar a
-		Brasil. Tres vuelos para llegar a Porto Alegre en la frontera sur. Y finalmente entré a
-		Uruguay.
-	</p>
-	<p>Ahora estoy en Canadá.</p>
-	<p>
-		<img
-			src="/los-sotos.webp"
-			alt="Damian Soto con sus dos hijos"
-			width="1100"
-			height="1100"
-			loading="lazy"
-			decoding="async"
+<!--
+	THE FIRST VIEWPORT: centred on the mango field. The headline at poster size,
+	one line under it, and the ask. It names the visitor's problem, not Damian —
+	the rows below are the answer.
+-->
+<section class="poster-hero" aria-labelledby="hero-title">
+	<div class="wide">
+		<h1 id="hero-title" class="poster-title">Nadie va a construir la herramienta que te falta.</h1>
+		<p class="poster-lead">
+			Yo me construyo las mías. Aquí las tienes, gratis y funcionando, para tu Substack.
+		</p>
+		<InlineForm
+			bind:value={heroEmail}
+			type="email"
+			placeholder={t.placeholder}
+			fieldLabel={t.fieldLabel}
+			label={t.button}
+			inputmode="email"
+			autocomplete="email"
+			onsubmit={() => subscribe(heroEmail)}
 		/>
-	</p>
-	<p>Estos son los míos. Tardé mas de un año en volver a verlos.</p>
-	<p>No te cuento esto para que me tengas lástima.</p>
-	<p>Te lo digo porque solo quien ha dejado todo y empieza de cero sabe que nada es imposible.</p>
-	<p>
-		Para eso escribo <strong>Objeto Brillante</strong>: cada semana me hago una herramienta como
-		las de arriba y te cuento cómo, para que armes tu propia caja de herramientas IA que trabajen
-		para ti.
-	</p>
-	<p>No escribo bonito. Escribo lo que sé.</p>
-	<p>
-		Si lo que quieres es una master class, 10 prompts o una plantilla, cierra la pestaña y
-		olvidame. No soy tu maestro
-	</p>
-	<p>Pero si quieres la historia completa, déjame tu email.</p>
-	<p>Si te canso, un clic y desaparezco.</p>
-	<p><strong>Damian</strong></p>
-</article>
-
-<!-- The signup: Substack's own form. -->
-<section class="mt-10">
-	<div class="embed-shell">
-		<iframe
-			src="https://sotoplatero.substack.com/embed"
-			title="Suscríbete a Objeto Brillante"
-			width="100%"
-			height="320"
-			frameborder="0"
-			scrolling="no"
-		></iframe>
+		<p class="poster-note">{t.note}</p>
 	</div>
 </section>
 
-<style>
-	/* Reserve one line so filling the greeting on mount doesn't shift the page */
-	.greeting {
-		min-height: 1.25rem;
-		margin-bottom: 0.75rem;
-	}
-</style>
+<!--
+	THE TOOLS: doors, not forms. Each row is the whole click target and says what
+	goes in; the field is on the tool's own page.
+-->
+<section id="herramientas" class="band" aria-labelledby="tools-title">
+	<div class="wide">
+		<div class="grid-12 band-head">
+			<h2 id="tools-title" class="band-title">Úsalas aquí. Con lo tuyo.</h2>
+			<p class="band-intro">
+				Cada una hace un trabajo que hoy haces a mano, o que no haces. Metes lo tuyo y te llevas el
+				resultado.
+			</p>
+		</div>
+
+		<ul class="doors">
+			{#each tools as tool (tool.href)}
+				<li>
+					<a href={tool.href} class="door">
+						<h3 class="door-name">{tool.name}</h3>
+						<p class="door-give">
+							{tool.blurb}
+							<span class="door-takes label"
+								>Metes <b>{tool.takes}</b>{#if !tool.capturesEmail}&nbsp;· sin correo{/if}</span
+							>
+						</p>
+						<Arrow class="door-go" />
+					</a>
+				</li>
+			{/each}
+		</ul>
+
+		<!--
+			THE WANTED ONE, closing the row of tools: the only reversed block in the content,
+			because it is the only tool that doesn't exist yet. It asks for no
+			address — this is the one place a visitor gets to SAY something.
+		-->
+		<div class="wanted on-ink">
+			<div class="grid-12">
+				<h3 class="wanted-title">{g.title}</h3>
+				<div class="wanted-body" aria-live="polite">
+					{#if gapSent}
+						<p class="wanted-sent"><b>{g.sentTitle}</b> {g.sentBody}</p>
+					{:else}
+						<p>{g.text}</p>
+						{#if gapError}<p class="text-error mb-3 text-sm">{gapError}</p>{/if}
+						<InlineForm
+							bind:value={gapTool}
+							placeholder={g.placeholder}
+							fieldLabel={g.fieldLabel}
+							label={g.button}
+							busyLabel={g.busy}
+							busy={gapBusy}
+							onsubmit={sendGap}
+						/>
+						<p class="muted mt-3">{g.note}</p>
+					{/if}
+				</div>
+			</div>
+		</div>
+	</div>
+</section>
+
+<!--
+	THE DOWNLOADS, as objects: a file you take away gets a cover. Each is a door
+	to its /recursos page, which is where the address is asked for.
+-->
+<section id="descargas" class="band band-sheet" aria-labelledby="files-title">
+	<div class="wide">
+		<div class="grid-12 band-head">
+			<h2 id="files-title" class="band-title">Estas te las llevas.</h2>
+			<p class="band-intro">Archivos para tu disco. Son tuyos aunque te borres mañana.</p>
+		</div>
+		<ul class="files">
+			{#each resources as resource, index (resource.slug)}
+				<li>
+					<a href={resourceHref(resource)} class="file">
+						<span class="cover" class:is-signal={index % 2 === 1} aria-hidden="true">
+							<span class="cover-meta">{resource.format} · {resource.cover.opens}</span>
+							<span>
+								<Mark class="cover-star" />
+								<span class="cover-title block">{resource.cover.title}</span>
+							</span>
+							<span class="cover-meta">Damian Soto</span>
+						</span>
+						<span class="block">
+							<h3 class="file-name">{resource.name}</h3>
+							<p class="file-blurb">{resource.blurb}</p>
+							<span class="file-take">Llévatelo <Arrow /></span>
+						</span>
+					</a>
+				</li>
+			{/each}
+		</ul>
+	</div>
+</section>
+
+<!--
+	WHO WRITES, and the newsletter as a REFERENCE: its latest issues by title and
+	date, linking out. Never an excerpt (PRODUCT.md, the criterion).
+-->
+<section class="band letter" aria-labelledby="letter-title">
+	<div class="wide grid-12">
+		<h2 id="letter-title" class="letter-quote">
+			Las herramientas, aquí. <span>Cómo las hago, en la carta.</span>
+		</h2>
+		<div class="letter-side">
+			<p>
+				Soy Damian. Salí de Cuba en 2022 y empecé de cero en Canadá. Cada semana me hago una
+				herramienta para un negocio real, y en <strong>Objeto Brillante</strong> cuento cómo, para que
+				tú puedas hacerte las tuyas.
+			</p>
+			<p>
+				No es un curso ni una plantilla. <strong>No escribo bonito. Escribo lo que sé.</strong>
+			</p>
+
+			{#if data.issues.length}
+				<div class="issues">
+					<h3 class="issues-title">Lo último en la carta</h3>
+					<ul>
+						{#each data.issues as issue (issue.url)}
+							<li>
+								<a class="issue" href={issue.url} target="_blank" rel="noopener noreferrer">
+									<span class="issue-title">{issue.title}</span>
+									<time class="issue-date" datetime={issue.date}>{shortDate(issue.date)}</time>
+								</a>
+							</li>
+						{/each}
+					</ul>
+					<a class="issues-all" href="{PUBLICATION_URL}/archive" target="_blank" rel="noopener noreferrer"
+						>Todas las cartas <Arrow /></a
+					>
+				</div>
+			{/if}
+		</div>
+	</div>
+</section>
+
+<!-- THE CLOSE: the second ask, for whoever just read the page. `id="alta"` is
+     what the header, a post or an email link to. -->
+<section id="alta" class="poster-close on-ink" aria-labelledby="close-title">
+	<div class="wide">
+		<h2 id="close-title">Si alguna te sirvió, <span>la próxima llega la semana que viene.</span></h2>
+		<!-- The line that knows the hour lives here, at the end: the voice of
+		     somebody who noticed you read the whole page. It reserves its height so
+		     filling it on mount moves nothing. -->
+		<p class="greeting">{greeting}</p>
+		<p>La herramienta nueva y cómo la hice. Si te canso, un clic y desaparezco.</p>
+		<InlineForm
+			bind:value={closeEmail}
+			type="email"
+			placeholder={t.placeholder}
+			fieldLabel={t.fieldLabel}
+			label={t.button}
+			inputmode="email"
+			autocomplete="email"
+			onsubmit={() => subscribe(closeEmail)}
+		/>
+		<p class="poster-note">El alta se confirma en Substack. — Damian</p>
+	</div>
+</section>

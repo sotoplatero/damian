@@ -34,17 +34,26 @@ export type Tool = {
 	 * front of it would turn it into lead capture.
 	 */
 	capturesEmail?: boolean;
+	/**
+	 * What the visitor puts in, as the home page says it: «Metes <takes>». A tool
+	 * here is dynamic — something goes in and a result comes out — and this line is
+	 * how the home page says so without a form of its own. The field lives on the
+	 * tool's page.
+	 */
+	takes: string;
 };
 
 export const tools: Tool[] = [
 	{
 		name: 'La postal de tu Substack',
 		href: '/postcard',
+		takes: 'tu Substack',
 		blurb: 'Pega tu dirección y llévate cuatro postales con tu historia, listas para compartir.'
 	},
 	{
 		name: 'Descarga el archivo de una newsletter',
 		href: '/tool/archive',
+		takes: 'la newsletter que quieres estudiar',
 		blurb:
 			'Pega la dirección de la que te interesa y llévate su archivo entero: el índice y sus posts en markdown.',
 		capturesEmail: true
@@ -52,18 +61,21 @@ export const tools: Tool[] = [
 	{
 		name: 'Distribuye tu artículo',
 		href: '/tool/repurpose',
+		takes: 'un artículo tuyo',
 		blurb: 'Nueve notas de un artículo tuyo: cinco con sus datos y cuatro que van más lejos que él.',
 		capturesEmail: true
 	},
 	{
 		name: 'Reescribe el “Acerca de” de tu Substack',
 		href: '/tool/substack-about',
+		takes: 'tu Substack',
 		blurb: 'Pega tu publicación. Te digo qué no se entiende y te propongo una versión mejor.',
 		capturesEmail: true
 	},
 	{
 		name: 'Saca 10 posts distintos de una sola idea',
 		href: '/tool/10-post-types',
+		takes: 'una idea',
 		blurb: 'Escribe el tema. Te doy diez posts listos para publicar.',
 		capturesEmail: true
 	}

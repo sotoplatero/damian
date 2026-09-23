@@ -181,16 +181,16 @@
 		<section class="section box bg-line/40">
 			<h2 class="section-title">{t.makeYoursTitle}</h2>
 			<p class="section-intro">{t.makeYoursBody}</p>
-			<form method="GET" action="/postcard" class="mt-4 flex gap-2">
+			<form method="GET" action="/postcard" class="frame mt-4">
 				<input
-					class="input input-bordered input-lg min-w-0 flex-1"
+					class="frame-field"
 					type="text"
 					name="url"
 					required
 					placeholder={t.urlPlaceholder}
-					aria-label={t.urlPlaceholder}
+					aria-label={t.urlFieldLabel}
 				/>
-				<button class="btn btn-primary btn-lg shrink-0" type="submit">{t.urlButton}</button>
+				<button class="frame-button" type="submit">{t.urlButton}</button>
 			</form>
 		</section>
 

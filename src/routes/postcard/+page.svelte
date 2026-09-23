@@ -42,16 +42,31 @@
 	{#if data.invalid}<p class="mt-6 text-sm text-error">{t.errorNotSubstack}</p>{/if}
 
 	<div class="mt-8">
-		<form method="GET" action="/postcard" class="flex gap-2">
+		<!--
+			Hand-rolled and NOT `InlineForm`, on purpose: this one is a real
+			`method="GET"` form that navigates, so it works with no JavaScript at all
+			— which is right for the front door of the only tool with no email gate.
+			What it must not do is LOOK like the shared form and behave differently,
+			so it carries the same responsive rule: stacked under 640px, side by side
+			above it. It was `flex gap-2` at every width, which left the field 200px
+			on a phone, the defect `InlineForm` was already corrected for.
+
+			`aria-label` is a NAME, not the example in the placeholder. It said
+			«tunewsletter.substack.com», so a screen reader announced the field as an
+			address that is not the visitor's.
+		-->
+		<form method="GET" action="/postcard" class="frame">
 			<input
-				class="input input-bordered input-lg min-w-0 flex-1"
+				class="frame-field"
 				type="text"
 				name="url"
 				required
 				placeholder={t.urlPlaceholder}
-				aria-label={t.urlPlaceholder}
+				aria-label={t.urlFieldLabel}
 			/>
-			<button class="btn btn-primary btn-lg shrink-0" type="submit">{t.urlButton}</button>
+			<button class="frame-button" type="submit"
+				>{t.urlButton}</button
+			>
 		</form>
 		<p class="muted mt-2">{t.urlHint}</p>
 	</div>

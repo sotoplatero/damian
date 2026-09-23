@@ -13,6 +13,8 @@
 	 */
 	const t = {
 		urlPlaceholder: 'https://tublog.com/tu-articulo',
+		/** El nombre accesible del campo: el placeholder es un ejemplo, no una etiqueta. */
+		urlFieldLabel: 'La dirección del artículo',
 		urlButton: 'Enviar',
 		urlWorking: 'Leyendo la página...',
 		urlHint: 'El enlace de un artículo que explique cómo se hace algo.',
@@ -35,6 +37,17 @@
 		planTitle: 'Esto es lo que voy a construir',
 		planLead: 'Antes de montar nada: cámbialo. Las etiquetas son lo que va a leer quien la use, y cada campo dice qué cambia en el resultado. Si uno no cambia nada, quítalo.',
 		planName: 'Cómo se llama',
+		/*
+		 * Los nombres accesibles del editor del plan. No se ven en pantalla —los
+		 * rótulos visibles ya están— pero sin ellos esta pantalla es una fila de
+		 * cajas de texto sin nombre, y es justo la pantalla donde el visitante
+		 * corrige nuestra interpretación.
+		 */
+		planDoes: 'Qué hace la herramienta',
+		planFieldName: 'Etiqueta del campo',
+		planFieldHelp: 'Texto de ayuda del campo',
+		planFieldChanges: 'Qué cambia en la respuesta el campo',
+		planRule: 'Regla',
 		planFields: 'Lo que va a pedir',
 		planRules: 'Las reglas que va a aplicar',
 		planRulesNote: 'Sacadas de tu artículo y escritas de nuevo, no copiadas: el procedimiento es tuyo, las frases se quedan en tu página.',
@@ -218,20 +231,59 @@
 		<p class="body-text">{t.planLead}</p>
 		{#if error}<p class="text-sm text-error">{error}</p>{/if}
 
+		<!--
+			THE PLAN IS THE PRODUCT, so its fields get real names and the site's own
+			input. Both were missing: the `<span class="eyebrow">` is a detached span,
+			not a `<label>`, so these announced as unlabelled edit boxes — and this is
+			the screen whose entire pitch is that the visitor can correct our
+			interpretation before anything is built. Five nameless text boxes is not a
+			plan anybody can edit.
+
+			`.input .input-bordered` instead of the raw `rounded-lg border border-line
+			bg-white p-3`: the same control, drawn twice, is how a design system drifts.
+		-->
 		<div class="box space-y-2">
 			<span class="eyebrow">{t.planName}</span>
-			<input class="w-full rounded-lg border border-line bg-white p-3" bind:value={spec.nombre} />
-			<textarea class="w-full rounded-lg border border-line bg-white p-3" rows="2" bind:value={spec.queHace}></textarea>
+			<input
+				class="input input-bordered w-full"
+				aria-label={t.planName}
+				bind:value={spec.nombre}
+			/>
+			<textarea
+				class="textarea textarea-bordered w-full"
+				rows="2"
+				aria-label={t.planDoes}
+				bind:value={spec.queHace}
+			></textarea>
 		</div>
 
 		<div class="space-y-4">
 			<h2 class="letter-heading">{t.planFields}</h2>
 			{#each spec.campos as field, index (field.id)}
+				<!--
+					Each row edits one field of the generated form, so each control says
+					WHICH field and WHICH part of it: with a bare «Etiqueta» three times
+					down the page, the third box sounds exactly like the first. The
+					number is the visitor's own, counting from 1, not the array index.
+				-->
 				<div class="box space-y-2">
-					<input class="w-full rounded-lg border border-line bg-white p-3" bind:value={spec.campos[index].etiqueta} />
-					<input class="w-full rounded-lg border border-line bg-white p-3" bind:value={spec.campos[index].ayuda} />
+					<input
+						class="input input-bordered w-full"
+						aria-label={`${t.planFieldName} ${index + 1}`}
+						bind:value={spec.campos[index].etiqueta}
+					/>
+					<input
+						class="input input-bordered w-full"
+						aria-label={`${t.planFieldHelp} ${index + 1}`}
+						bind:value={spec.campos[index].ayuda}
+					/>
 					<p class="muted">{t.planChanges}</p>
-					<textarea class="w-full rounded-lg border border-line bg-white p-3" rows="2" bind:value={spec.campos[index].cambia}></textarea>
+					<textarea
+						class="textarea textarea-bordered w-full"
+						rows="2"
+						aria-label={`${t.planFieldChanges} ${index + 1}`}
+						bind:value={spec.campos[index].cambia}
+					></textarea>
 					{#if spec.campos.length > MIN_FIELDS}
 						<button type="button" class="link-quiet" onclick={() => dropField(field.id)}>{t.planDrop}</button>
 					{/if}
@@ -246,13 +298,25 @@
 			<h2 class="letter-heading">{t.planRules}</h2>
 			<p class="muted">{t.planRulesNote}</p>
 			{#each spec.reglas as _, index (index)}
-				<textarea class="w-full rounded-lg border border-line bg-white p-3" rows="2" bind:value={spec.reglas[index]}></textarea>
+				<textarea
+					class="textarea textarea-bordered w-full"
+					rows="2"
+					aria-label={`${t.planRule} ${index + 1}`}
+					bind:value={spec.reglas[index]}
+				></textarea>
 			{/each}
 		</div>
 
 		<div class="box space-y-2">
 			<span class="eyebrow">{t.planCount}</span>
-			<input type="number" min="3" max="10" class="w-24 rounded-lg border border-line bg-white p-3" bind:value={spec.cuantos} />
+			<input
+				type="number"
+				min="3"
+				max="10"
+				class="input input-bordered w-24"
+				aria-label={t.planCount}
+				bind:value={spec.cuantos}
+			/>
 		</div>
 
 		<button type="button" class="btn btn-primary btn-lg" disabled={busy === 'building'} onclick={build}>
@@ -273,6 +337,7 @@
 			<InlineForm
 				bind:value={url}
 				placeholder={t.urlPlaceholder}
+				fieldLabel={t.urlFieldLabel}
 				label={t.urlButton}
 				busyLabel={t.urlWorking}
 				busy={busy === 'judging'}

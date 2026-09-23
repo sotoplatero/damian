@@ -42,7 +42,7 @@ const FONTS = [
 const INK = '#171717';
 const SOFT = '#525252';
 const MUTED = '#737373';
-const BRAND = '#0076ff';
+const BRAND = '#006ae6';
 
 /** 1200x630 es lo que esperan todas las plataformas. */
 const WIDTH = 1200;

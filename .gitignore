@@ -49,3 +49,9 @@ vite.config.ts.timestamp-*
 # como diana contra la que medir el informe. Lo que si es durable -el metodo y las
 # lecciones- esta en CLAUDE.md y en los comentarios de src/lib/tools/newsletter/.
 docs/auditoria-de-referencia.md
+
+# Impeccable tooling state (decision rounds, generated comps). Not project source.
+.impeccable/
+
+# Playwright MCP session logs and snapshots. Scratch.
+.playwright-mcp/

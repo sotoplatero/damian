@@ -16,6 +16,8 @@
  */
 export const copy = {
 	urlPlaceholder: 'tunewsletter.substack.com',
+	/** El nombre accesible del campo: el placeholder es un ejemplo, no una etiqueta. */
+	urlFieldLabel: 'La dirección de la publicación en Substack',
 	urlButton: 'Evaluar',
 	urlScanning: 'Leyendo...',
 	restart: 'Probar con otra',

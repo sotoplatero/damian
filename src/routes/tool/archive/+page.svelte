@@ -558,9 +558,12 @@
 	{#if error}<p class="mt-6 text-sm text-error">{error}</p>{/if}
 
 	{#if showForm}
-		<form onsubmit={handle} class="mt-8 space-y-3">
-			<label class="block">
-				<span class="eyebrow">{t.urlLabel}</span>
+		<!-- One ink frame for both fields and the button, the same frame as every
+		     form on the site. The labels stay real <label>s, visually hidden: the
+		     headline and the note already say what each field wants. -->
+		<form onsubmit={handle} class="frame frame-stack mt-8">
+			<label class="contents">
+				<span class="sr-only">{t.urlLabel}</span>
 				<input
 					type="text"
 					bind:value={url}
@@ -569,11 +572,11 @@
 					autocomplete="url"
 					required
 					disabled={working}
-					class="input input-bordered input-lg mt-1 w-full"
+					class="frame-field"
 				/>
 			</label>
-			<label class="block">
-				<span class="eyebrow">{t.emailLabel}</span>
+			<label class="contents">
+				<span class="sr-only">{t.emailLabel}</span>
 				<input
 					type="email"
 					bind:value={email}
@@ -582,13 +585,18 @@
 					autocomplete="email"
 					required
 					disabled={working}
-					class="input input-bordered input-lg mt-1 w-full"
+					class="frame-field"
 				/>
 			</label>
 			<!-- El botón ES el progreso: girando mientras trabaja y diciendo por dónde
 			     va. `aria-live` en el texto porque un botón deshabilitado que cambia de
 			     etiqueta no se anuncia solo. -->
-			<button type="submit" disabled={working || !ready} class="btn btn-primary btn-lg">
+			<!-- `working`, not `working || !ready`: this landed greyed out, the one
+			     action on the page reading as broken before anybody touched it, and a
+			     disabled button is the one control that cannot say why. Both fields
+			     are `required`, so the browser blocks an empty submit itself and names
+			     the field it wants. `start()` still returns early on `!ready`. -->
+			<button type="submit" disabled={working} class="frame-button is-subscribe">
 				{#if working}
 					<span class="loading loading-spinner loading-sm" aria-hidden="true"></span>
 				{/if}

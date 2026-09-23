@@ -63,7 +63,7 @@
 						type="button"
 						disabled={Boolean(picked)}
 						onclick={() => choose(study, option.id)}
-						class="w-full rounded-lg border p-4 text-left transition-colors
+						class="w-full border p-4 text-left transition-colors
 							{isTaught ? 'border-ink bg-line/40' : isPick ? 'border-ink/40' : 'border-line'}
 							{picked ? 'cursor-default' : 'hover:border-ink/60'}"
 					>

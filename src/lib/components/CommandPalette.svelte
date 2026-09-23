@@ -10,14 +10,14 @@
 	 */
 	import { goto } from '$app/navigation';
 	import { tools } from '$lib/tools/list';
-	import { resources } from '$lib/resources/list';
+	import { resources, resourceHref } from '$lib/resources/list';
 
 	let { open = $bindable(false) }: { open?: boolean } = $props();
 
 	const items = [
 		{ label: 'Inicio', href: '/' },
 		...tools.map((tool) => ({ label: tool.name, href: tool.href })),
-		...resources.map((resource) => ({ label: resource.name, href: resource.href })),
+		...resources.map((resource) => ({ label: resource.name, href: resourceHref(resource) })),
 		{ label: 'Colofón', href: '/colofon' }
 	];
 
@@ -49,11 +49,37 @@
 		active = 0;
 	}
 
+	/*
+	 * Whether the visitor is typing into something.
+	 *
+	 * `?` opening the palette is only a gem while it does NOT fire in the middle
+	 * of an address or of somebody telling us which tool they are missing — the
+	 * gap's field is a sentence in Spanish and «¿» is the first character of half
+	 * the questions in it.
+	 */
+	function isTyping(target: EventTarget | null): boolean {
+		const el = target as HTMLElement | null;
+		if (!el) return false;
+		const tag = el.tagName;
+		return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || el.isContentEditable;
+	}
+
 	function onWindowKeydown(event: KeyboardEvent) {
 		if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
 			event.preventDefault();
 			if (open) close();
 			else open = true;
+			return;
+		}
+		/*
+		 * `?` is the convention every app with shortcuts uses, and here it is also
+		 * the answer to the one discoverability hole ⌘K has: the hint in the footer
+		 * is the only thing that ever mentions it. Both `?` and `¿` open, because
+		 * this keyboard is Spanish.
+		 */
+		if (!open && (event.key === '?' || event.key === '¿') && !isTyping(event.target)) {
+			event.preventDefault();
+			open = true;
 			return;
 		}
 		if (open && event.key === 'Escape') close();
@@ -117,6 +143,19 @@
 		{#if egg}
 			<p class="muted mt-3">{egg}</p>
 		{/if}
+		<!--
+			The footer of the launcher: the shortcuts, written down.
+			A hidden gem people cannot find twice is a gem nobody has. ⌘K was hinted
+			in exactly one place (the key in the site footer) and `?` was hinted
+			nowhere, so this is the one screen where both are stated — inside the
+			thing you had to find to get here, which keeps the reward and drops the
+			guessing.
+		-->
+		<p class="palette-keys">
+			<span><kbd>⌘K</kbd> abre esto</span>
+			<span><kbd>?</kbd> también</span>
+			<span><kbd>esc</kbd> cierra</span>
+		</p>
 	</div>
 {/if}
 
@@ -159,6 +198,23 @@
 	}
 	.palette-active {
 		background: color-mix(in srgb, var(--color-ink) 5%, transparent);
+		color: var(--color-ink);
+	}
+	.palette-keys {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.9rem;
+		margin-top: 0.9rem;
+		padding-top: 0.75rem;
+		border-top: 1px solid var(--color-line);
+		font-size: 0.8125rem;
+		color: var(--color-muted);
+	}
+	.palette-keys kbd {
+		border: 1px solid var(--color-line);
+		border-radius: 0.3rem;
+		padding: 0.05rem 0.3rem;
+		font: inherit;
 		color: var(--color-ink);
 	}
 </style>

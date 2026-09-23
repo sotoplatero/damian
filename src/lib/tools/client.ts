@@ -17,6 +17,8 @@ const CODE_KEYS: Record<string, string> = {
 	invalid_url: 'errorInvalidUrl',
 	idea_short: 'errorIdeaShort',
 	invalid_email: 'errorInvalidEmail',
+	/** The gap on the board: too short to be an answer, or too long to be a note. */
+	gap_length: 'errorLength',
 	incomplete_form: 'errorIncompleteForm',
 	not_convertible: 'errorNotConvertible',
 	bad_spec: 'errorBadSpec',

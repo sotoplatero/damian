@@ -58,7 +58,7 @@ blockquote p{margin:0;}
 h1{font-size:32px;line-height:1.1;margin:0 0 8px;}
 h2{font-size:20px;line-height:1.3;margin:32px 0 8px;}
 hr{border:none;border-top:1px solid #e5e5e5;margin:32px 0;}
-a{color:#0076ff;}
+a{color:#006ae6;}
 </style>
 </head>
 <body style="margin:0;background:#f7f6f2;">

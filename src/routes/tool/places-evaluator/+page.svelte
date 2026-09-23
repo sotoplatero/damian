@@ -179,7 +179,7 @@
 						<span class="loading loading-spinner loading-sm absolute right-3 top-3"></span>
 					{/if}
 					{#if showSuggestions && suggestions.length > 0}
-						<ul class="menu bg-base-200 border border-base-300 rounded-box absolute top-full mt-1 w-full z-10 shadow-lg max-h-60 overflow-y-auto">
+						<ul class="menu bg-base-200 border border-base-300 absolute top-full mt-1 w-full z-10 max-h-60 overflow-y-auto">
 							{#each suggestions as suggestion}
 								<li>
 									<button

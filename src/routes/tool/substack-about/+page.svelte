@@ -9,6 +9,8 @@
 	   the list, not from adjectives. */
 	const t = {
 		urlPlaceholder: 'tunewsletter.substack.com',
+		/** El nombre accesible del campo: el placeholder es un ejemplo, no una etiqueta. */
+		urlFieldLabel: 'La dirección de tu newsletter en Substack',
 		urlButton: 'Enviar',
 		urlScanning: 'Leyendo tu página...',
 		readLine: 'He leído el Acerca de de {site}.',
@@ -135,6 +137,7 @@
 			<InlineForm
 				bind:value={url}
 				placeholder={t.urlPlaceholder}
+				fieldLabel={t.urlFieldLabel}
 				label={t.urlButton}
 				busyLabel={t.urlScanning}
 				busy={busy === 'analyzing'}

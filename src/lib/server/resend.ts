@@ -151,34 +151,50 @@ export async function sendArchiveEmail(
  * point of the mail, and the variable is NOT set in the local `.env` — the first
  * test send went out pointing at `/cervantes.zip` with no host in front of it.
  */
-async function sendResourceEmail(template: string, to: string, origin: string, file: string): Promise<void> {
+/**
+ * THE SERVER HALF OF A RESOURCE, keyed by the same slug the page is.
+ *
+ * The public half — headline, contents, the note under the field — is in
+ * `$lib/resources/list.ts`, which the browser imports. These two things cannot
+ * live there: a `?raw` email template would ship the whole mail to every visitor
+ * of the home page, and the filename belongs next to the template that links it.
+ *
+ * ADDING A RESOURCE IS TWO ENTRIES, ONE HERE AND ONE THERE, and forgetting this
+ * one is the only way to half-add a download. It is not a silent failure:
+ * `hasResourceDelivery` is what `/recursos/[slug]/api` checks before it takes an
+ * address, so the visitor gets an error instead of a promise nothing keeps.
+ */
+const RESOURCE_DELIVERY: Record<string, { template: string; file: string }> = {
+	/*
+	 * Cervantes. The URL carries no version on purpose: Cervantes has no version
+	 * marker by design — a newer one is a new folder the author moves into — so a
+	 * link mailed months ago has to keep giving the latest. Publishing a new build
+	 * is overwriting `static/cervantes.zip`.
+	 */
+	cervantes: { template: resourceCervantesTemplate, file: 'cervantes.zip' },
+	/*
+	 * The author-archive analysis pack. Here the two names in the filename ARE the
+	 * content — the pack ships one worked analysis per author — so unlike Cervantes
+	 * this file is not overwritten in place: another pair of authors is another ZIP
+	 * and another resource.
+	 */
+	'analisis-de-autor': {
+		template: resourceAuthorAnalysisTemplate,
+		file: 'paquete-analisis-dan-koe-hussain-ibarra.zip'
+	}
+};
+
+/** Whether a slug has a template and a file behind it. Checked before asking for
+    an address, never after. */
+export function hasResourceDelivery(slug: string): boolean {
+	return slug in RESOURCE_DELIVERY;
+}
+
+export async function sendResourceEmail(slug: string, to: string, origin: string): Promise<void> {
+	const delivery = RESOURCE_DELIVERY[slug];
+	if (!delivery) throw new Error(`no resource delivery for slug: ${slug}`);
 	const base = (publicEnv.PUBLIC_SITE_URL || origin).replace(/\/$/, '');
-	await sendToolEmail(template, 'DOWNLOAD', to, `${base}/${file}`);
-}
-
-/**
- * Cervantes. The URL carries no version on purpose: Cervantes has no version
- * marker by design — a newer one is a new folder the author moves into — so a
- * link mailed months ago has to keep giving the latest. Publishing a new build
- * is overwriting `static/cervantes.zip`.
- */
-export async function sendCervantesEmail(to: string, origin: string): Promise<void> {
-	await sendResourceEmail(resourceCervantesTemplate, to, origin, 'cervantes.zip');
-}
-
-/**
- * The author-archive analysis pack. Here the two names in the filename ARE the
- * content — the pack ships one worked analysis per author — so unlike Cervantes
- * this file is not overwritten in place: another pair of authors is another ZIP
- * and another resource.
- */
-export async function sendAuthorAnalysisEmail(to: string, origin: string): Promise<void> {
-	await sendResourceEmail(
-		resourceAuthorAnalysisTemplate,
-		to,
-		origin,
-		'paquete-analisis-dan-koe-hussain-ibarra.zip'
-	);
+	await sendToolEmail(delivery.template, 'DOWNLOAD', to, `${base}/${delivery.file}`);
 }
 
 /**

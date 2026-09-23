@@ -32,8 +32,8 @@ reported errors that weren't real. **Paraglide was removed in August 2026** and 
 whole trap — see Language below.
 
 Tests cover the pure modules only — `src/lib/authors/*`, `src/lib/tools/archive/*`,
-`src/lib/tools/actionable/*` and the archive walk with `fetch` mocked. **185 tests in 14
-files** as of 20 August 2026; there are no component tests, because the DOM adds nothing here and would drag in jsdom for nothing.
+`src/lib/tools/actionable/*`, `src/lib/resources/*`, `src/lib/publication.ts`, `src/lib/gap.ts` and the archive walk with `fetch` mocked.
+**221 tests in 18 files** as of 23 September 2026 (`src/lib/issues.ts` joined the pure modules); there are no component tests, because the DOM adds nothing here and would drag in jsdom for nothing.
 
 **`pnpm eval:actionable` is not a test and must never become one.** It judges twenty
 real pages with a real model over the real internet: it costs money and minutes.
@@ -69,7 +69,8 @@ old — **translate one when you are already editing it for another reason, not 
 sweep.** This is a far bigger job than it looks: **39 tracked code files still carry Spanish
 comments** (measured August 2026), so the rule describes where the codebase is going, not
 where it is. `newsletter.ts`, `rate-limit.ts`, `tools/list.ts`, `og-cards.ts` and `app.css`
-were migrated exactly that way while `/author` was built. The heaviest still to go are
+were migrated exactly that way while `/author` was built, and
+`components/InlineForm.svelte` while the resource pages were rebuilt. The heaviest still to go are
 `tools/newsletter/rules.ts` (90 comments), `tools/10-post-types/types.ts` (52),
 `tools/newsletter/prompt.ts` (38), `tools/newsletter/report.ts` (33),
 `routes/tool/newsletter/+server.ts` (31), `tools/repurpose/formats.ts` (27) and
@@ -81,27 +82,50 @@ course's title, the same way a post slug would be. The route segment around it (
 
 ## Architecture
 
-### Home Sales Page
+### Home Page
 
-The home route (`/`) is a single-column sales page (Spanish, Isra Bravo style) selling
-the newsletter **Objeto Brillante** (weekly): one direct sales letter, the Substack
-signup form, and below it the list of tools.
+The home route (`/`) is a **Swiss poster** since 23 September 2026: a centred mango hero with
+the headline and one email field, the tools as rows that each open their own page, the
+downloads as covers, a short «who writes» block with the latest issues, and an ink close with
+the second email field.
 
-- **All copy is written directly in `src/routes/+page.svelte`** as plain HTML. There
-  used to be a `src/lib/content/*.md` system (frontmatter strings + `marked` body);
-  Damian removed it in August 2026 as too much machinery for simple pages. Don't bring
-  it back.
-- There is a long editorial notes block at the top of that component addressed to
-  Damian — **read it before editing the letter**, it records decisions that look like
-  mistakes otherwise (for example: the story says "sin decírselo a mis amigos", never
-  "a nadie", because "a nadie" reads as abandoning his wife).
+- **The criterion that shapes it is in PRODUCT.md («Site and Newsletter: The Criterion»): the
+  newsletter tells the story, the site does the work.** Nothing on the site copies or summarises
+  an issue. The home links the three latest issues by title and date, read live from
+  Substack's `/api/v1/archive` in `src/routes/+page.server.ts` (2.5 s cap, in-memory cache,
+  `s-maxage=900`), shaped by the pure `src/lib/issues.ts`. If Substack doesn't answer, the list
+  simply isn't drawn — a slow Substack never makes a slow home.
+- **The home carries no tool fields.** Each tool and each download has its own page with its
+  own field; on the home a row is a door that says what goes in (`takes` in
+  `src/lib/tools/list.ts`, «Metes …») and a download shows a cover (`cover` in
+  `src/lib/resources/list.ts`). Three fields on the whole page: the hero, the
+  «¿Qué haces a mano cada semana?» block, and the close.
+- **All copy is written directly in `src/routes/+page.svelte`.** There used to be a
+  `src/lib/content/*.md` system; Damian removed it in August 2026. Don't bring it back.
+- There is an editorial notes block at the top of that component addressed to Damian —
+  **read it before editing the copy**, it records decisions that look like mistakes otherwise
+  (for example: the story says "sin decírselo a mis amigos", never "a nadie", because
+  "a nadie" reads as abandoning his wife).
 - Each tool page carries its own `const t = {...}` with its strings. Copy shared by two
   files lives in a module: `src/lib/tools/newsletter/copy.ts` (page + emailed report)
   and `src/lib/authors/copy.ts` (both /postcard pages).
-- **Signup**: the home embeds Substack's own iframe. The old self-hosted path
-  (`SubscribeForm.svelte` → `/api/subscribe` → Resend + welcome email) was **removed in
-  August 2026 as unused**; it lives in git history if the iframe ever goes. The tools
-  still subscribe addresses into Resend server-side via `subscribe()` in `resend.ts`.
+- **THE PAGE ASKS TWICE**: the hero for whoever arrives already convinced, the close
+  (`id="alta"`) for whoever just read the page. They are never on screen together.
+  **Both hand off to Substack's own subscribe page with the address prefilled**
+  (`subscribeUrl` in `src/lib/publication.ts`). The close used to be Substack's iframe; it went
+  because it put 320px of third-party white box over the ink close, and the signup is the same
+  — it is confirmed on Substack either way. THIS IS NAVIGATION, NOT THE API — the API is the
+  thing behind Cloudflare that cannot be called and must not be tried again. MEASURED on the
+  live publication: `?email=` arrives prefilled in that page's own field, `+` included. If
+  Substack ever stops honouring the parameter, the worst case is one retype, which is why it is
+  a query string and not a POST. The note under the field names Substack out loud because the
+  button leaves this site. `PUBLICATION_EMBED_URL` is still exported and currently unused.
+- **`src/lib/publication.ts` holds our own Substack addresses**, and is not
+  `server/newsletter.ts` or `server/substack.ts` — those two read OTHER people's
+  publications.
+- The old self-hosted signup (`SubscribeForm.svelte` → `/api/subscribe` → Resend + welcome
+  email) was **removed in August 2026 as unused**; it lives in git history. The tools still
+  subscribe addresses into Resend server-side via `subscribe()` in `resend.ts`.
 - Substack's subscribe API cannot be called from the server: it sits behind Cloudflare
   and returns a challenge to anything that isn't a real browser. Don't try again.
 
@@ -744,7 +768,38 @@ The segment is Spanish, against the rule that route segments are English (`tool`
 
 There is no `capturesEmail` flag on a resource: every one of them asks for an address, which
 is what a resource IS here. The page says so **before the field** — «al descargarlo te
-suscribes» — not in the confirmation, where it no longer matters.
+suscribes» — not in the confirmation, where it no longer matters. That sentence is
+`SUBSCRIBE_NOTE` in the list, shared and not per-resource: the day it reads more gently on
+one page than another is the day it stops being true on that page.
+
+**ADDING A LEAD MAGNET IS AN OBJECT IN A FILE, NOT A ROUTE.** Since 2 September 2026 there is
+ONE page (`src/routes/recursos/[slug]/+page.svelte`) and ONE endpoint
+(`recursos/[slug]/api/+server.ts`), and everything that differs between two downloads is data:
+`src/lib/resources/list.ts` for the public half (headline and its `mark`, the lead, `contents`,
+the requirement sentence, the meta tags) and `RESOURCE_DELIVERY` in `src/lib/server/resend.ts`
+for the two server-only halves (the email template and the filename). The slug is the address,
+the lookup key and the share-card key at once.
+
+It was a folder per resource until then — `+page.svelte` (95 lines) plus `api/+server.ts` (58)
+— and the two that existed were **byte-identical apart from which sender got called**, which
+the second one's own header comment said out loud. Two copies is a coincidence; three would
+have been a system nobody designed. `resourceHref()` is the only thing that builds
+`/recursos/<slug>`, so the home page, ⌘K and `og-cards.ts` cannot disagree about where a
+resource lives.
+
+**Two entries, and forgetting the server one is the only way to half-add a download.** It is
+not silent: `hasResourceDelivery(slug)` is checked by the endpoint *before* it accepts an
+address, so a visitor gets an error instead of a «va para tu correo» that nothing follows.
+`src/lib/resources/list.test.ts` covers the invariants TypeScript can't — a `mark` that is
+really a fragment of its `headline` (an edit that breaks it loses the page's only colour,
+silently), unique url-safe slugs, a non-empty `contents`, and that every resource still
+resolves to a share card.
+
+**`contents` is there because both pages used to go headline → one paragraph → give me your
+address**, and the file itself was never described: no format, no contents, nothing. A lead
+magnet page that doesn't show the magnet is asking for trust it hasn't earned. **What is
+deliberately NOT in the data is the file's weight in KB**: Cervantes' ZIP is overwritten in
+place on every new build, so a typed size goes stale silently and nobody finds out.
 
 **`/recursos/cervantes`** delivers Cervantes, a folder that opens in Claude Code, learns one
 author's voice from their published newsletter and writes their issues with them. It is
@@ -756,7 +811,7 @@ built in a **separate repo** (`projects/cervantes`) and only distributed here.
   overwriting that file with `dist/cervantes-<v>.zip` from the other repo, by hand.
 - The endpoint is the gated half of a tool with the tool removed — nothing scraped, no model
   call, nothing on screen. It reuses the `toolDelivery` limits rather than naming its own.
-- **`sendCervantesEmail` builds the link from the request origin**, and `PUBLIC_SITE_URL`
+- **`sendResourceEmail` builds the link from the request origin**, and `PUBLIC_SITE_URL`
   only overrides it. The unsubscribe link can trust that variable; this one can't, because a
   broken download link is the entire mail — and the variable is not in the local `.env`, so
   the first test send went out pointing at `/cervantes.zip` with no host in front of it.
@@ -821,30 +876,92 @@ Resend sends everything. **There is no cron.**
 
 ### Styling
 
-The theme is in `src/app.css`, in two blocks:
+**`DESIGN.md` is the authority and it is rewritten from the built world each time — read it
+before touching the home page, `/recursos` or a tool page's shell.** The world since
+23 September 2026 is a **Swiss typographic poster**: Schibsted Grotesk (self-hosted, 400/500/
+700/900) set very large on a 12-column grid, one committed colour, hairline rows, no cards and
+no radius. The worlds before it were a classifieds column, a workshop shadow board and
+ruled-stripe paper; don't reach back into any of them.
 
-1. `@theme` — the whole palette: `ink`, `soft`, `muted`, `line`, plus `#0076ff` (Substack's
-   blue, so the embedded form doesn't look bolted on). DaisyUI's `--color-primary` is
-   overridden to match.
-2. `@layer components` — the site vocabulary: `.section`, `.box`, `.box-link`,
-   `.box-locked`, `.box-title`, `.box-text`, `.body-text`, `.muted`, `.link-quiet`,
-   `.eyebrow`, `.screen-center`, `.meter`, `.chip`. `.meter` is a bar that knows nothing
-   about what it measures — the fill is a child with its own width, so it serves both a
-   dimension score and a locked finding.
+The theme is in `src/app.css`: `@theme` holds the palette, `@layer components` the vocabulary
+tool pages share (`.section`, `.box`, `.box-title`, `.box-text`, `.body-text`, `.muted`,
+`.link-quiet`, `.eyebrow`, `.screen-center`, `.meter`, `.chip`, `.poster`, the slider), and the
+unlayered rest holds the shell, the frame and the home page's poster classes (`.wide`,
+`.grid-12`, `.poster-hero`, `.door`, `.wanted`, `.file`/`.cover`, `.letter-*`,
+`.poster-close`).
 
-**There are only two font sizes on the site**: body `1.25rem` and note `0.875rem`.
-Hierarchy comes from colour, not size. Writing `text-base` or `text-lg` in markup means a
-class is missing from `app.css`.
+**The shell:** the home page runs full-bleed bands inside `.wide` (max 1320px); every other
+page sits in `.page-column` (46rem), chosen by `isHome` in `+layout.svelte`. `ToolShell`
+centres a tool in the height left under the header.
+
+**Rules that look like preferences and are not:**
+
+- **MANGO `#ffc21a` IS A FIELD AND A HIGHLIGHTER, NEVER TEXT ON THE PAPER.** Chosen by Damian
+  on 23 September 2026. MEASURED: 1.44:1 on paper. It is the hero's ground, the second line of
+  the close on ink (11.28:1), a cover, and a marker stroke behind ink text (the `<mark>` in a
+  tool headline, the letter's second sentence). Anything that must be READ on a light ground —
+  a hover colour, an arrow — uses `--color-signal-deep` `#7a5800` (5.82:1).
+- **SUBSTACK BLUE MEANS «THIS PUTS YOU ON THE LIST», AND ONLY THAT.** It is `#006ae6`, one step
+  darker than Substack's `#0076ff`, because MEASURED their blue carries white text at 4.17:1,
+  under AA for an 18px label (ours is 4.99:1). `InlineForm` defaults an email field's button to
+  blue (`subscribes`), a text field's to ink. **`.btn-primary` is INK site-wide**; a DaisyUI
+  button that does subscribe opts back in with `.is-subscribe`. Those overrides are UNLAYERED:
+  DaisyUI writes `.btn-primary` into the utilities layer, which beats `@layer components`
+  whatever the specificity.
+- **EVERY FORM IS THE INK FRAME** (`.frame` > `.frame-field` + `.frame-button`): 4px of ink
+  around the field and its button, side by side from 640px, stacked below; `.frame-stack` keeps
+  a textarea or a two-field form stacked at every width. `InlineForm`, `TextareaForm`,
+  `/tool/archive` and both `/postcard` forms use it. A hand-rolled form that looks like the
+  shared one behaves like it.
+- **A submit button is disabled for being busy, never for being empty.** Fields are `required`
+  (and `minlength` on the idea textarea), so the browser blocks the submit and names the field
+  in the visitor's own language. `TextareaForm`'s Ctrl/Cmd+Enter goes through `requestSubmit`
+  so that validation runs.
+- **No kicker above a heading, no 01/02/03 numbering on the home rows.** The heading carries
+  its own weight; the rows are not a sequence.
+- **Depth:** no shadows on interface surfaces. The only two are objects on a page — the
+  postcard `.poster` and the download `.cover` — each a real offset shadow.
+- **Motion: one authored moment, the mark's hover spin** (quintic ease-out; an overshoot on a
+  star symmetrical every 90° reads as a wobble), plus one entrance on the hero only. Nothing
+  loops. Everything is inside `prefers-reduced-motion: no-preference`, smooth scroll included.
+- **Display sizes:** the home headline caps at 8.5rem, a tool headline is
+  `clamp(2.5rem, 8.4vw, 4.6rem)`, tracking -0.04em. Reading text stays at `1.125rem` (or
+  `1.25rem` inside `.prose`) and notes at `0.875rem`; `text-base`/`text-lg` in markup means a
+  class is missing from `app.css`.
+- **`--color-muted` is `#6b6862`: 4.96:1 on paper, 5.46:1 on the sheet.** `.muted` carries the
+  line under every form that says handing over an address subscribes you. Don't lighten it.
 
 **The tool-page header is one pattern, and every tool uses it.** A `<section
 class="screen-center">` wrapping an `<article class="prose prose-xl prose-neutral
-max-w-none">` with a real `<h1>` — that is what picks up the fluid
-`clamp(2.35rem, 9vw, 4.4rem)` in `app.css` — plus **one** lead sentence, then the form, then
-a `.muted` note under it. `.box-title` is `text-lg`: it is the vocabulary for a card in a
-list, never for the headline of a page. `/postcard` had `<h1 class="box-title">` and two
-paragraphs of body text until August 2026, and it read as a list item that had escaped its
-list. If a second paragraph feels necessary, it is usually the `.muted` note under the
-field.
+max-w-none">` with a real `<h1>` (that is what picks up the display size and the mango marker
+on its `<mark>`), **one** lead sentence, then the form, then a `.muted` note under it. If a
+second paragraph feels necessary, it is usually the note under the field.
+
+**Cascade traps, still true:**
+
+- **`.prose` maps `--tw-prose-*` onto the site's tokens in an UNLAYERED block**, or the plugin
+  paints its own zinc next to our ink.
+- **`.letter-heading` is declared as `.letter-heading, .prose .letter-heading`**: Typography
+  wraps its selectors in `:where()`, so both tie at (0,1,0) and the LAYER decides — `@plugin`
+  writes into utilities, after `@layer components`. Any class meant to beat `prose` on an
+  element inside it needs the compound selector.
+- **`app.html`'s font preloads must name the files `app.css` declares** (400 and 900 of
+  Schibsted Grotesk). The explanation lives in `app.css`, because a comment in `app.html` is a
+  payload that ships on every request. The subset has no arrows and no ✦: both are SVG
+  (`Arrow.svelte`, the mark in the layout).
+
+**`src/routes/+error.svelte` is a real surface, not a fallback.** `/recursos` and `/tool` are
+both 404s and both are the obvious thing to type after landing on `/recursos/cervantes`. It
+reads the same two lists the home does, as doors, so a new tool appears on it on its own. It
+does **not** print `page.error.message`, which arrives from the framework in English.
+
+**Every field has an accessible name that is a NAME, never the placeholder.** There is no
+visible `<label>` on this site by design; `InlineForm` defaults an email field's name, a text
+field passes `fieldLabel`, and hand-rolled forms use a visually hidden `<label>` or
+`aria-label`. A detached `<span class="eyebrow">` is not a label.
+
+**`.box-text` clamps to 4 lines under 640px, not 2.** MEASURED at 390px, `line-clamp-2` clipped
+six of seven blurbs mid-word; most readers arrive on a phone.
 
 `src/lib/tools/voice.ts` holds the shared writing rules for everything a model writes:
 Spanish voice plus the anti-AI rules (vary sentence rhythm, repeat words instead of hunting

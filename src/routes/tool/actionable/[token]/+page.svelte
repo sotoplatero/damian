@@ -90,7 +90,7 @@
 				<div>
 					<label class="box-title block" for={field.id}>{field.etiqueta}</label>
 					{#if field.tipo === 'opcion'}
-						<select id={field.id} class="mt-2 w-full rounded-lg border border-line bg-white p-3" bind:value={valores[field.id]}>
+						<select id={field.id} class="mt-2 w-full border-2 border-ink bg-sheet p-3" bind:value={valores[field.id]}>
 							{#each field.opciones as option (option)}
 								<option value={option}>{option}</option>
 							{/each}
@@ -98,7 +98,7 @@
 					{:else if field.tipo === 'parrafo'}
 						<textarea
 							id={field.id}
-							class="mt-2 w-full rounded-lg border border-line bg-white p-3"
+							class="mt-2 w-full border-2 border-ink bg-sheet p-3"
 							rows="4"
 							placeholder={field.ayuda}
 							bind:value={valores[field.id]}
@@ -107,7 +107,7 @@
 						<input
 							id={field.id}
 							type="text"
-							class="mt-2 w-full rounded-lg border border-line bg-white p-3"
+							class="mt-2 w-full border-2 border-ink bg-sheet p-3"
 							placeholder={field.ayuda}
 							bind:value={valores[field.id]}
 						/>

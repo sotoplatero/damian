@@ -177,6 +177,7 @@
 		<InlineForm
 			bind:value={url}
 			placeholder={t.urlPlaceholder}
+			fieldLabel={t.urlFieldLabel}
 			label={t.urlButton}
 			busyLabel={t.urlScanning}
 			busy={busy === 'analyzing'}
@@ -247,7 +248,7 @@
 		     visto desde fuera. De todo el informe es lo que más convence. -->
 		<div class="box">
 			<p class="eyebrow">{t.labelCard}</p>
-			<div class="mt-3 rounded-lg border border-line">
+			<div class="mt-3 border border-line">
 				{#if preview.card.image}
 					<!-- Su imagen de verdad, servida por Substack. Sin referrer y con
 					     proporción fija: si tarda o falla, la tarjeta no salta. -->

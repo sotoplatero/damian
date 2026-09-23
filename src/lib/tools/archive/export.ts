@@ -115,7 +115,7 @@ export type ExportInput = {
 	 * This site's origin, for the one link the README carries back here.
 	 *
 	 * Passed in rather than read from `PUBLIC_SITE_URL`, for the same reason
-	 * `sendCervantesEmail` takes it from the request: that variable is not set in
+	 * `sendResourceEmail` takes it from the request: that variable is not set in
 	 * the local `.env`, and a link with no host in front of it is worse than no
 	 * link. No trailing slash.
 	 */

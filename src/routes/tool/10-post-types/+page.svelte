@@ -17,7 +17,7 @@
 	const t = {
 		ideaPlaceholder:
 			'Escribe tu idea. Por ejemplo: llevo seis años montando cocinas industriales y la mayoría de los restaurantes que cierran lo hacen por cómo tienen puesta la cocina, no por la comida.',
-		ideaButton: 'Enviar',
+		ideaButton: 'Sacar los diez',
 		ideaWorking: 'Escribiendo...',
 		ideaHint: 'Cuéntame de qué va y para quién. Un par de frases bastan.',
 		ideaShortcut: 'O pulsa Ctrl+Enter.',

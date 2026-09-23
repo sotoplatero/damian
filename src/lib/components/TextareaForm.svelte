@@ -26,6 +26,11 @@
 		rows = 5,
 		/** La nota de debajo: el atajo, o lo que falte por escribir. */
 		hint = '',
+		/**
+		 * The field's accessible name. A placeholder is not one — it is an example,
+		 * and it vanishes as soon as anybody types.
+		 */
+		fieldLabel = 'Tu idea',
 		onsubmit
 	}: {
 		value?: string;
@@ -37,44 +42,57 @@
 		maxLength?: number;
 		rows?: number;
 		hint?: string;
+		fieldLabel?: string;
 		onsubmit: () => void;
 	} = $props();
 
 	const ready = $derived(value.trim().length >= minLength);
 
-	function send() {
+	let form: HTMLFormElement | undefined = $state();
+
+	function handle(event: SubmitEvent) {
+		event.preventDefault();
 		if (busy || !ready) return;
 		onsubmit();
 	}
 
-	function handle(event: SubmitEvent) {
-		event.preventDefault();
-		send();
-	}
-
+	/*
+	 * Ctrl/Cmd+Enter goes through `requestSubmit`, not straight to `onsubmit`, so
+	 * the browser's own validation runs first: a too-short idea gets the browser's
+	 * message, in the visitor's language, instead of a keypress that does nothing.
+	 */
 	function keydown(event: KeyboardEvent) {
 		if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
 			event.preventDefault();
-			send();
+			form?.requestSubmit();
 		}
 	}
 </script>
 
-<form onsubmit={handle}>
-	<textarea
-		bind:value
-		{placeholder}
-		{rows}
-		maxlength={maxLength}
-		disabled={busy}
-		onkeydown={keydown}
-		class="textarea textarea-bordered textarea-lg w-full"
-	></textarea>
-	<div class="mt-3 flex flex-wrap items-center gap-3">
-		<button type="submit" disabled={busy || !ready} class="btn btn-primary btn-lg shrink-0">
+<!--
+	The same ink frame as `InlineForm`, stacked at every width because a textarea
+	needs the whole measure. THE BUTTON IS DISABLED FOR BEING BUSY, NEVER FOR BEING
+	SHORT: it used to arrive greyed out, the page's one action reading as broken.
+	`required` + `minlength` let the browser stop a short submit and say why.
+-->
+<form bind:this={form} onsubmit={handle}>
+	<div class="frame frame-stack">
+		<textarea
+			bind:value
+			{placeholder}
+			{rows}
+			required
+			minlength={minLength || undefined}
+			maxlength={maxLength}
+			disabled={busy}
+			onkeydown={keydown}
+			aria-label={fieldLabel}
+			class="frame-field frame-area"
+		></textarea>
+		<button type="submit" disabled={busy} class="frame-button">
 			{#if busy}<span class="loading loading-spinner loading-sm" aria-hidden="true"></span>{/if}
 			<span>{busy ? busyLabel : label}</span>
 		</button>
-		{#if hint}<p class="muted">{hint}</p>{/if}
 	</div>
+	{#if hint}<p class="muted mt-3">{hint}</p>{/if}
 </form>

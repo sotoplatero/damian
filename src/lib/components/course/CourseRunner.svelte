@@ -265,11 +265,14 @@
 		<h1 class="section-title mt-8">{course.handoff.title}</h1>
 		<p class="section-intro">{course.handoff.text}</p>
 
+		<!-- One outward link, not a list, so it takes `.box` and not the classifieds
+		     ad: an ad belongs to a column of them. It carried `.box-link`, which the
+		     home page retired when the card became a classified. -->
 		<a
 			href={course.handoff.reference.url}
 			target="_blank"
 			rel="noopener noreferrer"
-			class="box-link mt-6 block"
+			class="box mt-6 block transition-colors hover:border-ink"
 		>
 			<span class="box-title">{course.handoff.reference.title}</span>
 		</a>

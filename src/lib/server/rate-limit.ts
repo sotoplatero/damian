@@ -94,7 +94,19 @@ export const LIMITS = {
 	 * Substack real requests. Five a day from one IP still covers a household or an
 	 * office where two people find the tool the same afternoon.
 	 */
-	archiveExportPerIp: { max: 5, windowMs: DAY_MS }
+	archiveExportPerIp: { max: 5, windowMs: DAY_MS },
+
+	/**
+	 * The gap on the board: somebody saying which tool they are missing.
+	 *
+	 * It costs nothing — no model, no mail, one line in the log — so the limit is
+	 * not about money. It is about the log staying readable: this is Damian's
+	 * research channel and what makes it worth reading is that every line came
+	 * from a different person with a different problem. Five a day is more than
+	 * anybody with one real answer needs, and few enough that flooding it takes
+	 * deliberate effort.
+	 */
+	gap: { max: 5, windowMs: DAY_MS }
 } as const;
 
 export type LimitName = keyof typeof LIMITS;

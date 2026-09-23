@@ -11,6 +11,8 @@
 	   the list, not from adjectives. */
 	const t = {
 		urlPlaceholder: 'tuweb.com',
+		/** El nombre accesible del campo: el placeholder es un ejemplo, no una etiqueta. */
+		urlFieldLabel: 'La dirección de tu web',
 		urlButton: 'Escribir mi copy',
 		urlScanning: 'Leyendo tu web...',
 		readLine: 'He leído {site}.',
@@ -138,6 +140,7 @@
 			<InlineForm
 				bind:value={url}
 				placeholder={t.urlPlaceholder}
+				fieldLabel={t.urlFieldLabel}
 				label={t.urlButton}
 				busyLabel={t.urlScanning}
 				busy={busy === 'analyzing'}

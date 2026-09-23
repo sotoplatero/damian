@@ -52,7 +52,9 @@ export function cardFor(slug: string): Card | null {
 	const tool = tools.find((t) => toSlug(t.href) === slug);
 	if (tool) return { title: tool.name, subtitle: tool.blurb, tag: 'herramienta gratis' };
 
-	const resource = resources.find((r) => toSlug(r.href) === slug);
+	// The resource's slug IS the card's slug — `/recursos/<slug>` reduces to it —
+	// so this needs no `toSlug` the way a tool's `href` does.
+	const resource = resources.find((r) => r.slug === slug);
 	if (resource) return { title: resource.name, subtitle: resource.blurb, tag: 'descarga gratis' };
 
 	return null;

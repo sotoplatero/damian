@@ -18,6 +18,9 @@ export const copy = {
 	description:
 		'Pega la dirección de un newsletter de Substack y llévate cuatro postales con su historia, listas para compartir.',
 	urlPlaceholder: 'tunewsletter.substack.com',
+	/* The field's accessible name. The placeholder is an EXAMPLE address, so using
+	   it as the name announced somebody else's newsletter as the label. */
+	urlFieldLabel: 'La dirección de tu newsletter en Substack',
 	urlButton: 'Ver las postales',
 	/* The note under the field, the same slot every other tool uses. It carries
 	   what used to be a second paragraph of the intro: true, worth saying, and
