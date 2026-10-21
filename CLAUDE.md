@@ -33,7 +33,7 @@ whole trap — see Language below.
 
 Tests cover the pure modules only — `src/lib/authors/*`, `src/lib/tools/archive/*`,
 `src/lib/tools/actionable/*`, `src/lib/resources/*`, `src/lib/publication.ts`, `src/lib/gap.ts`, the `_preloads` parser and the archive walk with `fetch` mocked.
-**188 tests in 17 files** as of 21 October 2026 (the postcard's and `7-frameworks`' tests left with them); there are no component tests, because the DOM adds nothing here and would drag in jsdom for nothing.
+**205 tests in 18 files** as of 21 October 2026 (the archive analysis joined; the postcard's and `7-frameworks`' tests left); there are no component tests, because the DOM adds nothing here and would drag in jsdom for nothing.
 
 **`pnpm eval:actionable` is not a test and must never become one.** It judges twenty
 real pages with a real model over the real internet: it costs money and minutes.
@@ -299,6 +299,30 @@ pushed down two levels so they sit under their post (`demoteHeadings`), and that
 code, because a shell comment inside one starts with `#`. **The zip stays** for the email: the
 attachment rides a request body Vercel cuts at 4.5 MB, and markdown deflates to about a
 quarter.
+
+**«Lo que mejor le funcionó» — the verdict on top of the raw material (October 2026).**
+`src/lib/tools/archive/analysis.ts`, pure and tested, reads the INDEX alone (likes, comments,
+restacks are already in it), so it costs no request and no model call. It appears on screen
+the moment `start` returns — the download takes minutes and this part needn't wait — and as a
+section of the markdown between the head and the index, with the same words
+(`ANALYSIS_COPY`, read by both).
+
+- **Each post is ranked against the median of its own neighbours in time (`WINDOW` posts on
+  each side), not against the archive.** Raw «most liked» is a list of the newest posts of
+  the biggest year: an old post was written for a fraction of today's audience. The lift
+  (×N over its moment) also makes a 20-like newsletter and a 2,000-like one comparable.
+- **Out of the ranking:** paid posts (only paying readers can like them, so they always
+  sink next to free neighbours), posts younger than `SETTLE_DAYS` (still collecting), imported
+  posts (filler dates make a random neighbourhood). `childComments` is not counted: it
+  includes the author's own replies.
+- **A standout needs ×2 AND 10 interactions above its baseline.** MEASURED: with a ratio
+  alone, kloshletter (a daily digest around 5 interactions) got ten «standouts» at 10–14 —
+  noise presented as a finding. Now it says «Ningún post se despega», which is the honest
+  answer; The Honest Broker's real hits (×6–×22: «The State of the Culture», the Spotify
+  piece) are untouched.
+- The method sentence is printed ABOVE the list on purpose: a ranking whose rule isn't
+  stated is an opinion dressed as a number. The whole section vanishes with the RSS fallback
+  (no figures), all-zero figures, or fewer than `MIN_POSTS` dated posts.
 
 **THE BROWSER DRIVES THE DOWNLOAD, and that is the whole architecture.** A body is one
 request to `/p/{slug}` (`body_html` arrives empty from the archive; `/api/v1/posts/by-slug/`

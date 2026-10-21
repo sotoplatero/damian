@@ -53,7 +53,7 @@ export const tools: Tool[] = [
 		href: '/tool/archive',
 		takes: 'la newsletter que quieres estudiar',
 		blurb:
-			'Pega la dirección de la que te interesa y llévate su archivo entero: el índice y sus posts en markdown.',
+			'Pega la dirección de la que te interesa: te digo qué le funcionó de verdad y te llevas su archivo entero en markdown.',
 		capturesEmail: true
 	},
 	{

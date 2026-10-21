@@ -12,6 +12,15 @@
 		type ExportPub
 	} from '$lib/tools/archive/export';
 	import { zip } from '$lib/tools/archive/zip';
+	import {
+		analyze,
+		ANALYSIS_COPY,
+		fillCopy,
+		habitLines,
+		sectionLine,
+		standoutLine,
+		type Analysis
+	} from '$lib/tools/archive/analysis';
 
 	/**
 	 * THE LOOP LIVES HERE, and that is the point of the tool's shape.
@@ -228,6 +237,12 @@
 	 * estimate at the old rate is a promise the download can't keep.
 	 */
 	let spacing = $state(SPACING_START_MS);
+	/**
+	 * What worked, computed from the index the moment `start` returns it. It goes
+	 * on screen BEFORE the bodies arrive: the download takes minutes, and this is
+	 * the part of the result that doesn't have to wait for them.
+	 */
+	let findings = $state<{ analysis: Analysis; origin: string } | null>(null);
 
 	/**
 	 * The loop's own state, deliberately NOT reactive: it is read by `pump` and
@@ -264,6 +279,14 @@
 			(text, [key, value]) => text.replaceAll(`{${key}}`, String(value)),
 			template
 		);
+	}
+
+	/** `12 mar 2025`: a standout's date, short enough to share its line. */
+	function shortDate(iso: string): string {
+		const at = Date.parse(iso);
+		return Number.isFinite(at)
+			? new Date(at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })
+			: '';
 	}
 
 	/** **bold** → <strong>, for the one line that needs it. */
@@ -315,6 +338,9 @@
 			phase = 'form';
 			return;
 		}
+
+		const analysis = analyze(session.posts, session.pub.createdAt, new Date(), session.fromFeed);
+		findings = analysis ? { analysis, origin: session.pub.origin } : null;
 
 		const candidates = bodyCandidates(session.posts);
 		asked = candidates.length;
@@ -525,6 +551,7 @@
 		notice = '';
 		stopAsked = false;
 		session = null;
+		findings = null;
 		queue = [];
 		bodies = new Map();
 		spacing = SPACING_START_MS;
@@ -536,9 +563,49 @@
 	}
 </script>
 
+<!-- What worked, on screen as soon as the index is in. The same words and the
+     same order as the section at the top of the markdown (`ANALYSIS_COPY`), so
+     what the visitor reads here is what a model reads in the file. The method
+     line comes before the list on purpose: a ranking without its rule is an
+     opinion pretending to be a number. -->
+{#snippet findingsBlock(found: { analysis: Analysis; origin: string })}
+	{@const { analysis, origin } = found}
+	{@const habits = habitLines(analysis)}
+	<article class="mt-12">
+		<h2 class="box-title">{ANALYSIS_COPY.title}</h2>
+		<p class="muted mt-2">{fillCopy(ANALYSIS_COPY.method, { ranked: analysis.ranked })}</p>
+		{#if analysis.standouts.length}
+			<ol class="mt-5 border-t-[3px] border-ink">
+				{#each analysis.standouts as standout (standout.post.slug)}
+					<li class="border-b border-line py-3">
+						<a
+							class="link-quiet box-text font-bold"
+							href={`${origin}/p/${standout.post.slug}`}
+							target="_blank"
+							rel="noopener">{standout.post.title}</a
+						>
+						<p class="muted mt-1">{shortDate(standout.post.date)} · {standoutLine(standout)}</p>
+					</li>
+				{/each}
+			</ol>
+		{:else}
+			<p class="box-text mt-4">{ANALYSIS_COPY.none}</p>
+		{/if}
+		{#if habits.length}<p class="box-text mt-5">{habits.join(' ')}</p>{/if}
+		{#if analysis.sections.length}
+			<p class="eyebrow mt-6">{ANALYSIS_COPY.sectionsTitle}</p>
+			<ul class="mt-2 space-y-1">
+				{#each analysis.sections as section (section.name)}
+					<li class="muted">{sectionLine(section)}</li>
+				{/each}
+			</ul>
+		{/if}
+	</article>
+{/snippet}
+
 <PageMeta
 	title="Descarga el archivo de cualquier newsletter de Substack — Damian Soto"
-	description="Pega la dirección de una newsletter y llévate un zip con su índice completo y sus posts en markdown."
+	description="Pega la dirección de una newsletter: te digo qué posts le funcionaron por encima de lo normal y te llevas su archivo entero en markdown."
 />
 
 <section class="screen-center">
@@ -551,7 +618,10 @@
 	{#if showForm}
 		<article class="prose prose-xl prose-neutral max-w-none">
 			<h1>Descarga el archivo de <mark>una newsletter de Substack</mark>.</h1>
-			<p>El índice de todo lo que ha publicado y sus posts en markdown, en un zip.</p>
+			<p>
+				Qué le funcionó de verdad, el índice de todo lo que ha publicado y sus posts en markdown,
+				en un zip.
+			</p>
 		</article>
 	{/if}
 
@@ -629,6 +699,7 @@
 				</p>
 			{/if}
 		</div>
+		{#if working && findings}{@render findingsBlock(findings)}{/if}
 	{:else if phase === 'atCap'}
 		<!-- Stopped at `BODY_CAP` with posts left. Both answers are reasonable and
 		     only one of them is the visitor's, so it asks instead of deciding. -->
@@ -652,6 +723,7 @@
 			</div>
 			<p class="muted mt-4">{t.capWhy}</p>
 		</article>
+		{#if findings}{@render findingsBlock(findings)}{/if}
 	{:else if done}
 		<div class="box border-ink mt-8">
 			<p class="box-title">{t.doneTitle}</p>
@@ -694,6 +766,8 @@
 				</div>
 			{/if}
 		</div>
+
+		{#if findings}{@render findingsBlock(findings)}{/if}
 
 		<!-- Lo siguiente que hacer con lo que acaba de bajar. Cervantes lee una
 		     newsletter entera para aprender a escribir como ella, y lo que come es

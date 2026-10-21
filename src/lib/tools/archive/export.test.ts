@@ -392,3 +392,36 @@ describe('buildExport', () => {
 		expect(entries[0].content).not.toContain('## Un título cualquiera');
 	});
 });
+
+describe('the analysis section', () => {
+	/** Twenty weekly free posts at 40 interactions, one of them at 200. */
+	const weekly = Array.from({ length: 20 }, (_, i) =>
+		post({
+			date: new Date(Date.parse('2026-07-27T06:00:00.000Z') - i * 7 * 86_400_000).toISOString(),
+			slug: `semana-${i}`,
+			title: i === 6 ? 'El que despegó' : `Semana ${i}`,
+			reactions: i === 6 ? 180 : 30,
+			comments: i === 6 ? 15 : 5,
+			restacks: i === 6 ? 5 : 5
+		})
+	);
+	const deep = input({ posts: weekly, pub: { ...PUB, createdAt: '2025-01-01T00:00:00.000Z' } });
+
+	it('goes between the head and the index, standout first', () => {
+		const archive = buildArchive(deep, summarize(deep.posts, deep.pub.createdAt));
+		const analysis = archive.indexOf('## Lo que mejor le funcionó');
+		expect(analysis).toBeGreaterThan(0);
+		expect(analysis).toBeLessThan(archive.indexOf('## Índice'));
+		expect(archive).toContain('1. [El que despegó](https://ejemplo.substack.com/p/semana-6)');
+		expect(archive).toContain('×5,0 sobre lo normal en su momento');
+	});
+
+	it('is left out when there is nothing honest to say', () => {
+		const archive = buildArchive(input(), summarize(POSTS, PUB.createdAt));
+		expect(archive).not.toContain('Lo que mejor le funcionó');
+		const feed = input({ posts: weekly, fromFeed: true });
+		expect(buildArchive(feed, summarize(weekly, PUB.createdAt))).not.toContain(
+			'Lo que mejor le funcionó'
+		);
+	});
+});

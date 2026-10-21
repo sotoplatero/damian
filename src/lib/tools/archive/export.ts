@@ -1,5 +1,6 @@
 import type { ArchivePost } from '$lib/server/substack-archive';
 import type { ZipEntry } from './zip';
+import { analyze, ANALYSIS_COPY, fillCopy, habitLines, sectionLine, standoutLine } from './analysis';
 
 /**
  * The export, assembled: **ONE markdown file with the whole archive in it.**
@@ -236,6 +237,42 @@ function linkText(title: string): string {
 }
 
 /**
+ * What worked, before the index: the one part of this file that is an opinion,
+ * so it goes where a model reading top-down meets it first, with its method
+ * stated. Empty string when there is nothing honest to say (no figures, too few
+ * posts) — the section is left out rather than printed hollow.
+ */
+export function buildAnalysisSection(input: ExportInput): string {
+	const analysis = analyze(input.posts, input.pub.createdAt, input.generatedAt, input.fromFeed);
+	if (!analysis) return '';
+
+	const lines = [`## ${ANALYSIS_COPY.title}`, ''];
+	lines.push(`_${fillCopy(ANALYSIS_COPY.method, { ranked: analysis.ranked })}_`, '');
+	if (analysis.standouts.length) {
+		analysis.standouts.forEach((standout, i) => {
+			const { post } = standout;
+			const day = isoDay(post.date);
+			const title = post.slug
+				? `[${linkText(post.title)}](${postUrl(input.pub.origin, post.slug)})`
+				: linkText(post.title);
+			lines.push(`${i + 1}. ${title}${day ? ` · ${day}` : ''} · ${standoutLine(standout)}`);
+		});
+	} else {
+		lines.push(ANALYSIS_COPY.none);
+	}
+
+	const habits = habitLines(analysis);
+	if (habits.length) lines.push('', habits.join(' '));
+
+	if (analysis.sections.length) {
+		lines.push('', `### ${ANALYSIS_COPY.sectionsTitle}`, '');
+		for (const section of analysis.sections) lines.push(`- ${sectionLine(section)}`);
+	}
+
+	return `${lines.join('\n')}\n`;
+}
+
+/**
  * The index: every entry the archive returned, one line each, newest first.
  *
  * It says which lines have their post below and which don't, because that is the
@@ -455,7 +492,10 @@ export function buildHead(input: ExportInput, summary: Summary): string {
  * tool travels — somebody who is handed one of these can go and make their own.
  */
 export function buildArchive(input: ExportInput, summary: Summary): string {
-	const parts = [buildHead(input, summary), buildIndexSection(input)];
+	const parts = [buildHead(input, summary)];
+	const analysis = buildAnalysisSection(input);
+	if (analysis) parts.push(analysis);
+	parts.push(buildIndexSection(input));
 
 	for (const post of input.posts) {
 		const markdown = input.bodies.get(post.slug);
