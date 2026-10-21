@@ -232,7 +232,7 @@
 						<p class="door-give">
 							{tool.blurb}
 							<span class="door-takes label"
-								>Metes <b>{tool.takes}</b>{#if !tool.capturesEmail}&nbsp;· sin correo{/if}</span
+								>Metes <b>{tool.takes}</b>{#if !tool.capturesEmail}&nbsp;· sin correo{/if}{#if tool.beta}&nbsp;· beta{/if}</span
 							>
 						</p>
 						<Arrow class="door-go" />

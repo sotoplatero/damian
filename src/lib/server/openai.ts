@@ -94,11 +94,11 @@ function extractText(data: unknown, tag: string): string | null {
 }
 
 /**
- * Pide JSON al modelo y lo devuelve parseado, o `null` si algo falló.
+ * Asks the model for JSON and returns it parsed, or `null` if anything failed.
  *
- * Nunca lanza: quien llama decide si un fallo es fatal. El informe de newsletter
- * sale sin la parte de juicio y no se rompe; 7-frameworks sí lo trata como error
- * porque sin copy no hay nada que enseñar.
+ * Never throws: the caller decides whether a failure is fatal. The newsletter
+ * report goes out without its judgement half and doesn't break; a tool with
+ * nothing else to show treats it as an error.
  */
 export async function askJson<T = Record<string, unknown>>(ask: Ask): Promise<T | null> {
 	const key = env.OPENAI_API_KEY;

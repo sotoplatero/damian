@@ -11,9 +11,9 @@
  *
  * Deliberately off the list, and why:
  *
- *   - `places-evaluator` — plain DaisyUI, so it doesn't fit with the rest yet.
- *     Getting it onto the home page means migrating it to the site theme. It also
- *     used Paraglide until August 2026; that half is done, its copy is in the page.
+ *   - `10-post-types` — taken off in October 2026. It asks a model for what the
+ *     visitor could ask one directly, behind an email gate, which argues against
+ *     the site's thesis instead of for it. It stays live because the skill calls it.
  *   - `newsletter` — it works, but the report still doesn't deliver what it
  *     should. The judgement half is being rewritten and the reference it is
  *     measured against is a hand-written audit that is NOT in this repo (it names
@@ -29,11 +29,15 @@ export type Tool = {
 	blurb: string;
 	/**
 	 * Marks the ones that ask for an email, so you can see at a glance which ones
-	 * capture. `/postcard` is the first one without it, on purpose: the postcard
-	 * is a gift meant to open a conversation with another author, and a form in
-	 * front of it would turn it into lead capture.
+	 * capture.
 	 */
 	capturesEmail?: boolean;
+	/**
+	 * Listed before it is finished, on purpose: what is left to learn about it
+	 * (whether people accept the plan or fight it) only traffic can answer. The
+	 * home page says «beta» next to it so a rough edge reads as honest, not broken.
+	 */
+	beta?: boolean;
 	/**
 	 * What the visitor puts in, as the home page says it: «Metes <takes>». A tool
 	 * here is dynamic — something goes in and a result comes out — and this line is
@@ -45,18 +49,20 @@ export type Tool = {
 
 export const tools: Tool[] = [
 	{
-		name: 'La postal de tu Substack',
-		href: '/postcard',
-		takes: 'tu Substack',
-		blurb: 'Pega tu dirección y llévate cuatro postales con tu historia, listas para compartir.'
-	},
-	{
 		name: 'Descarga el archivo de una newsletter',
 		href: '/tool/archive',
 		takes: 'la newsletter que quieres estudiar',
 		blurb:
 			'Pega la dirección de la que te interesa y llévate su archivo entero: el índice y sus posts en markdown.',
 		capturesEmail: true
+	},
+	{
+		name: 'Convierte un artículo en herramienta',
+		href: '/tool/actionable',
+		takes: 'un artículo que explique cómo se hace algo',
+		blurb:
+			'Te digo si da para herramienta y, si da, la construyo. Si no da, te explico por qué.',
+		beta: true
 	},
 	{
 		name: 'Distribuye tu artículo',
@@ -70,13 +76,6 @@ export const tools: Tool[] = [
 		href: '/tool/substack-about',
 		takes: 'tu Substack',
 		blurb: 'Pega tu publicación. Te digo qué no se entiende y te propongo una versión mejor.',
-		capturesEmail: true
-	},
-	{
-		name: 'Saca 10 posts distintos de una sola idea',
-		href: '/tool/10-post-types',
-		takes: 'una idea',
-		blurb: 'Escribe el tema. Te doy diez posts listos para publicar.',
 		capturesEmail: true
 	}
 ];

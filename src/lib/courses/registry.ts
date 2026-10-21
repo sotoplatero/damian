@@ -11,8 +11,8 @@ import { course as crisBudget } from './cris-budget/course';
  * the conversation happens, not something published with her name on it.
  *
  * When one has to go public it will be linked from wherever it belongs; no new
- * mechanism is needed here. Same pattern `/tool/newsletter` and
- * `/tool/places-evaluator` already follow: live by URL, unlisted.
+ * mechanism is needed here. Same pattern `/tool/newsletter` already follows:
+ * live by URL, unlisted.
  */
 const courses: Course[] = [crisBudget];
 

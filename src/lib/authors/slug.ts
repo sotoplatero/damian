@@ -1,8 +1,8 @@
 /**
  * The card URL's slug, in both directions.
  *
- * `/postcard/kloshletter` and `/postcard/honest-broker.com` both need to be able to turn
- * back into an origin that answers, because the page regenerates from the slug alone.
+ * `kloshletter` and `honest-broker.com` both need to be able to turn back into an
+ * origin that answers, because `/tool/archive` signs and re-reads the slug alone.
  *
  * WHY THERE ARE TWO ORIGINS AND NOT ONE
  *

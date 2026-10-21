@@ -8,7 +8,7 @@
  *
  * NOT to be confused with `$lib/server/newsletter.ts` or `$lib/server/substack.ts`.
  * Those two read OTHER people's publications for `/tool/newsletter` and
- * `/postcard`. This one is ours, and it holds no logic beyond a URL.
+ * `/tool/archive`. This one is ours, and it holds no logic beyond a URL.
  */
 export const PUBLICATION_URL = 'https://sotoplatero.substack.com';
 

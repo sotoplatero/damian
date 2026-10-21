@@ -3,7 +3,6 @@ import { env } from '$env/dynamic/private';
 import { env as publicEnv } from '$env/dynamic/public';
 import { renderStandalone } from './emails';
 import { signEmail } from './tokens';
-import toolCopyTemplate from '../emails/tool-7-frameworks.md?raw';
 import toolNewsletterTemplate from '../emails/tool-newsletter.md?raw';
 import toolPostsTemplate from '../emails/tool-10-post-types.md?raw';
 import toolRepurposeTemplate from '../emails/tool-repurpose.md?raw';
@@ -55,11 +54,6 @@ export async function unsubscribe(email: string): Promise<void> {
 }
 
 /**
- * Deliver the copy tool's output. `copiesMarkdown` is the seven generated
- * frameworks already formatted as markdown; it replaces `{{COPIES}}` in
- * `src/lib/emails/tool-7-frameworks.md`.
- */
-/**
  * A file to attach. `content` is text or raw bytes: `/tool/repurpose` sends a
  * prompt as a string, `/tool/archive` sends a zip the browser built and posted
  * back, and both end up as a Buffer here.
@@ -87,10 +81,6 @@ async function sendToolEmail(template: string, marker: string, to: string, markd
 		}
 	});
 	if (error) throw new Error(error.message);
-}
-
-export async function sendToolCopyEmail(to: string, copiesMarkdown: string): Promise<void> {
-	await sendToolEmail(toolCopyTemplate, 'COPIES', to, copiesMarkdown);
 }
 
 /**

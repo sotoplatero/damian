@@ -21,9 +21,9 @@ const IDEA_MIN = 20;
 const IDEA_MAX = 2000;
 
 /**
- * El mismo modelo que 7-frameworks: el más rápido de los que Damian comparó y el
- * que más varía el ritmo de las frases, que es lo que hace que no suene a IA.
- * No cambiar sin decírselo.
+ * Same model as `/tool/newsletter`: the fastest of the ones Damian compared and
+ * the one that varies sentence rhythm most, which keeps it from sounding like AI.
+ * Don't change it without asking him.
  */
 const MODEL = 'gpt-5.4-mini';
 

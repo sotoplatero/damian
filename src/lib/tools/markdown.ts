@@ -1,8 +1,8 @@
 /**
- * Lo que hay que hacerle al texto del modelo antes de meterlo en un correo.
+ * What the model's text needs before it goes into an email.
  *
- * Compartido por las tres herramientas: estaba copiado en `7-frameworks/format.ts`
- * y en `10-post-types/format.ts`, y `repurpose` habría sido la tercera copia.
+ * Shared by every tool that emails model output: it used to be copied into each
+ * tool's own `format.ts`, and a third copy is where they start to drift.
  */
 
 /**

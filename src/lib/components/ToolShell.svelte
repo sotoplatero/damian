@@ -10,15 +10,14 @@
 	 * results). So the layout never has to know which state the page is in —
 	 * something it cannot know.
 	 *
-	 * It lives here, and not inline in a `+layout.svelte`, because TWO routes need
-	 * it: `/tool/*` and `/postcard`. `/postcard` sits outside `/tool/` on purpose
-	 * (the segment after it is a publication, not a tool name) and therefore never
-	 * inherited `src/routes/tool/+layout.svelte`. For a while that was the whole
-	 * reason its front door looked foreign next to the other tools: right classes,
-	 * wrong shell. Duplicating these two divs would have let them drift.
+	 * It lives here, and not inline in a `+layout.svelte`, because several route
+	 * trees need it — `/tool/*`, `/recursos/*`, `/skill` — and a page outside
+	 * `/tool/` never inherits `src/routes/tool/+layout.svelte`: right classes,
+	 * wrong shell, a front door that reads as a different site. Duplicating these
+	 * two divs would have let them drift.
 	 *
 	 * No `max-width` here on purpose — the width comes from `.site-column` in the
-	 * root layout, so the postcard slider can still run edge to edge inside it.
+	 * root layout.
 	 */
 	let { children } = $props();
 </script>

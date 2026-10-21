@@ -2,10 +2,11 @@ import { redirect } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
 /**
- * /author moved to /postcard in August 2026, when the handoff postcards
- * replaced the old square card. The footer of every card shared before then
- * prints a damiansoto.me/author/... address, so those links must keep landing.
+ * /author became /postcard in August 2026, and the postcard tool was removed in
+ * October 2026. Every card shared before then prints one of those addresses, so
+ * they land on the home page instead of a 404. 307, not 308: a permanent
+ * redirect is cached by browsers, and the address may get a tool again.
  */
-export const GET: RequestHandler = ({ params }) => {
-	redirect(308, params.rest ? `/postcard/${params.rest}` : '/postcard');
+export const GET: RequestHandler = () => {
+	redirect(307, '/');
 };

@@ -1,9 +1,9 @@
 <script lang="ts">
 	/**
-	 * Todas las herramientas comparten la cáscara de `ToolShell`, que también usa
-	 * `/postcard` — vive fuera de `/tool/` y antes se quedaba sin ella.
+	 * Every tool shares the `ToolShell` shell, as do the pages that live outside
+	 * `/tool/` (`/recursos`, `/skill`).
 	 *
-	 * La cabecera global ya enlaza al inicio, así que aquí no se repite ese enlace.
+	 * The global header already links home, so that link isn't repeated here.
 	 */
 	import ToolShell from '$lib/components/ToolShell.svelte';
 

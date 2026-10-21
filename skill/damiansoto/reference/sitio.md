@@ -35,14 +35,12 @@ Una herramienta se usa allí y se acaba al cerrar la pestaña.
 
 | En la web | Qué hace | Pide correo | ¿Está en el skill? |
 |---|---|---|---|
-| `/postcard` | Cuatro postales descargables con la historia entera de una publicación de Substack, en un carrusel | No, es un regalo | No: son PNG pintados en el servidor |
 | `/tool/archive` | El archivo entero de la newsletter **de otro**: índice y posts en markdown, en un zip | Sí, y solo una descarga por dirección | Sí → `archivo-newsletter` |
 | `/tool/repurpose` | Nueve notas de un artículo: cinco con sus datos, cuatro que van más lejos que él | Sí, las cuatro últimas van por correo | Sí → `distribuir-articulo` |
 | `/tool/substack-about` | Audita el «Acerca de» de una publicación y lo reescribe | Sí | Sí → `acerca-de-substack` |
 | `/tool/10-post-types` | Diez posts distintos de una sola idea escrita | Sí, nueve van por correo | Sí → `diez-posts` |
 | `/tool/newsletter` | Auditoría de un Substack desde lo que enseña en público | Sí | No, sin listar en la web mientras se rehace |
-| `/tool/7-frameworks` | Reescribe una oferta con siete marcos de copywriting | Sí | No |
-| `/tool/actionable` | Juzga un artículo, planea una herramienta y la construye tras un enlace firmado | El generado, sí | No |
+| `/tool/actionable` | Juzga un artículo, planea una herramienta y la construye tras un enlace firmado. En beta | El generado, sí | No |
 
 Casi todas parten en dos: **algo entra → una parte se ve gratis en pantalla → la otra llega
 por correo a cambio de la dirección.** El skill llama a esos mismos endpoints, así que **el

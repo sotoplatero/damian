@@ -19,7 +19,7 @@ preheader: La auditoría completa, hallazgo a hallazgo, con su arreglo.
 
 **Otra herramienta que te puede servir**
 
-[Tu oferta, escrita de 7 formas](https://damiansoto.me/tool/7-frameworks) — pegas tu web y te devuelvo lo que vendes escrito de siete maneras distintas, cada una con un framework de copy. Una en pantalla, las otras seis por correo.
+[El archivo entero de una newsletter](https://damiansoto.me/tool/archive) — pegas la dirección de la que quieres estudiar y te llevas su índice y sus posts en un solo markdown, listo para dárselo a un modelo.
 
 Las que vaya haciendo van saliendo en [damiansoto.me](https://damiansoto.me).
 

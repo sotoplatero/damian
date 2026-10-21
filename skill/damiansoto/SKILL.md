@@ -53,8 +53,6 @@ memoria: sin el servidor, estas tres herramientas no se pueden hacer aquí.
 
 ## Lo que esto NO hace, y adónde mandar a la persona
 
-- **Las postales del Substack** —cuatro imágenes con la historia de una publicación— se pintan
-  en el servidor con tipografías propias. → <https://damiansoto.me/postcard>
 - **La auditoría completa de una newsletter** está a medias en el propio sitio mientras se
   rehace su mitad de juicio. → <https://damiansoto.me/tool/newsletter>
 - **Cervantes** es una carpeta aparte que aprende tu voz y escribe tus envíos contigo. No es

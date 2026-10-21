@@ -55,8 +55,8 @@
  * forma (prompt.ts) y se enseña en las tarjetas bloqueadas de la página, para
  * que quien entra vea de qué va cada tipo aunque su propio texto vaya al correo.
  *
- * A diferencia de los 7 frameworks, un tipo de post no tiene pasos: cada uno
- * produce UN post entero de una tacada. Por eso aquí no hay `steps`.
+ * A post type has no steps, unlike a copywriting framework: each one produces
+ * ONE whole post in a single go. That is why there is no `steps` here.
  */
 /**
  * Un post real de cada tipo, para el prompt y SOLO para el prompt.

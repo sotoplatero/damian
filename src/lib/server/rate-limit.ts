@@ -55,20 +55,6 @@ export const LIMITS = {
 	/** Per-IP ceiling on the expensive step, so nobody chains a hundred emails from one. */
 	toolDeliveryPerIp: { max: 10, windowMs: DAY_MS },
 
-	/** Google Places costs ~$0.086 per evaluation. Ten a day is ~$0.86 per IP. */
-	places: { max: 10, windowMs: DAY_MS },
-
-	/** Autocomplete fires on every keystroke. Generous, but capped. */
-	placesAutocomplete: { max: 60, windowMs: HOUR_MS },
-
-	/**
-	 * The /postcard walk. It costs no money — there is no model call and no email —
-	 * but each walk is up to 50 requests to someone else's server. This limit
-	 * exists to protect Substack, not the bill. Keyed by IP because there is no
-	 * email to ask for: it is the only tool with no gate.
-	 */
-	authorCard: { max: 20, windowMs: HOUR_MS },
-
 	/**
 	 * The archive export: **one per address**, which is what the page promises.
 	 *

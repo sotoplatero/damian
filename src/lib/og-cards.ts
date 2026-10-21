@@ -29,10 +29,9 @@ const HOME_CARD: Card = {
  * A path reduced to its card slug.
  *
  * The `/tool/` and `/recursos/` prefixes and a bare leading slash are all
- * stripped, because not every page lives under `/tool/`: `/postcard` is its own
- * route segment, since what follows it is a publication and not a tool name.
- * Without stripping the bare slash, `/postcard` asked for `/og//postcard.png`
- * and got nothing. Stripping the section leaves a flat slug, which is what
+ * stripped, because not every page lives under `/tool/`: without stripping the
+ * bare slash, a top-level page asked for `/og//<slug>.png` and got nothing.
+ * Stripping the section leaves a flat slug, which is what
  * `/og/[slug].png` can serve — a nested one would never match that route.
  */
 function toSlug(path: string): string {

@@ -23,7 +23,7 @@ plate. The time-aware greeting on the home page is written to that moment and is
 it — they are reading this instead of working on the business.
 
 Every tool shipped so far serves the newsletter case specifically (Substack archives, voice,
-postcards, repurposing, the "About" page). That is the beachhead, not the boundary.
+repurposing, the "About" page). That is the beachhead, not the boundary.
 
 ## Product Purpose
 
@@ -60,7 +60,7 @@ Everything on the site is exactly one of three things:
 
 1. **Tool.** Dynamic: the visitor puts something in (a URL, an idea, a publication) and gets a
    result that did not exist before. Independent: it works for someone who has never read an
-   issue. Lives on the site (`/tool/*`, `/postcard`).
+   issue. Lives on the site (`/tool/*`).
 2. **Download.** A file traded for an address — the lead magnet. Lives on the site
    (`/recursos/<slug>`). Cervantes and the author-analysis pack stay here (confirmed).
 3. **Reference.** A link to an issue: the story behind a tool, or something the site does not
@@ -151,9 +151,6 @@ Confirmed by Damian:
   `/colofon` page nobody links to, the words the palette answers instead of navigating, the
   greeting that knows the hour. Damian asked for this layer to be *expanded*, naming the
   keyboard shortcut as the example.
-- **The four postcard designs** (`biolink`, `editorial`, `gema`, `cartel`) come from a Claude
-  Design handoff and are implemented pixel-faithful. They have their own type and colour world
-  on purpose and do not follow the site's.
 - Voice: first person, direct, short sentences, no ornament. «No escribo bonito. Escribo lo que
   sé.» Copy is Spanish; code and comments are English.
 

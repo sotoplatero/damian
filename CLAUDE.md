@@ -32,8 +32,8 @@ reported errors that weren't real. **Paraglide was removed in August 2026** and 
 whole trap — see Language below.
 
 Tests cover the pure modules only — `src/lib/authors/*`, `src/lib/tools/archive/*`,
-`src/lib/tools/actionable/*`, `src/lib/resources/*`, `src/lib/publication.ts`, `src/lib/gap.ts` and the archive walk with `fetch` mocked.
-**221 tests in 18 files** as of 23 September 2026 (`src/lib/issues.ts` joined the pure modules); there are no component tests, because the DOM adds nothing here and would drag in jsdom for nothing.
+`src/lib/tools/actionable/*`, `src/lib/resources/*`, `src/lib/publication.ts`, `src/lib/gap.ts`, the `_preloads` parser and the archive walk with `fetch` mocked.
+**188 tests in 17 files** as of 21 October 2026 (the postcard's and `7-frameworks`' tests left with them); there are no component tests, because the DOM adds nothing here and would drag in jsdom for nothing.
 
 **`pnpm eval:actionable` is not a test and must never become one.** It judges twenty
 real pages with a real model over the real internet: it costs money and minutes.
@@ -107,8 +107,7 @@ the second email field.
   (for example: the story says "sin decírselo a mis amigos", never "a nadie", because
   "a nadie" reads as abandoning his wife).
 - Each tool page carries its own `const t = {...}` with its strings. Copy shared by two
-  files lives in a module: `src/lib/tools/newsletter/copy.ts` (page + emailed report)
-  and `src/lib/authors/copy.ts` (both /postcard pages).
+  files lives in a module: `src/lib/tools/newsletter/copy.ts` (page + emailed report).
 - **THE PAGE ASKS TWICE**: the hero for whoever arrives already convinced, the close
   (`id="alta"`) for whoever just read the page. They are never on screen together.
   **Both hand off to Substack's own subscribe page with the address prefilled**
@@ -133,22 +132,27 @@ the second email field.
 
 Every tool under `src/routes/tool/*` is reachable by URL; only the ones in
 `src/lib/tools/list.ts` show on the home page. Add an object there and it appears.
-**`postcard` is the exception to that path**: it lives at `/postcard`, not under
-`/tool/`, because the segment after it is a publication and not a tool name.
 
 | Tool | State |
 |---|---|
-| `postcard` | Listed. **The only one with no email gate.** Lives at `/postcard`, not `/tool/`. See below. |
 | `substack-about` | Listed. Rewrites a publication's "About" page. |
 | `archive` | Listed. Downloads **somebody else's** whole archive as a zip. The only tool whose deliverable is a file served in the response, the only one with no free step, and the only one limited to one per address. See below. |
-| `7-frameworks` | **Live by URL, unlisted.** Built on the site theme. Taken off the home page on 4 August 2026 (`117a855`); the commit doesn't say why, so don't assume it's broken. |
-| `10-post-types` | Listed. Built on the site theme. |
+| `actionable` | **Listed as beta** (October 2026). Judges an article, plans a tool, builds it behind a signed link. The generated tools live at `/tool/actionable/<token>`. See below. |
+| `10-post-types` | **Live by URL, unlisted** since October 2026. Kept alive because the skill calls it. |
 | `repurpose` | Listed. Built on the site theme. |
 | `newsletter` | **Live by URL, unlisted.** Built on the site theme; pulled from the home page while the judgement half is reworked. See below. |
-| `places-evaluator` | Live by URL, unlisted. Predates the theme, still plain DaisyUI. |
-| `actionable` | **Live by URL, unlisted.** Judges an article, plans a tool, builds it behind a signed link. The generated tools live at `/tool/actionable/<token>`. See below. |
 
-`lyra`, `uuid-generator` and `character-counter` were removed.
+`lyra`, `uuid-generator` and `character-counter` were removed; `postcard` in October 2026
+(see the note after `/tool/newsletter`); `7-frameworks` and `places-evaluator` the same month.
+
+**The criterion behind the October 2026 cut** (Damian, acting on a brand review): a tool earns
+the home page by doing something the visitor's own chat window can't — data they couldn't
+gather (`archive`), a verdict with judgement behind it (`actionable`, `newsletter`), or output
+verified against its source (`repurpose`). A tool that only asks a model to write, behind an
+email gate, argues against the thesis: `10-post-types` came off the home page for that reason
+and `7-frameworks` was deleted for it. `places-evaluator` was deleted as off-brand (Google
+Places scoring for local businesses, plain DaisyUI). Both are in git history; the beta flag
+on a list entry (`beta` in `tools/list.ts`) prints «beta» on its home row.
 
 **Researched, not built.** Reading someone's whole archive to decide what a tool
 should be is expensive, so the reading gets written down in `docs/` and nobody redoes
@@ -157,22 +161,15 @@ actually engages with, the ten hook types and the other enumerable material, the
 candidate tool (rewrite the hook of a post that flopped), what was ruled out and why,
 and the two arguments against building it at all. Read it before starting that tool.
 
-`7-frameworks` and `10-post-types` follow the same shape: **something in → free preview on
-screen → full result emailed in exchange for the address.** The expensive half never reaches
-the browser. What goes in differs: `7-frameworks` and `newsletter` take a URL and fetch it;
-`10-post-types` takes a written idea and fetches nothing.
-
-**`/tool/7-frameworks`** scrapes a page and rewrites the offer with the seven
-copywriting frameworks in `src/lib/tools/7-frameworks/frameworks.ts`. The first is free
-on screen; the other six are emailed. Framework definitions were audited against the
-cheatsheet **image** in Neal O'Grady's article (the text alone is not enough) — don't
-change a `hint` without checking the source.
+`10-post-types`, `repurpose`, `substack-about` and `newsletter` follow the same shape:
+**something in → free preview on screen → full result emailed in exchange for the address.**
+The expensive half never reaches the browser.
 
 **`/tool/10-post-types`** takes **a written idea, not a URL** — nothing is fetched. It orders
 the idea (topic, audience, angle, proof) and writes that one topic as ten social posts, one
 per type in `src/lib/tools/10-post-types/types.ts`. The first (`practico`) is free on screen;
-the other nine are emailed. Simpler underneath than `7-frameworks`: a post type has no steps,
-so the model returns one `text` per type instead of keyed `blocks`.
+the other nine are emailed. A post type has no steps, so the model returns one `text` per
+type.
 
 The input used to be a scraped URL, which required having a site that said something usable.
 Text works for someone who doesn't. The trade-off is that it can arrive in two words, so the
@@ -507,8 +504,9 @@ Notion's product page. Don't tune anything against a single run.
 **The wobbling shape is the argument FOR the plan step, not a bug to chase.** A page
 that comes back `generador` on one pass and `checklist` on the next is a page whose
 shape is genuinely arguable, and the visitor is a better judge of it than a second model
-call would be. That is also why the tool is unlisted: not because it is broken, but
-because whether people accept the plan or fight it is the thing left to find out.
+call would be. It was unlisted for that reason until October 2026 — not because it was
+broken, but because whether people accept the plan or fight it was the thing left to find
+out. Only traffic answers that, so it is now listed and marked beta.
 
 **One label in the corpus was wrong and got changed; that is allowed and the rule is
 written there.** `sive.rs/dj` was filed as "an anecdote with a moral" and the judgment
@@ -580,110 +578,38 @@ at 320px.
 `window._preloads` — **142 keys, of which we read a couple of dozen; the header comment says
 which and why**) and Substack's undocumented `/api/v1/archive`. The transport underneath it
 lives in **`src/lib/server/substack.ts`** (`get` with the SSRF guard, `readBody` with the byte
-cap, `decode`, `preloads`, `toOrigin`), extracted so `/postcard` could reuse it — the
-`_preloads` double-`JSON.parse` and the guard are expensive to get right and must not exist
+cap, `decode`, `preloads`, `toOrigin`), shared with `/tool/archive` — the
+`_preloads` parsing and the guard are expensive to get right and must not exist
 twice. Post bodies need one extra request each: `body_html` comes back empty from the archive
 and `/api/v1/posts/by-slug/` 302s to the page. Bodies are fetched in **both** steps — if only
 the paid step had them, screen and email would disagree.
 
-**`/postcard` — the Substack postcards.** Paste a newsletter's address, get FOUR
-downloadable postcards of its whole public history, in a slider. **They are portrait
-1080×1350 (4:5) on purpose** — see the long header comment on `POSTCARD_WIDTH` in
-`postcard.ts`, which records the measurement. The short version: a single-image note
-renders into a CONTAIN box (`c_limit`, no crop) capped at **400px tall on mobile**, and
-landscape can't reach that cap — 14:10 painted 310×223 on a 390px phone, 56% of the height
-available to it. 4:5 paints 310×388. Taller than ~3:4 buys nothing, because you are already
-against the cap and only losing width, and 4:5 is also the tallest LinkedIn and X show
-uncropped. **Don't "fix" it back to landscape or to square**: the earlier landscape choice
-optimised for pasting into a POST, which is not where these go.
+**`window._preloads` has had three shapes, and `preloads()` reads all of them.** Current
+(measured October 2026): plain JSON inside `<script type="application/json"
+id="preloads-json">`, every `<` written as `<`. Before it, an escaped string inside
+`JSON.parse("...")`; before that, a bare object. When Substack switched to the first and only
+the second was read, every publication came back as "not a Substack" and every post body came
+back empty — at once, across every tool that reads Substack. `substack.test.ts` pins all three.
+`skill/damiansoto/scripts/archivo.mjs` carries its own copy and needs the same change.
 
-The trees keep a 1080-wide design space scaled numerically on the way out, so SCALE is
-currently 1. Two traps when the canvas moves: the bar charts are drawn at a hand-set
-`maxHeight` and do **not** stretch with their container (raise the number or the chart
-floats), and a fixed-`height` bar row whose content overflows spills the month label on top
-of its own bar — put the rule and the padding on a wrapper, never on the row carrying the
-height.
+**`/postcard` was removed in October 2026.** It painted four downloadable PNG postcards of a
+publication's public history (satori, with its own fonts and a Claude Design handoff). Git
+history has the whole thing — `src/lib/authors/{postcard,metrics,copy}.ts`,
+`server/author-card.ts`, `author-cache.ts`, `postcard-render.ts` and the TTFs. Its addresses,
+and the older `/author/...` ones, are printed on cards already shared, so both catch-alls
+(`src/routes/{postcard,author}/[...rest]`) 307 to the home page. What it left behind and is
+still in use:
 
-**No email gate**, the only tool without one: the postcard is a gift meant to open a
-conversation with another author, and a form in front of it would turn it into lead
-capture. Listed on the home page. It replaced `/author` in August 2026 (a catch-all in
-`src/routes/author/[...rest]/+server.ts` 308-redirects the old addresses, which are
-printed on already-shared cards).
-
-`biolink` is the light one. It was dark until August 2026; its ground (`LIGHT`) is
-deliberately cooler than `gema`'s warm `PAPER`, because two light variants sharing a ground
-read as the same postcard twice at feed size.
-
-**The four designs come from a Claude Design handoff** («Rediseño postal Substack») and
-are implemented pixel-faithful in `src/lib/authors/postcard.ts`: `biolink` (dark,
-centred), `editorial` (dark, typographic), `gema` (warm paper catalogue), `cartel`
-(orange poster with the giant number). Their language is the postcard's own — Space
-Grotesk / Instrument Serif / JetBrains Mono (TTFs for satori in `src/lib/server/fonts/`),
-fixed orange `#f05a1e`, faceted diamond mark — and deliberately does NOT adapt to the
-publication's `brandColor`: every postcard also advertises the tool.
-
-**The page is the FRAME of the images, not a report.** What the visitor sees ARE the four
-PNGs (`/postcard/<slug>/<variant>.png`) in a scroll-snap rail — the snap is the swipe on
-touch, no dependency; arrows and dots ride on top and share the same scroll position.
-Under it: download of the active slide, and the contagion loop («¿Tú también escribes en
-Substack?» + inline form) — the recipient of the gift makes the next one. Honest notices
-(imported posts, truncated/feed) stay visible; no download in the feed-degraded state.
-The single-card era (`card.ts` with heroFor/chips, `lines.ts` sentences, the heatmap, the
-landscape `og.png`) was deleted with it; git history has it.
-
-Its shape, and why:
-
-- `src/lib/server/substack-archive.ts` is **the only module that touches the network**.
-  Everything downstream is pure computation. It walks `/api/v1/archive` to exhaustion and
-  falls back to `/feed` when it can't. Two measured facts drive it, both in its header
-  comment: `limit` maxes out at **50**, and **`offset=0` returns at most 23 posts whatever
-  `limit` says**, so the walk advances by `offset += received.length` — advancing by page size
-  silently skips 27 posts with no error.
-- `src/lib/authors/metrics.ts` is pure and tested. **There are three post sets, not one
-  filter**, and that is the load-bearing decision: rankings (most liked, most commented) look
-  at every post regardless of date, because likes accrue whatever date a post claims; anything
-  with a shape in time (streaks, cadence, weekday, hour) is floored at `created_at`. Measured:
-  **435 of The Honest Broker's 1330 posts are dated `2000-01-01`** from an imported archive,
-  and `first_post_date` lies on two of the three reference publications.
-- Several metrics are **conditional and vanish** rather than showing noise: the weekday needs
-  ≥40% share (measured top days were 17% and 18%, against 14.3% for an even split), the hour
-  needs ≥50% in a three-hour window, the free/paid split needs both sides present. The same
-  rule shapes `postcardData`: a zero figure is dropped and the stat grids flex — no
-  consolation cells on a gift nobody asked for.
-- **The chart's window is the publication's life, capped at twelve closed months — it is NOT
-  a fixed twelve.** `monthlyEngagement` never starts before the first post, and it takes in
-  the month in progress when the closed months alone don't reach `MIN_BARS` (3). Both halves
-  were MEASURED on sotoplatero.substack.com, 11 posts from June 2026 on: the fixed window drew
-  **ten empty bars and two with height**, and excluding the month in progress hid August — 3
-  of its 11 posts and its whole most recent month. The in-progress month stays out for anyone
-  older, where it is a partial month against full ones and reads as a collapse; that rule was
-  calibrated on publications with a year of bars behind them, and it costs them a twelfth
-  rather than a third. Leading empty months are not honesty: they are ten months of a silence
-  that never happened.
-- **`BAR_MAX_WIDTH` (120) exists because the bar count now varies.** The columns are `flex: 1`,
-  so twelve bars land around 67px and the cap never bites — a twelve-bar card renders exactly
-  as it did. Three bars without it are 330px slabs: not a chart, a flag.
-- **The subscriber count is only shown if its author allows it.** The payload carries it
-  either way; since 2026 the explicit `hide_subscriber_count` setting DOES come through and
-  it wins when present (`subscriberMagnitude` in `substack-archive.ts`, shown as Substack's
-  own «7.7K+» said in Spanish). When the key is absent, the old rendered-text heuristic
-  decides. The author's `followerCount` is different: person-level, always public on their
-  profile (`readFollowers`), no setting to respect. The profile also carries a
-  `subscriberCount` — it is the AUTHOR's aggregate across publications, never this
-  publication's; using it on the card would lie.
-- `src/lib/server/author-card.ts` builds the data; `author-cache.ts` holds it in memory and
-  is **shared by the page and all four PNGs**. Without that sharing, viewing the slider and
-  downloading a postcard would walk someone else's archive several times over.
-- **There is no progress stream.** The load does the whole walk server-side (~24 s for the
-  deepest archive measured) and `s-maxage=86400` means the CDN serves it afterwards without
-  waking the function. Damian always sees the postcards before sharing them, so the link is
-  warm by the time anyone else opens it.
-- **Deliberately not on the card:** the longest gap without publishing. It is the one figure
-  that reads as a reproach, and the one imported dates corrupt most — a first pass reported
-  182 weeks of silence for one publication and 56 for another, both invented by imported
-  dates. Also dead: `postTags` (too sparse). `restacks` are NOT dead — an early pass read
-  the field as an array, got 0 everywhere and wrongly wrote them off; it is a number (see
-  the comment on `ArchivePost.restacks`) and the card shows it when it is earned.
+- `src/lib/server/substack-archive.ts` is the one module that walks a publication, now for
+  `/tool/archive`. It walks `/api/v1/archive` to exhaustion and falls back to `/feed`. Two
+  measured facts drive it, both in its header comment: `limit` maxes out at **50**, and
+  **`offset=0` returns at most 23 posts whatever `limit` says**, so the walk advances by
+  `offset += received.length` — advancing by page size silently skips 27 posts with no error.
+- **Imported archives lie about dates.** **435 of The Honest Broker's 1330 posts are dated
+  `2000-01-01`**, and `first_post_date` lies on two of the three reference publications.
+  Anything with a shape in time is floored at `created_at`.
+- `src/lib/authors/slug.ts` (address → slug → origins to try) and `fixtures.ts` stayed where
+  they were because `/tool/archive` and its tests import them.
 
 ### The skill (`skill/`, served at `/skill`)
 
@@ -745,8 +671,8 @@ into the skill.**
   imports `src/lib/tools/archive/zip.ts` rather than carrying a second zip writer.
 - `DAMIANSOTO_URL` points the client somewhere else. That is how it is tested against
   `localhost:5173`.
-- `src/routes/skill/+layout.svelte` exists for the same reason `/postcard`'s did: outside
-  `/tool/` and `/recursos/` it inherits no shell, and without `ToolShell` its front door reads
+- `src/routes/skill/+layout.svelte` exists because outside
+  `/tool/` and `/recursos/` a page inherits no shell, and without `ToolShell` its front door reads
   as a different site. Its page also learned that **`.steps` is DaisyUI's** — the class name
   collides and lays the list out in columns — and that `.box-text` clamps to two lines, so it
   is card vocabulary and not body copy.
@@ -910,8 +836,8 @@ centres a tool in the height left under the header.
   whatever the specificity.
 - **EVERY FORM IS THE INK FRAME** (`.frame` > `.frame-field` + `.frame-button`): 4px of ink
   around the field and its button, side by side from 640px, stacked below; `.frame-stack` keeps
-  a textarea or a two-field form stacked at every width. `InlineForm`, `TextareaForm`,
-  `/tool/archive` and both `/postcard` forms use it. A hand-rolled form that looks like the
+  a textarea or a two-field form stacked at every width. `InlineForm`, `TextareaForm`
+  and `/tool/archive` use it. A hand-rolled form that looks like the
   shared one behaves like it.
 - **A submit button is disabled for being busy, never for being empty.** Fields are `required`
   (and `minlength` on the idea textarea), so the browser blocks the submit and names the field
@@ -919,8 +845,8 @@ centres a tool in the height left under the header.
   so that validation runs.
 - **No kicker above a heading, no 01/02/03 numbering on the home rows.** The heading carries
   its own weight; the rows are not a sequence.
-- **Depth:** no shadows on interface surfaces. The only two are objects on a page — the
-  postcard `.poster` and the download `.cover` — each a real offset shadow.
+- **Depth:** no shadows on interface surfaces. The only one is an object on a page — the
+  download `.cover` — a real offset shadow.
 - **Motion: one authored moment, the mark's hover spin** (quintic ease-out; an overshoot on a
   star symmetrical every 90° reads as a wobble), plus one entrance on the hero only. Nothing
   loops. Everything is inside `prefers-reduced-motion: no-preference`, smooth scroll included.
@@ -993,9 +919,6 @@ What the removal bought, beyond one fewer dependency:
   forced a page reload — which killed anything long-running in the tab, `/tool/archive`'s
   download loop included. That was diagnosed while building it and it is the least obvious
   thing on this list.
-
-`places-evaluator`'s eight strings now live in a `const t` at the top of its page, like every
-other tool. Its remaining oddity is DaisyUI, not i18n.
 
 ### SvelteKit Configuration
 

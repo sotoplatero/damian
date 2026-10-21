@@ -190,65 +190,6 @@
 	.chip {
 		@apply inline-block px-1.5 py-0.5 text-xs font-bold tracking-wide uppercase;
 	}
-
-	/*
-	 * /postcard's images, staged as the objects they are. The one real shadow on
-	 * the site: a printed card photographed on a page, with a real offset.
-	 */
-	.poster {
-		@apply mt-2 w-full border border-line;
-		height: auto;
-		box-shadow: 0 24px 70px rgba(22, 21, 20, 0.16);
-	}
-
-	/* The postcard slider: a scroll-snap rail. The snap IS the swipe on touch. */
-	.slider-frame {
-		@apply relative;
-	}
-	.slider {
-		@apply flex w-full gap-4 overflow-x-auto;
-		scroll-snap-type: x mandatory;
-		scrollbar-width: none;
-	}
-	.slider::-webkit-scrollbar {
-		display: none;
-	}
-	.slide {
-		@apply w-full shrink-0;
-		scroll-snap-align: center;
-	}
-	.slider-arrow {
-		@apply absolute top-1/2 flex h-11 w-11 -translate-y-1/2 cursor-pointer items-center justify-center border-2 border-ink text-lg text-ink transition-all;
-		background: var(--color-sheet);
-	}
-	.slider-arrow-prev {
-		left: 0.9rem;
-	}
-	.slider-arrow-next {
-		right: 0.9rem;
-	}
-	.slider-arrow:hover:not(:disabled) {
-		background: var(--color-ink);
-		color: var(--color-paper);
-	}
-	.slider-arrow:disabled {
-		opacity: 0;
-		cursor: default;
-		pointer-events: none;
-	}
-	.slider-dots {
-		@apply absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-2.5 px-3.5 py-2.5;
-		background: rgba(22, 21, 20, 0.62);
-	}
-	.slider-dot {
-		@apply h-2 w-2 cursor-pointer rounded-full border-0 p-0;
-		background: rgba(255, 255, 255, 0.45);
-		transition: background 180ms ease, transform 180ms ease;
-	}
-	.slider-dot-active {
-		background: #ffffff;
-		transform: scale(1.3);
-	}
 }
 
 /* ─── Browser surfaces: selection, caret, focus. They ship with the design. ─── */
@@ -861,8 +802,8 @@ html {
 
 /*
  * THE DOWNLOADS, as objects. A download is a thing you take away, so it gets a
- * cover. Its depth is a real shadow with a real offset — the same rule as
- * `.poster`: an object on a page, not a surface of the interface.
+ * cover. Its depth is a real shadow with a real offset: an object on a page,
+ * not a surface of the interface.
  */
 .files {
 	display: grid;

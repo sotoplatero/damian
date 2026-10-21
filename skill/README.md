@@ -92,7 +92,6 @@ silencio y con un error que parece del usuario** (`incomplete_article`).
 
 ## Lo que se quedó fuera, y por qué
 
-- **Las postales** (`/postcard`) son PNG pintados con satori y tipografías propias.
 - **La auditoría de newsletter** (`/tool/newsletter`) está sin listar en la propia web mientras
   se rehace su mitad de juicio.
 - **`/tool/archive` es la excepción a todo lo de arriba: ese sí es local.** Su trabajo son

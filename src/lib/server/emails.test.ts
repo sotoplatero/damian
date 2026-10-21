@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import { renderStandalone } from './emails';
-import sevenFrameworks from '../emails/tool-7-frameworks.md?raw';
 import tenPostTypes from '../emails/tool-10-post-types.md?raw';
 import newsletter from '../emails/tool-newsletter.md?raw';
 import repurpose from '../emails/tool-repurpose.md?raw';
@@ -14,7 +13,6 @@ const UNSUBSCRIBE = 'https://example.com/unsubscribe?e=x&t=y';
  * A template that fails here would fail at send time, silently.
  */
 const TEMPLATES = [
-	{ name: 'tool-7-frameworks', raw: sevenFrameworks, marker: 'COPIES' },
 	{ name: 'tool-10-post-types', raw: tenPostTypes, marker: 'POSTS' },
 	{ name: 'tool-newsletter', raw: newsletter, marker: 'REPORT' },
 	{ name: 'tool-repurpose', raw: repurpose, marker: 'PIECES' },

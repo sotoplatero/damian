@@ -294,15 +294,13 @@ Flat. Depth comes from tone (paper, sheet, ink) and from the border. Hover chang
 and sometimes nudges an arrow sideways. It never lifts an interface surface.
 
 ### Shadow Vocabulary
-- **Printed card** (`0 24px 70px rgba(22,21,20,0.16)`): `.poster`, the postcard PNGs on
-  `/postcard`.
 - **Download cover** (`0 18px 36px -12px rgba(22,21,20,0.45)`, and on hover
   `0 26px 44px -14px rgba(22,21,20,0.5)` with `translateY(-4px) rotate(-1.5deg)`): the 3:4
   covers in the downloads band.
 
 ### Named Rules
-**The Objects-Only Rule.** A shadow means a physical object lying on the page: a postcard or
-a file cover. Interface surfaces never get one, and that includes boxes, fields, buttons and
+**The Objects-Only Rule.** A shadow means a physical object lying on the page: a file
+cover. Interface surfaces never get one, and that includes boxes, fields, buttons and
 bands.
 
 ## Shapes
@@ -385,12 +383,6 @@ which answers some words instead of navigating. `/colofon` is linked only from Â
 The greeting that knows the hour lives in the ink close, with its height reserved so filling
 it on mount moves nothing. The console has a working `damian.*` API: `damian.hueco()` posts to
 the same endpoint as the wanted block. **A gem must work, not wink.**
-
-### Postcards (a separate world)
-The four `/postcard` designs (`biolink`, `editorial`, `gema`, `cartel`) come from a Claude
-Design handoff and have their own type (Space Grotesk / Instrument Serif / JetBrains Mono)
-and a fixed orange `#f05a1e`. They don't follow this system and this system doesn't follow
-them. The site only frames them (`.poster`, `.slider`).
 
 ## Do's and Don'ts
 

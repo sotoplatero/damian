@@ -120,7 +120,7 @@ export type PubInfo = {
 	logoUrl: string | null;
 	/** The author's own photo, distinct from the publication logo. */
 	authorPhotoUrl: string | null;
-	/** The author's profile handle, for `readFollowers`. */
+	/** The author's profile handle (substack.com/@handle). */
 	authorHandle: string | null;
 	/** The publication's own one-line pitch. Substack calls it `hero_text`. */
 	tagline: string;
@@ -240,26 +240,6 @@ function readArchivePost(raw: unknown): ArchivePost | null {
  * measured, bare `honest-broker.com` returns 404 and only
  * `www.honest-broker.com` answers.
  */
-/**
- * The author's follower count, from their public profile
- * (substack.com/@handle). Person-level and always public — there is no hide
- * setting to respect, unlike subscribers. Any failure returns null: a card
- * must never fail over a nicety.
- */
-export async function readFollowers(handle: string): Promise<number | null> {
-	try {
-		const url = new URL(
-			`https://substack.com/api/v1/user/${encodeURIComponent(handle)}/public_profile`
-		);
-		const response = await get(url, 'application/json');
-		const profile = JSON.parse(await readBody(response)) as { followerCount?: unknown };
-		return typeof profile.followerCount === 'number' && Number.isFinite(profile.followerCount)
-			? profile.followerCount
-			: null;
-	} catch {
-		return null;
-	}
-}
 
 export async function readPubInfo(slug: string): Promise<PubInfo> {
 	const candidates = originsForSlug(slug);

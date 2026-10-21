@@ -48,7 +48,11 @@ import { toMarkdown } from '$lib/tools/newsletter/report';
  * nunca una peor ni una que contradiga a la otra.
  */
 
-/** El mismo que /tool/7-frameworks. Ver el comentario de allí antes de cambiarlo. */
+/**
+ * Chosen by Damian after comparing 8 models on the same prompt: the fastest of
+ * them (3 s) and the one that varies sentence rhythm most, which is what keeps
+ * the text from sounding like AI. Don't change it without asking him.
+ */
 const MODEL = 'gpt-5.4-mini';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
