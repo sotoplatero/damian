@@ -82,11 +82,26 @@ export function decode(input: string): string {
 }
 
 /**
- * Pulls the publication object out of `window._preloads`. Substack embeds it
- * as an escaped JSON string inside `JSON.parse("...")`, so there are two
- * rounds of parsing.
+ * Pulls the publication object out of `window._preloads`.
+ *
+ * Substack has shipped three shapes. Current (measured October 2026): plain JSON
+ * inside `<script type="application/json" id="preloads-json">`, which
+ * `_preloads` then reads with `JSON.parse(querySelector(...).textContent)`.
+ * Before that it was an escaped string inside `JSON.parse("...")`, two rounds of
+ * parsing; before that, a bare object literal. When the first shape arrived and
+ * only the second was read, every publication came back as "not a Substack".
  */
 export function preloads(html: string): Record<string, unknown> {
+	const tag = html.match(
+		/<script\b[^>]*\bid=["']preloads-json["'][^>]*>([\s\S]*?)<\/script>/
+	);
+	if (tag) {
+		try {
+			return JSON.parse(tag[1]);
+		} catch {
+			/* fall through to the older shapes */
+		}
+	}
 	const escaped = html.match(/window\._preloads\s*=\s*JSON\.parse\("((?:\\.|[^"\\])*)"\)/);
 	if (escaped) {
 		try {

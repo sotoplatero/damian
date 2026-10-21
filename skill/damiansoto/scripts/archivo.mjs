@@ -112,10 +112,20 @@ async function get(url, accept) {
 }
 
 /**
- * Saca el objeto de `window._preloads`. Substack lo mete como una cadena JSON
- * escapada dentro de `JSON.parse("...")`, así que hay dos rondas de parseo.
+ * Pulls the object out of `window._preloads`. Same three shapes, same order, as
+ * `preloads` in `src/lib/server/substack.ts`: current Substack (October 2026)
+ * ships plain JSON in `<script id="preloads-json">`; older pages carry an escaped
+ * string inside `JSON.parse("...")`, or a bare object.
  */
 function preloads(html) {
+	const tag = html.match(/<script\b[^>]*\bid=["']preloads-json["'][^>]*>([\s\S]*?)<\/script>/);
+	if (tag) {
+		try {
+			return JSON.parse(tag[1]);
+		} catch {
+			/* fall through to the older shapes */
+		}
+	}
 	const escaped = html.match(/window\._preloads\s*=\s*JSON\.parse\("((?:\\.|[^"\\])*)"\)/);
 	if (escaped) {
 		try {
