@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { tools } from '$lib/tools/list';
-	import { resources, resourceHref } from '$lib/resources/list';
+	import { listedResources, resourceHref } from '$lib/resources/list';
 	import Arrow from '$lib/components/Arrow.svelte';
 
 	/**
@@ -58,7 +58,7 @@
 						</a>
 					</li>
 				{/each}
-				{#each resources as resource (resource.slug)}
+				{#each listedResources as resource (resource.slug)}
 					<li>
 						<a href={resourceHref(resource)} class="door is-compact">
 							<h2 class="door-name">{resource.name}</h2>

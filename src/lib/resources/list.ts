@@ -90,6 +90,12 @@ export type Resource = {
 
 	/** What it takes to open it, if anything. Sentence with one link in it. */
 	requirement?: InlineLink;
+
+	/**
+	 * Live by URL, but not listed: off the home page, ⌘K and the 404. Same rule
+	 * as a tool missing from `tools/list.ts` — hiding one does not turn it off.
+	 */
+	hidden?: boolean;
 };
 
 /**
@@ -166,6 +172,8 @@ export const resources: Resource[] = [
 		}
 	},
 	{
+		// Hidden by Damian, 5 November 2026. The page and its download still work.
+		hidden: true,
 		slug: 'stackpostal',
 		name: 'StackPostal, la extensión que te construyes',
 		blurb: 'Construye una extensión de Chrome sin saber programar: Claude Code la escribe y tú solo contestas.',
@@ -193,6 +201,9 @@ export const resources: Resource[] = [
 		}
 	}
 ];
+
+/** The ones that show: home page, ⌘K, the 404. `findResource` still sees them all. */
+export const listedResources = resources.filter((resource) => !resource.hidden);
 
 /** Where a resource lives. One source, so the home, ⌘K and the share cards agree. */
 export function resourceHref(resource: Pick<Resource, 'slug'>): string {

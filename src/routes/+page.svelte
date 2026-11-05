@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { tools } from '$lib/tools/list';
-	import { resources, resourceHref } from '$lib/resources/list';
+	import { listedResources, resourceHref } from '$lib/resources/list';
 	import { PUBLICATION_URL, subscribeUrl } from '$lib/publication';
 	import { GAP_MIN, GAP_MAX, isGapRequestValid } from '$lib/gap';
 	import { shortDate } from '$lib/issues';
@@ -161,7 +161,7 @@
 				},
 				herramientas() {
 					console.table(
-						[...tools, ...resources.map((r) => ({ name: r.name, href: resourceHref(r) }))].map(
+						[...tools, ...listedResources.map((r) => ({ name: r.name, href: resourceHref(r) }))].map(
 							(item) => ({ herramienta: item.name, dónde: item.href })
 						)
 					);
@@ -283,7 +283,7 @@
 			<p class="band-intro">Archivos para tu disco. Son tuyos aunque te borres mañana.</p>
 		</div>
 		<ul class="files">
-			{#each resources as resource, index (resource.slug)}
+			{#each listedResources as resource, index (resource.slug)}
 				<li>
 					<a href={resourceHref(resource)} class="file">
 						<span class="cover" class:is-signal={index % 2 === 1} aria-hidden="true">
