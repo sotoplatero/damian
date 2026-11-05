@@ -24,7 +24,7 @@
 		resultTitle: 'Tu tema, en diez posts distintos.',
 		lowConfidence:
 			'Tu idea es un poco corta, así que he supuesto bastante. Si los posts no te encajan, ese es el motivo: cuéntame algo más y vuelve a probar.',
-		freeBadge: 'Gratis',
+		freeBadge: 'Ya escrito',
 		copyAction: 'Copiar',
 		copiedAction: 'Copiado',
 		restart: 'Probar con otra idea',
@@ -112,7 +112,7 @@
 
 <PageMeta
 	title="Saca 10 posts distintos de una sola idea — Damian Soto"
-	description="Escribe un tema y recibe diez posts distintos listos para publicar. El primero es gratis."
+	description="Escribe un tema y recibe diez posts distintos listos para publicar. El primero, al momento."
 />
 
 {#snippet credit()}

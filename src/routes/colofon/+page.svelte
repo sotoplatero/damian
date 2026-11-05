@@ -25,8 +25,8 @@
 		abiertas por si te sirven. La lista crece casi cada semana.
 	</p>
 	<p>
-		Debajo hay un modelo de lenguaje trabajando, código que escribo yo, y un principio: lo caro no
-		se enseña gratis en pantalla, se manda al correo.
+		Debajo hay un modelo de lenguaje trabajando, código que escribo yo, y un principio: en pantalla se ve
+		una muestra, y lo caro llega al correo.
 	</p>
 	<p>
 		Si has llegado hasta aquí sin que nadie te lo enseñara, tú y yo nos vamos a entender.

@@ -75,42 +75,38 @@ export type Resource = {
 	lead: { opening: string; rest: string };
 
 	/**
-	 * What is actually inside the file.
+	 * What is actually inside the file, as a list under the field.
 	 *
 	 * Both pages used to end after the lead, so the entire case for handing over
 	 * an address was one sentence and a button, and the thing being offered was
 	 * never described. A lead magnet page that doesn't show the magnet is asking
 	 * for trust it hasn't earned.
+	 *
+	 * OPTIONAL since StackPostal: when the lead already explains how the thing
+	 * works, a list of files repeats it in a worse order. Leave it out and the
+	 * lead has to carry the description on its own.
 	 */
-	contents: string[];
+	contents?: string[];
 
 	/** What it takes to open it, if anything. Sentence with one link in it. */
 	requirement?: InlineLink;
 };
 
 /**
- * The price of every download, said in the same words everywhere.
+ * The price of every download AND what it buys, said in the same words everywhere.
  *
  * It is shared and not per-resource on purpose: this is the sentence that tells
  * somebody their address goes on a list, and the day it reads more gently on one
  * page than another is the day it stops being true on that page.
+ *
+ * It also says what Objeto Brillante is, because a resource page is often the
+ * first page of this site somebody sees, and the list they are joining has to be
+ * named for what it is. That used to be a second note (`NEWSLETTER_NOTE`) in its
+ * own paragraph; Damian asked for one text under the field (October 2026), so
+ * the two became this one sentence, printed after the requirement.
  */
 export const SUBSCRIBE_NOTE =
-	'Es para quien lee Objeto Brillante: al descargarlo te suscribes. Si te canso, te borras en un clic desde cualquier correo.';
-
-/**
- * What the address is being handed over FOR, said on the page where it is handed
- * over.
- *
- * A resource page is often the first page of this site somebody ever sees — the
- * link arrives from a post, a reply, somebody else's newsletter — and until now
- * the only mention of Objeto Brillante on it was `SUBSCRIBE_NOTE` naming it as
- * the thing you get subscribed to, with nothing anywhere saying what it is. The
- * home page's letter does that job in eleven paragraphs; here it takes one line,
- * and it has to be there, because this is the page doing the asking.
- */
-export const NEWSLETTER_NOTE =
-	'Objeto Brillante es un email a la semana: una herramienta que me he hecho para un negocio real y cómo la hice.';
+	'Al descargarlo te suscribes a Objeto Brillante, un email a la semana con una herramienta que me he hecho para un negocio real y cómo la hice. Te borras en un clic desde cualquier correo.';
 
 export const resources: Resource[] = [
 	{
@@ -167,6 +163,33 @@ export const resources: Resource[] = [
 			linkLabel: 'esta otra herramienta',
 			href: '/tool/archive',
 			after: ', que es el paso 2 del método.'
+		}
+	},
+	{
+		slug: 'stackpostal',
+		name: 'StackPostal, la extensión que te construyes',
+		blurb: 'Construye una extensión de Chrome sin saber programar: Claude Code la escribe y tú solo contestas.',
+		format: 'ZIP',
+		// The zero-width space lets the one long word break as «Stack / Postal» on a
+		// phone, where the cover is 118px wide. The cover is aria-hidden, so nothing
+		// reads it aloud.
+		cover: { title: 'Stack\u200bPostal', opens: 'Claude Code' },
+		title: 'Construye una extensión de Chrome sin saber programar — Damian Soto',
+		description:
+			'Una carpeta que abres con Claude Code y te construye StackPostal, una extensión de Chrome que convierte las cifras de tu Substack en una imagen para compartir. Sin saber programar.',
+		headline: 'Construye una extensión de Chrome sin saber programar',
+		mark: 'sin saber programar',
+		// No `contents`: the lead IS how it works, and the folder holds nothing but
+		// the instructions the lead describes.
+		lead: {
+			opening: 'Descargas una carpeta, la abres con Claude Code y le pegas una frase.',
+			rest: 'Te hace tres preguntas, escribe StackPostal entera y te dice dónde hacer clic para instalarla. Al terminar, pulsas su icono y las cifras de tu Substack salen en una imagen lista para compartir.'
+		},
+		requirement: {
+			before: 'Necesitas ',
+			linkLabel: 'Claude Code',
+			href: 'https://claude.com/claude-code',
+			after: ' y tu sesión de Substack abierta en Chrome, Edge o Brave.'
 		}
 	}
 ];

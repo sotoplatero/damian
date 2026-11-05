@@ -182,7 +182,7 @@
 
 <PageMeta
 	title="Objeto Brillante — Damian Soto"
-	description="Herramientas gratis para tu Substack, hechas por una persona sola. Úsalas aquí con lo tuyo, y cada semana una nueva y cómo la hice."
+	description="Herramientas para tu Substack, hechas por una persona sola. Úsalas aquí con lo tuyo, y cada semana una nueva y cómo la hice."
 />
 
 <!--
@@ -194,7 +194,7 @@
 	<div class="wide">
 		<h1 id="hero-title" class="poster-title">Nadie va a construir la herramienta que te falta.</h1>
 		<p class="poster-lead">
-			Yo me construyo las mías. Aquí las tienes, gratis y funcionando, para tu Substack.
+			Yo me construyo las mías. Aquí las tienes, funcionando, para tu Substack.
 		</p>
 		<InlineForm
 			bind:value={heroEmail}

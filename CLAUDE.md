@@ -753,18 +753,41 @@ place on every new build, so a typed size goes stale silently and nobody finds o
 
 **`/recursos/cervantes`** delivers Cervantes, a folder that opens in Claude Code, learns one
 author's voice from their published newsletter and writes their issues with them. It is
-built in a **separate repo** (`projects/cervantes`) and only distributed here.
+built in a **separate, public repo** (`projects/cervantes`, `github.com/sotoplatero/cervantes`)
+and only distributed here.
 
-- The ZIP is `static/cervantes.zip`, **without a version in the URL on purpose**: Cervantes
-  carries no version marker by design (a newer one is a new folder the author moves into),
-  so a link mailed months ago has to keep giving the latest. Shipping a new build is
-  overwriting that file with `dist/cervantes-<v>.zip` from the other repo, by hand.
+- **The ZIP is served from that repo's GitHub release, not from `static/`** (November 2026).
+  The mail links `releases/latest/download/cervantes.zip` (`CERVANTES_RELEASE_URL` in
+  `src/lib/resources/cervantes.ts`), which GitHub resolves to whatever release is marked
+  Latest — so **shipping a new build is publishing a release there**, nothing to do in this
+  repo. The asset must keep the name `cervantes.zip`. Links mailed before the move point at
+  `/cervantes.zip`; `src/routes/cervantes.zip/+server.ts` 302s them to the same place. Still
+  no version in any URL: Cervantes carries no version marker by design, so a link mailed
+  months ago has to keep giving the latest.
+- The repo being public means the email gate on this page is a courtesy, not a lock: anyone
+  who finds the repo gets the same zip without an address.
 - The endpoint is the gated half of a tool with the tool removed — nothing scraped, no model
   call, nothing on screen. It reuses the `toolDelivery` limits rather than naming its own.
 - **`sendResourceEmail` builds the link from the request origin**, and `PUBLIC_SITE_URL`
   only overrides it. The unsubscribe link can trust that variable; this one can't, because a
   broken download link is the entire mail — and the variable is not in the local `.env`, so
   the first test send went out pointing at `/cervantes.zip` with no host in front of it.
+
+**`/recursos/stackpostal`** delivers a **blank project, not the extension**: a `stackpostal/`
+folder with `CLAUDE.md`, `LEEME.md` and `docs/`, and not one line of code. The reader opens it
+in Claude Code, which builds StackPostal (a Chrome extension that draws their Substack figures
+as an image) on their machine. Copy that says «descarga la extensión» or «la postal» is wrong.
+Its page has **no contents list**: the lead is a short explanation of how it works, and
+`contents` is optional for exactly that case. Under every download's field there is ONE
+paragraph: the requirement, then `SUBSCRIBE_NOTE` (which now also says what Objeto Brillante
+is; `NEWSLETTER_NOTE` was folded into it).
+Built in `projects/stackpostal`; shipping a new version is re-zipping that folder over
+`static/stackpostal.zip`, no version in the URL (Cervantes moved to a GitHub release; this one
+hasn't).
+
+**On every download page the field is on the first screen** (Damian, October 2026): the
+contents list comes after the field, not before it. Measured, before/after, at 8 sizes from
+360×740 to 1920×1080 — with the list first, the field landed 76–496px below the fold.
 
 ### OpenAI
 

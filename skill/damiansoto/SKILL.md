@@ -1,6 +1,6 @@
 ---
 name: damiansoto
-description: Las herramientas de damiansoto.me y la newsletter Objeto Brillante, de Damian Soto. Distribuye un artículo en nueve notas para redes, saca diez posts distintos de una sola idea, audita y reescribe el «Acerca de» de un Substack, y descarga el archivo público entero de una newsletter. Úsalo cuando alguien quiera repartir, trocear o reaprovechar un artículo ya escrito; cuando tenga un tema y quiera contenido para LinkedIn o X sin repetirse; cuando pase la dirección de un Substack y pregunte por su página de presentación o por qué la gente entra y no se suscribe; cuando quiera bajar, guardar o estudiar todo lo que ha publicado una newsletter; o cuando pregunte por damiansoto.me, por Objeto Brillante o por Damian Soto.
+description: Llama a las herramientas web de damiansoto.me (el sitio de Damian Soto y su newsletter Objeto Brillante) y enseña lo que devuelven. Distribuye un artículo en nueve piezas para LinkedIn o X, saca diez posts de una idea para LinkedIn o X, audita el «Acerca de» de un Substack y descarga el archivo público de una newsletter. Úsalo cuando alguien nombre damiansoto.me, Objeto Brillante o estas herramientas; cuando quiera contenido para LinkedIn o X; cuando pregunte por su página «Acerca de» de Substack; o cuando quiera bajar todo lo que ha publicado una newsletter. No lo uses para escribir, responder o revisar notas de Substack Notes: eso es subnotes.
 ---
 
 # Las herramientas de damiansoto.me

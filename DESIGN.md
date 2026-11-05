@@ -21,7 +21,7 @@ colors:
 typography:
   display:
     fontFamily: "Schibsted Grotesk, ui-sans-serif, system-ui, sans-serif"
-    fontSize: "clamp(3rem, 9vw, 8.5rem)"
+    fontSize: "clamp(3rem, min(9vw, 12svh), 8.5rem)"
     fontWeight: 900
     lineHeight: 0.86
     letterSpacing: "-0.04em"
@@ -239,7 +239,7 @@ so the arrow is drawn as SVG (`Arrow.svelte`), like the mark (`Mark.svelte`). Ne
 tracking. Reading text is plain 400/500.
 
 ### Hierarchy
-- **Display** (`display`): the home hero only, `max-width: 12ch`, capped at 8.5rem so the four
+- **Display** (`display`): the home hero only, `max-width: 12ch`, capped at 8.5rem and at 12svh so the four
   lines and the field fit on one laptop screen.
 - **Display close** (`display-close`): the ink close's h2. The letter's quote uses the
   band-title size: at this one «herramientas,» overflows six columns.
@@ -354,8 +354,12 @@ disappears on a light tab bar); `static/apple-touch-icon.png` is mango on ink.
 
 ### File (download)
 - A 3px ink rule, then a 3:4 cover (ink, or mango on every other one) with meta in 0.62rem
-  uppercase, the mark and a 900 title, and next to it the name, blurb and «Llévatelo» with a 2px
+  uppercase, the mark and a 900 title, then the name, blurb and «Llévatelo» with a 2px
   underline.
+- **The shelf:** from 900px the files stand side by side, cover on top and name under it, as
+  many columns as there are files (`auto-fit`, `minmax(15rem, 1fr)`), so a third download
+  never sits alone next to an empty cell. Under 900px each file is a row with the cover beside
+  the name; under 460px the cover drops above it.
 
 ### Result box
 - `.box` is sheet with a 1px line border and 1.25rem padding. Used for results only: a

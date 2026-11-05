@@ -11,6 +11,8 @@ import toolArchiveTemplate from '../emails/tool-archive.md?raw';
 import courseTemplate from '../emails/course.md?raw';
 import resourceCervantesTemplate from '../emails/resource-cervantes.md?raw';
 import resourceAuthorAnalysisTemplate from '../emails/resource-analisis-de-autor.md?raw';
+import resourceStackPostalTemplate from '../emails/resource-stackpostal.md?raw';
+import { CERVANTES_RELEASE_URL } from '$lib/resources/cervantes';
 
 function client(): Resend {
 	const key = env.RESEND_API_KEY;
@@ -156,12 +158,14 @@ export async function sendArchiveEmail(
  */
 const RESOURCE_DELIVERY: Record<string, { template: string; file: string }> = {
 	/*
-	 * Cervantes. The URL carries no version on purpose: Cervantes has no version
-	 * marker by design — a newer one is a new folder the author moves into — so a
-	 * link mailed months ago has to keep giving the latest. Publishing a new build
-	 * is overwriting `static/cervantes.zip`.
+	 * Cervantes is served straight from its GitHub release, not from `static/`:
+	 * `releases/latest/download/<asset>` always resolves to whatever release is
+	 * marked Latest, so publishing a release in `sotoplatero/cervantes` IS shipping
+	 * it here — no copying a zip between repos. The asset must keep the name
+	 * `cervantes.zip`. Links mailed before this change point at `/cervantes.zip`,
+	 * which `src/routes/cervantes.zip/+server.ts` redirects to the same place.
 	 */
-	cervantes: { template: resourceCervantesTemplate, file: 'cervantes.zip' },
+	cervantes: { template: resourceCervantesTemplate, file: CERVANTES_RELEASE_URL },
 	/*
 	 * The author-archive analysis pack. Here the two names in the filename ARE the
 	 * content — the pack ships one worked analysis per author — so unlike Cervantes
@@ -171,7 +175,14 @@ const RESOURCE_DELIVERY: Record<string, { template: string; file: string }> = {
 	'analisis-de-autor': {
 		template: resourceAuthorAnalysisTemplate,
 		file: 'paquete-analisis-dan-koe-hussain-ibarra.zip'
-	}
+	},
+	/*
+	 * The blank project that builds StackPostal, from `projects/stackpostal`.
+	 * Same rule as Cervantes: no version in the URL, and a new build is
+	 * overwriting `static/stackpostal.zip`. The ZIP holds a `stackpostal/` folder,
+	 * because its LEEME tells the reader to open «esta carpeta» in Claude Code.
+	 */
+	stackpostal: { template: resourceStackPostalTemplate, file: 'stackpostal.zip' }
 };
 
 /** Whether a slug has a template and a file behind it. Checked before asking for
@@ -183,8 +194,10 @@ export function hasResourceDelivery(slug: string): boolean {
 export async function sendResourceEmail(slug: string, to: string, origin: string): Promise<void> {
 	const delivery = RESOURCE_DELIVERY[slug];
 	if (!delivery) throw new Error(`no resource delivery for slug: ${slug}`);
+	// An absolute `file` is hosted elsewhere (Cervantes' release); a bare filename is in `static/`.
 	const base = (publicEnv.PUBLIC_SITE_URL || origin).replace(/\/$/, '');
-	await sendToolEmail(delivery.template, 'DOWNLOAD', to, `${base}/${delivery.file}`);
+	const href = /^https?:\/\//.test(delivery.file) ? delivery.file : `${base}/${delivery.file}`;
+	await sendToolEmail(delivery.template, 'DOWNLOAD', to, href);
 }
 
 /**

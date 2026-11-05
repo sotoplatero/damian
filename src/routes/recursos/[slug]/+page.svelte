@@ -2,7 +2,7 @@
 	import PageMeta from '$lib/components/PageMeta.svelte';
 	import InlineForm from '$lib/components/InlineForm.svelte';
 	import { postTool } from '$lib/tools/client';
-	import { splitHeadline, SUBSCRIBE_NOTE, NEWSLETTER_NOTE } from '$lib/resources/list';
+	import { splitHeadline, SUBSCRIBE_NOTE } from '$lib/resources/list';
 	import type { PageData } from './$types';
 
 	/**
@@ -14,9 +14,9 @@
 	 * exactly how a third one gets a stale note under its field or a confirmation
 	 * that forgets to say the address went on a list.
 	 *
-	 * The strings that are NOT per-resource are the two shared notes: the price of
-	 * the download and what the newsletter is. Those are the sentences that have to
-	 * read the same on every one of these pages, so neither is copyable.
+	 * The string that is NOT per-resource is the shared note: the price of the
+	 * download and what the newsletter is, in one sentence. It has to read the same
+	 * on every one of these pages, so it is not per-resource copy.
 	 */
 	let { data }: { data: PageData } = $props();
 	const resource = $derived(data.resource);
@@ -73,26 +73,6 @@
 		<p><strong>{resource.lead.opening}</strong> {resource.lead.rest}</p>
 	</article>
 
-	<!--
-		WHAT IS IN THE FILE, BEFORE THE FIELD AND NOT AFTER IT.
-
-		Both of these pages used to go headline → one paragraph → give me your
-		address, and the thing being handed over was never described: no format, no
-		contents, nothing. The visitor was asked to pay in the only currency they
-		have on a page that hadn't shown them the goods.
-
-		It is hairline-separated lines and not a grid of cards on purpose. Three
-		items do not need three boxes, and this site's unit of content is a rule.
-	-->
-	<section class="section">
-		<h2 class="letter-heading">Qué hay dentro del {resource.format}</h2>
-		<ul class="contents-list">
-			{#each resource.contents as item (item)}
-				<li class="body-text text-soft">{item}</li>
-			{/each}
-		</ul>
-	</section>
-
 	{#if sent}
 		<div class="box border-ink mt-8">
 			<p class="box-title">{t.sentTitle}</p>
@@ -121,21 +101,45 @@
 		</div>
 	{/if}
 
-	<div class="mt-6 space-y-2">
+	<!-- ONE TEXT under the field (Damian, October 2026): what it takes to open the
+	     file, then the price, in one paragraph instead of two notes stacked. -->
+	<p class="muted mt-6">
 		{#if resource.requirement}
-			<p class="muted">
-				{resource.requirement.before}<a
-					class="link"
-					href={resource.requirement.href}
-					target={resource.requirement.href.startsWith('http') ? '_blank' : undefined}
-					rel={resource.requirement.href.startsWith('http')
-						? 'noopener noreferrer'
-						: undefined}>{resource.requirement.linkLabel}</a
-				>{resource.requirement.after}
-			</p>
+			{resource.requirement.before}<a
+				class="link"
+				href={resource.requirement.href}
+				target={resource.requirement.href.startsWith('http') ? '_blank' : undefined}
+				rel={resource.requirement.href.startsWith('http') ? 'noopener noreferrer' : undefined}
+				>{resource.requirement.linkLabel}</a
+			>{resource.requirement.after}
 		{/if}
-		<p class="muted">{NEWSLETTER_NOTE} {SUBSCRIBE_NOTE}</p>
-	</div>
+		{SUBSCRIBE_NOTE}
+	</p>
+
+	<!--
+		WHAT IS IN THE FILE, right under the field.
+
+		These pages used to go headline → one paragraph → give me your address, and
+		the thing being handed over was never described: no format, no contents,
+		nothing. Then the list went BEFORE the field, and on a laptop that pushed
+		the field 120–440px below the first screen. Damian's rule since October
+		2026: on every page, the field is on the first screen. So the lead sells,
+		the field and its notes follow, and the list is the first thing below —
+		still on the page, still read before anyone submits.
+
+		It is hairline-separated lines and not a grid of cards on purpose. Three
+		items do not need three boxes, and this site's unit of content is a rule.
+	-->
+	{#if resource.contents?.length}
+		<section class="section">
+			<h2 class="letter-heading">Qué hay dentro del {resource.format}</h2>
+			<ul class="contents-list">
+				{#each resource.contents as item (item)}
+					<li class="body-text text-soft">{item}</li>
+				{/each}
+			</ul>
+		</section>
+	{/if}
 </section>
 
 <style>
