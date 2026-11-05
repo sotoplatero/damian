@@ -205,6 +205,10 @@ body {
 html {
 	caret-color: var(--color-ink);
 	accent-color: var(--color-ink);
+	/* The scrollbar's lane is always reserved. Without it the long home page had
+	   one and a short tool page didn't, the viewport changed width by 15px, and the
+	   centred header jumped 8px sideways between them (measured at 1440, Windows). */
+	scrollbar-gutter: stable;
 }
 /*
  * ONE FOCUS RING, drawn from the palette, replacing three browsers' defaults.
@@ -725,6 +729,17 @@ html {
 	font-size: 1.125rem;
 	line-height: 1.42;
 	color: var(--color-soft);
+}
+/* A measured figure, when the tool has one (`figure` in tools/list.ts). Ink and
+   bold against the soft blurb: the only proof on the row, so it reads before the
+   «Metes» line, not after it. Proportional figures on purpose — tabular ones give
+   Schibsted's «.» and «,» a full digit's width and «1.333» reads «1 . 333». */
+.door-figure {
+	display: block;
+	margin-top: 0.6rem;
+	font-weight: 700;
+	letter-spacing: -0.01em;
+	color: var(--color-ink);
 }
 /* `white-space: normal` because this element also carries `.label`, and DaisyUI
    ships a `.label` of its own with `nowrap`: the actionable row's line ran 219px

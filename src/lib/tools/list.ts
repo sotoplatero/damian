@@ -45,6 +45,14 @@ export type Tool = {
 	 * tool's page.
 	 */
 	takes: string;
+	/**
+	 * One MEASURED figure, printed on the home row in ink. PRODUCT.md: «say the
+	 * real number or say nothing». Only a number that was measured as the visitor
+	 * will meet it — actionable's 20/20 is a majority of three passes and a visitor
+	 * gets one, so it does not qualify. No figure, no line: the row stays as it is.
+	 * Write where it was measured in a comment beside it.
+	 */
+	figure?: string;
 };
 
 export const tools: Tool[] = [
@@ -77,6 +85,10 @@ export const tools: Tool[] = [
 		name: 'Descarga el archivo de una newsletter',
 		href: '/tool/archive',
 		takes: 'la newsletter que quieres estudiar',
+		// The index walk of The Honest Broker, 1333 posts, in 21.5 s (CLAUDE.md,
+		// «Measured end to end, 12 August 2026»). The index, not the bodies: those
+		// come at 2.9/s and the download stops at 150 to ask.
+		figure: '1.333 posts indexados en 21,5 segundos',
 		blurb:
 			'Pega la dirección de la que te interesa: te digo qué le funcionó de verdad y te llevas su archivo entero en markdown.',
 		capturesEmail: true

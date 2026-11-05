@@ -231,6 +231,7 @@
 						<h3 class="door-name">{tool.name}</h3>
 						<p class="door-give">
 							{tool.blurb}
+							{#if tool.figure}<span class="door-figure">{tool.figure}</span>{/if}
 							<span class="door-takes label"
 								>Metes <b>{tool.takes}</b>{#if !tool.capturesEmail}&nbsp;· sin correo{/if}{#if tool.beta}&nbsp;· beta{/if}</span
 							>
