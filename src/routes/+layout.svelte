@@ -19,6 +19,24 @@
 	 */
 	const isHome = $derived(page.url.pathname === '/');
 
+	/*
+	 * The header ask goes quiet while the home hero is on screen: the hero is
+	 * already asking, and two «Apúntame» on the first screen pointed to two
+	 * different places. It starts quiet (true) so the server render and the
+	 * first paint agree; the observer turns it on once the hero scrolls away.
+	 */
+	let heroInView = $state(true);
+	$effect(() => {
+		if (!isHome) return;
+		const hero = document.querySelector('.poster-hero');
+		if (!hero) return;
+		const observer = new IntersectionObserver(([entry]) => {
+			heroInView = entry.isIntersecting;
+		});
+		observer.observe(hero);
+		return () => observer.disconnect();
+	});
+
 	onMount(() => {
 		// Force light theme site-wide
 		document.documentElement.setAttribute('data-theme', 'light');
@@ -77,7 +95,7 @@
 			<a href="/#herramientas">Herramientas</a>
 			<a href="/#descargas">Descargas</a>
 			<a href={PUBLICATION_URL} target="_blank" rel="noopener noreferrer">La carta</a>
-			<a class="site-join" href="/#alta">Apúntame</a>
+			<a class="site-join" class:is-quiet={isHome && heroInView} href="/#alta">Apúntame</a>
 		</nav>
 	</header>
 

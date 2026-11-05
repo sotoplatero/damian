@@ -48,22 +48,9 @@ export type Tool = {
 };
 
 export const tools: Tool[] = [
-	{
-		name: 'Descarga el archivo de una newsletter',
-		href: '/tool/archive',
-		takes: 'la newsletter que quieres estudiar',
-		blurb:
-			'Pega la dirección de la que te interesa: te digo qué le funcionó de verdad y te llevas su archivo entero en markdown.',
-		capturesEmail: true
-	},
-	{
-		name: 'Convierte un artículo en herramienta',
-		href: '/tool/actionable',
-		takes: 'un artículo que explique cómo se hace algo',
-		blurb:
-			'Te digo si da para herramienta y, si da, la construyo. Si no da, te explico por qué.',
-		beta: true
-	},
+	// Order (November 2026): the two that work on the visitor's OWN material first
+	// — somebody arriving from their own Note proves the thesis on their own
+	// article — then the judgement tool, then the one about somebody else's archive.
 	{
 		name: 'Distribuye tu artículo',
 		href: '/tool/repurpose',
@@ -76,6 +63,22 @@ export const tools: Tool[] = [
 		href: '/tool/substack-about',
 		takes: 'tu Substack',
 		blurb: 'Pega tu publicación. Te digo qué no se entiende y te propongo una versión mejor.',
+		capturesEmail: true
+	},
+	{
+		name: 'Convierte un artículo en herramienta',
+		href: '/tool/actionable',
+		takes: 'un artículo que explique cómo se hace algo',
+		blurb:
+			'Te digo si da para herramienta y, si da, la construyo. Si no da, te explico por qué.',
+		beta: true
+	},
+	{
+		name: 'Descarga el archivo de una newsletter',
+		href: '/tool/archive',
+		takes: 'la newsletter que quieres estudiar',
+		blurb:
+			'Pega la dirección de la que te interesa: te digo qué le funcionó de verdad y te llevas su archivo entero en markdown.',
 		capturesEmail: true
 	}
 ];
